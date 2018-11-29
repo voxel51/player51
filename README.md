@@ -27,4 +27,18 @@ sudo apt install node npm
 npm install --global rollup
 ```
 
+# Examples and Testing
+
+## Get the test data
+
+In order to automatically download and unzip the test-data, you need to install [ETA](https://github.com/voxel51/eta).  Otherwise, you can download the file below and unzip it to a directory `player51/test/player51-test-data`.
+
+Automatic Data Download and Extraction:
+```
+cd /path/to/player51/test
+python download_data.py
+```
+
+Example Test Data Google File ID: `1kdwJ3ZG8TURzUxNK-H9c909SnhE7YlYD` and [link](https://drive.google.com/a/voxel51.com/file/d/1kdwJ3ZG8TURzUxNK-H9c909SnhE7YlYD/view?usp=sharing)
+
 
