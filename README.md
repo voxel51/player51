@@ -37,7 +37,7 @@ npm install --save-dev rollup-plugin-node-resolve
 npm install --save-dev @babel/core @babel/preset-env
 ```
 
-You may need to set your `$NODE_PATH` to include the appropriate node install locations, especially if you add the `--global` option to the commands above.  With homebrew on mac this is `export NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/npm/node_modules`.  However, with the `--cli` option, the node_modules are stored locally.
+You may need to set your `$NODE_PATH` to include the appropriate node install locations, especially if you add the `--global` option to the commands above.  With homebrew on mac this is `export NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/npm/node_modules`.  However, without the `--global` option, the node_modules are stored locally.
 
 ## Building
 
