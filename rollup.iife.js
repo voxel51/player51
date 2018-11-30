@@ -1,5 +1,6 @@
-import resolve from 'rollup-plugin-node-resolve';
+import eslint from 'rollup-plugin-eslint-bundle';
 import babel from 'rollup-plugin-babel';
+import resolve from 'rollup-plugin-node-resolve';
 
 export default {
   input: 'src/js/player51.js',
@@ -9,6 +10,12 @@ export default {
     name: 'Player51',
   },
   plugins: [
+    eslint({
+      exclude: [
+        'node_modules/**',
+        'src/css/**',
+      ]
+    }),
     resolve(),
     babel({
       exclude: 'node_modules/**',
