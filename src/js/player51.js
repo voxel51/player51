@@ -260,6 +260,14 @@ Player51.prototype.render = function(parentElement) {
   this.eleVideo.addEventListener("play", function() {
       self.timerCallback();
     }, false);
+
+  parent.addEventListener("mouseenter", function() {
+    self.eleDivVideoControls.style.opacity = "0.9";
+  });
+
+  parent.addEventListener("mouseleave", function() {
+    self.eleDivVideoControls.style.opacity = "0";
+  });
 }
 
 
