@@ -35,6 +35,7 @@ npm install --save-dev rollup
 npm install --save-dev rollup-plugin-babel@latest
 npm install --save-dev rollup-plugin-node-resolve
 npm install --save-dev rollup-plugin-eslint-bundle
+npm install --save-dev rollup-plugin-commonjs
 npm install --save-dev eslint-plugin-react
 npm install --save-dev @babel/core @babel/preset-env
 ```
