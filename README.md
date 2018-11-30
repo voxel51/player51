@@ -28,7 +28,7 @@ sudo apt install node npm
 
 ### Packages
 
-We use rollup, babel, uglify and eslint packages for packaging Player51.  
+We use rollup, babel, uglify and eslint packages for packaging Player51 javascript, and postcss and cssnano for handling the css files.  
 
 ```
 npm install --save-dev rollup
@@ -40,6 +40,8 @@ npm install --save-dev rollup-plugin-uglify
 npm install --save-dev rollup-plugin-replace
 npm install --save-dev eslint-plugin-react
 npm install --save-dev @babel/core @babel/preset-env
+npm install --save-dev postcss-cli
+npm install --save-dev cssnano
 ```
 
 You may need to set your `$NODE_PATH` to include the appropriate node install locations, especially if you add the `--global` option to the commands above.  With homebrew on mac this is `export NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/npm/node_modules`.  However, without the `--global` option, the node_modules are stored locally.
