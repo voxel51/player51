@@ -1,0 +1,34 @@
+{
+  "name": "player51",
+  "version": "1.0.0",
+  "description": "Javascript video player that can render metadata overlays.",
+  "main": "src/js/player51.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "babel-plugin-external-helpers": "^6.22.0",
+    "rollup": "^0.67.3",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-node-resolve": "^3.4.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
+    "eslint-plugin-react": "^7.11.1",
+    "rollup-plugin-eslint-bundle": "^5.0.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/voxel51/player51.git"
+  },
+  "author": "Jason Corso",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/voxel51/player51/issues"
+  },
+  "homepage": "https://github.com/voxel51/player51#readme"
+}
