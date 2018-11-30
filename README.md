@@ -36,6 +36,8 @@ npm install --save-dev rollup-plugin-babel@latest
 npm install --save-dev rollup-plugin-node-resolve
 npm install --save-dev rollup-plugin-eslint-bundle
 npm install --save-dev rollup-plugin-commonjs
+npm install --save-dev rollup-plugin-uglify
+npm install --save-dev rollup-plugin-replace
 npm install --save-dev eslint-plugin-react
 npm install --save-dev @babel/core @babel/preset-env
 ```
@@ -52,6 +54,8 @@ bash build.bash
 ```
 
 This creates a folder `build` with the following contents.  XXX
+
+Note that the `build.bash` script sets a variable `NODE_ENV` to `prod` which forces the minimification of the code.  If you do not want to minify the code, then you should change that to `dev`.
 
 ## Reference
 

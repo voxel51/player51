@@ -2,6 +2,9 @@
 # Requires rollup to be installed.
 
 ROLLUP="./node_modules/.bin/rollup"
+if [ -z "$NODE_ENV"]; then
+  export NODE_ENV='prod'
+fi
 
 if [ ! -d "build" ]; then
     mkdir -p build

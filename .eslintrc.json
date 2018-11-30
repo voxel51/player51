@@ -5,6 +5,9 @@
         "es6": true,
         "node": true
     },
+    "globals": {
+      "ENV": true
+    },
     "extends": "eslint:recommended",
     "parserOptions": {
         "ecmaFeatures": {
