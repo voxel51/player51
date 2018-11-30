@@ -1,7 +1,7 @@
 # Build script for creating various versions of the Player51.
 # Requires rollup to be installed.
 
-ROLLUP="./node_modules/rollup/bin/rollup"
+ROLLUP="./node_modules/.bin/rollup"
 
 if [ ! -d "build" ]; then
     mkdir -p build
