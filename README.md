@@ -12,20 +12,48 @@ Player51 implements ES6 modules.  However, we do support older browsers through 
 
 ## Installation and Setup
 
+### Node and NPM
 You need Node and npm installed in order to run the build process with rollup.js.
 
 Installation on a Mac is easy with Homebrew
 ```
 brew update
 brew install node
-npm install --global rollup
 ```
 
 Installation on Linux/Ubuntu is easy with apt
 ```
 sudo apt install node npm
-npm install --global rollup
 ```
+
+### Packages
+
+We use rollup, babel, uglify and eslint packages for packaging Player51.  
+
+```
+npm install --save-dev rollup
+npm install --save-dev rollup-plugin-babel@latest
+npm install --save-dev rollup-plugin-node-resolve
+npm install --save-dev @babel/core @babel/preset-env
+```
+
+You may need to set your `$NODE_PATH` to include the appropriate node install locations, especially if you add the `--global` option to the commands above.  With homebrew on mac this is `export NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/npm/node_modules`.  However, with the `--cli` option, the node_modules are stored locally.
+
+## Building
+
+A `build.bash` script is included that executes the various scripts necessary for making the Player51 usable in various forms, such as iife and CommonJS.
+
+```
+cd /path/to/player51
+bash build.bash
+```
+
+This creates a folder `build` with the following contents.  XXX
+
+## Reference
+
+Some background information on rollup.
+- <https://code.lengstorf.com/learn-rollup-js/>
 
 # Examples and Testing
 
