@@ -66,7 +66,7 @@ Some background information on rollup.
 
 # Examples and Testing
 
-Assume you have a running python installation.
+Assume you have a running python installation.  
 
 ## Get the test data
 
@@ -94,4 +94,27 @@ python3 -m http.server
 ```
 
 Then point your browser at <http://0.0.0.0:8000/test/simple.html> (note that Google Chrome will not support scrubbing in this simple web-server setting).
+
+
+## React Test
+
+To set up Player51 for a React test, you need a new Node.js (6+) and npm (5.2+) installed.  This test is performed outside of this source tree because of dependency conflicts.  The code below copies over the necessary files.
+
+```
+cd /path/to/player51
+npx create-react-app /tmp/react-player51
+cp test/react-example-App.js /tmp/react-player51/src/App.js
+cp src/js/player51.js /tmp/react-player51/src/player51.js
+cp src/css/player51.css /tmp/react-player51/src/player51.css
+cp -r test/player51-test-data /tmp/react-player51/src/.
+
+cd /tmp/react-player51
+npm start
+```
+
+Then you can point your browser to `http://localhost:3000`.
+
+XXX there is a fix in the player51 code to allow the json already loaded...
+
+XXX note to fix the overlay code so it properly acknowledges that the overlay can be a string, an object or an array.
 
