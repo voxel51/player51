@@ -23,14 +23,21 @@ export {Player51};
  * F-MIXINS:  None
  * @constructor
  * @param media is an object that has 'src' and 'type' attributes.
- * @param overlay is the string pointing to the markup to overlay on the video
+ * @param overlay is data that should be overlayed on the video.  Overlay can
+ * be empty (`null`), a string point to a single URL or an object that is
+ * preloaded data.
  * @param fps is the frame-rate of the media.  If it is not provided then it
  * will be guessed.
  */
 function Player51(media, overlay, fps) {
   this.media = media;
-  this.overlayInfo = overlay;
-  this.loadOverlay();
+
+  this.frameOverlay = {}; // will be used to store the labels per frame
+  if (typeof(overlay) == "string") {
+    this.loadOverlay(overlay);
+  } else if ( (typeof(overlay) == "object") && (overlay != null) ) {
+    this.prepareOverlay(overlay);
+  }
 
   // initialize members to default or null values
   this.canvasWidth = null;
@@ -40,7 +47,6 @@ function Player51(media, overlay, fps) {
   this.frameDuration = 1.0/this.frameRate;
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
   this.videoIsPlaying = false;
-  this.frameOverlay = {}; // will be used to store the labels per frame
   this.boolDrawFrameNumber = false;
 };
 
@@ -64,7 +70,7 @@ Player51.prototype.computeFrameNumber = function() {
  * When an overlay is a string to a json file, then we assume that it needs to
  * be loaded and this function performs that load asynchronously.
  */
-Player51.prototype.loadOverlay = function() {
+Player51.prototype.loadOverlay = function(overlayPath) {
   let self = this;
 
   var xmlhttp = new XMLHttpRequest();
@@ -74,7 +80,7 @@ Player51.prototype.loadOverlay = function() {
         self.prepareOverlay(labelsObject);
       }
   };
-  xmlhttp.open("GET", this.overlayInfo, true);
+  xmlhttp.open("GET", overlayPath, true);
   xmlhttp.send();
 };
 
