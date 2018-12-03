@@ -156,10 +156,15 @@ Player51.prototype.processFrame = function() {
  * @member render
  * Render a new player for this media within the DOM element provided
  *
- * @param parentElement String id of the parentElement.
+ * @param parentElement String id of the parentElement or actual Div object.
  */
 Player51.prototype.render = function(parentElement) {
-  let parent = document.getElementById(parentElement);
+  let parent = undefined;
+  if (typeof parentElement === "string") {
+    parent = document.getElementById(parentElement);
+  } else {
+    parent = parentElement;
+  }
 
   this.eleDivVideo = document.createElement("div");
   this.eleDivVideo.className = "p51-contained-video";
