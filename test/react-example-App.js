@@ -43,6 +43,8 @@ class Player51Component extends Component {
    */
   componentDidMount() {
     console.log('ComponentDidMount is being called.');
+    // both of these work; here for clarity
+    //this.player.render("player-container");
     this.player.render(this.el);
   }
 
