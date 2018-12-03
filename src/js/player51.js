@@ -166,6 +166,10 @@ Player51.prototype.render = function(parentElement) {
     parent = parentElement;
   }
 
+  // Using the widths of the parent is a bit limiting: it requires the parent
+  // to the rendered fully into the browser and configured in a way that
+  // appropriately sizes the parent.  If and when the parent is resized, then
+  // this code will not recognize that (and is not "responsive").
   let theWidth = parent.offsetWidth;
   let theHeight = parent.offsetHeight;
 

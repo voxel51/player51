@@ -7,14 +7,13 @@ import { Player51 } from './player51.js';
 import './player51.css';
 import overlayData from './player51-test-data/8Xxvx8V-hnc-001.json';
 
-//  XXX CHECK
+
 // Integrating a non-react js module into a react one, requires poking some
 // holes.
 // See this article for using refs:
 // https://reactjs.org/docs/integrating-with-other-libraries.html
 
 
-        //src: "./player51-test-data/8Xxvx8V-hnc-001.mp4",
 class Player51Component extends Component {
   constructor(props) {
     super(props);
@@ -44,15 +43,12 @@ class Player51Component extends Component {
    */
   componentDidMount() {
     console.log('ComponentDidMount is being called.');
-    //this.player.render('player-container');
-    console.log(this.el);
     this.player.render(this.el);
   }
 
   componentWillUnmount() {
-    // need to destroy this.$el, the video player
+    // Do we need to destroy this.el, the video player?
   }
-
 
   render() {
     console.log('Render is being called.');
@@ -60,9 +56,7 @@ class Player51Component extends Component {
       <div
         id="player-container"
         ref={el => this.el = el}
-        width="320px"
-        height="180px"
-        style={{width: '320px', height: '180px'}}
+        style={{width: '640px', height: '340px', position: 'relative',}}
       >
       </div>
     );
