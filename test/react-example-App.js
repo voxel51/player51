@@ -46,10 +46,6 @@ class Player51Component extends Component {
     this.player.render(this.el);
   }
 
-  componentWillUnmount() {
-    // Do we need to destroy this.el, the video player?
-  }
-
   render() {
     console.log('Render is being called.');
     return (
