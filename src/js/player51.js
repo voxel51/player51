@@ -166,11 +166,14 @@ Player51.prototype.render = function(parentElement) {
     parent = parentElement;
   }
 
+  let theWidth = parent.offsetWidth;
+  let theHeight = parent.offsetHeight;
+
   this.eleDivVideo = document.createElement("div");
   this.eleDivVideo.className = "p51-contained-video";
   this.eleVideo = document.createElement("video");
-  this.eleVideo.setAttribute("width", "100%");
-  this.eleVideo.setAttribute("height", "100%");
+  this.eleVideo.setAttribute("width", theWidth);
+  this.eleVideo.setAttribute("height", theHeight);
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
   this.eleVideoSource = document.createElement("source");
   this.eleVideoSource.setAttribute("src", this.media.src);
@@ -182,8 +185,8 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivCanvas = document.createElement("div");
   this.eleDivCanvas.className = "p51-contained-canvas";
   this.eleCanvas = document.createElement("canvas");
-  this.eleCanvas.setAttribute("width", parent.offsetWidth);
-  this.eleCanvas.setAttribute("height", parent.offsetHeight);
+  this.eleCanvas.setAttribute("width", theWidth);
+  this.eleCanvas.setAttribute("height", theHeight);
   this.eleDivCanvas.appendChild(this.eleCanvas);
   parent.appendChild(this.eleDivCanvas);
 
@@ -203,8 +206,8 @@ Player51.prototype.render = function(parentElement) {
 
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
-  this.canvasWidth = parent.offsetWidth;
-  this.canvasHeight = parent.offsetHeight;
+  this.canvasWidth = theWidth;
+  this.canvasHeight = theHeight;
   this.canvasContext = this.eleCanvas.getContext("2d");
   this.canvasContext.strokeStyle = "#fff";
   this.canvasContext.fillStyle = "#fff";
