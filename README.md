@@ -55,7 +55,10 @@ cd /path/to/player51
 bash build.bash
 ```
 
-This creates a folder `build` with the following contents.  XXX
+This creates a folder `build` with the following contents.  
+- cjs -- CommonJS build
+- css -- Minified CSS
+- iife -- Standard JS immediate execution build.
 
 Note that the `build.bash` script sets a variable `NODE_ENV` to `prod` which forces the minimification of the code.  If you do not want to minify the code, then you should change that to `dev`.
 
@@ -66,7 +69,7 @@ Some background information on rollup.
 
 # Examples and Testing
 
-Assume you have a running python installation.
+Assume you have a running python installation.  
 
 ## Get the test data
 
@@ -95,3 +98,25 @@ python3 -m http.server
 
 Then point your browser at <http://0.0.0.0:8000/test/simple.html> (note that Google Chrome will not support scrubbing in this simple web-server setting).
 
+
+## React Test
+
+To set up Player51 for a React test, you need a new Node.js (6+) and npm (5.2+) installed.  This test is performed outside of this source tree because of dependency conflicts.  The code below copies over the necessary files.
+
+```
+cd /path/to/player51
+npx create-react-app /tmp/react-player51
+cp test/react-example-App.js /tmp/react-player51/src/App.js
+cp src/js/player51.js /tmp/react-player51/src/player51.js
+cp src/css/player51.css /tmp/react-player51/src/player51.css
+cp -r test/player51-test-data /tmp/react-player51/src/.
+python3 -m http.server
+
+cd /tmp/react-player51
+npm start
+```
+
+Note that the python web-server is also started to serve the mp4 to the react 
+client.  (TODO: figure out how to do this from react/npm.)
+
+Then you can point your browser to `http://localhost:3000`.

@@ -156,16 +156,28 @@ Player51.prototype.processFrame = function() {
  * @member render
  * Render a new player for this media within the DOM element provided
  *
- * @param parentElement String id of the parentElement.
+ * @param parentElement String id of the parentElement or actual Div object.
  */
 Player51.prototype.render = function(parentElement) {
-  let parent = document.getElementById(parentElement);
+  let parent = undefined;
+  if (typeof parentElement === "string") {
+    parent = document.getElementById(parentElement);
+  } else {
+    parent = parentElement;
+  }
+
+  // Using the widths of the parent is a bit limiting: it requires the parent
+  // to the rendered fully into the browser and configured in a way that
+  // appropriately sizes the parent.  If and when the parent is resized, then
+  // this code will not recognize that (and is not "responsive").
+  let theWidth = parent.offsetWidth;
+  let theHeight = parent.offsetHeight;
 
   this.eleDivVideo = document.createElement("div");
   this.eleDivVideo.className = "p51-contained-video";
   this.eleVideo = document.createElement("video");
-  this.eleVideo.setAttribute("width", "100%");
-  this.eleVideo.setAttribute("height", "100%");
+  this.eleVideo.setAttribute("width", theWidth);
+  this.eleVideo.setAttribute("height", theHeight);
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
   this.eleVideoSource = document.createElement("source");
   this.eleVideoSource.setAttribute("src", this.media.src);
@@ -177,8 +189,8 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivCanvas = document.createElement("div");
   this.eleDivCanvas.className = "p51-contained-canvas";
   this.eleCanvas = document.createElement("canvas");
-  this.eleCanvas.setAttribute("width", parent.offsetWidth);
-  this.eleCanvas.setAttribute("height", parent.offsetHeight);
+  this.eleCanvas.setAttribute("width", theWidth);
+  this.eleCanvas.setAttribute("height", theHeight);
   this.eleDivCanvas.appendChild(this.eleCanvas);
   parent.appendChild(this.eleDivCanvas);
 
@@ -198,8 +210,8 @@ Player51.prototype.render = function(parentElement) {
 
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
-  this.canvasWidth = parent.offsetWidth;
-  this.canvasHeight = parent.offsetHeight;
+  this.canvasWidth = theWidth;
+  this.canvasHeight = theHeight;
   this.canvasContext = this.eleCanvas.getContext("2d");
   this.canvasContext.strokeStyle = "#fff";
   this.canvasContext.fillStyle = "#fff";
