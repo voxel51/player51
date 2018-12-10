@@ -22,20 +22,38 @@ class ReactPlayer51 extends React.Component {
     this.frameOverlay = {};
   }
 
-  componentDidMount = () => {
-    this.canvasRef.current.width = this.parentContainerRef.current.offsetWidth;
-    this.canvasRef.current.height = this.parentContainerRef.current.offsetHeight;
-    this.setState({
-      canvasWidth: this.canvasRef.current.width,
-      canvasHeight: this.canvasRef.current.height,
-    });
-    this.frameDuration = 1.0 / this.props.fps;
+  handleLoadedMetadata = () => {
+    this.parentContainerRef.current.style.width = (this.videoRef.current.videoWidth + 'px');
+    this.parentContainerRef.current.style.height = (this.videoRef.current.videoHeight + 'px');
+    if (this.videoRef.current.videoWidth >= 1440) {
+      this.parentContainerRef.current.style.width = '1280px';
+      this.parentContainerRef.current.style.height = '720px';
+      this.canvasRef.current.width = '1280';
+      this.canvasRef.current.height = '720';
+      this.videoRef.current.width = '1280';
+      this.videoRef.current.height = '720';
+      this.setState({
+        canvasWidth: this.canvasRef.current.width,
+        canvasHeight: this.canvasRef.current.height,
+      });
+    } else {
+      this.canvasRef.current.width = this.videoRef.current.videoWidth;
+      this.canvasRef.current.height = this.videoRef.current.videoHeight;
+      this.frameDuration = 1.0 / this.props.fps;
+      this.setState({
+        canvasWidth: this.canvasRef.current.width,
+        canvasHeight: this.canvasRef.current.height,
+      });
+    }
+
     this.ctx = this.canvasRef.current.getContext('2d');
     this.ctx.fillStyle = '#fff';
     this.ctx.strokeStyle = '#fff';
     this.ctx.lineWidth = 1;
     this.ctx.font = '14px sans-serif';
-    this.prepareOverlay(this.props.overlay);
+    if (Object.keys(this.props.overlay).length > 0) {
+      this.prepareOverlay(this.props.overlay);
+    }
   }
 
   prepareOverlay = (rawjson) => {
@@ -57,9 +75,15 @@ class ReactPlayer51 extends React.Component {
     if (this.playPauseButton.current) {
       if (this.videoRef.current.paused) {
         this.videoRef.current.play();
-        this.setState({
-          videoIsPlaying: true,
-        }, this.timerCallBack);
+        if (Object.keys(this.props.overlay).length > 0) {
+          this.setState({
+            videoIsPlaying: true,
+          }, this.timerCallBack);
+        } else {
+          this.setState({
+            videoIsPlaying: true,
+          });
+        }
       } else {
         // Pause the video
         this.videoRef.current.pause();
@@ -109,7 +133,7 @@ class ReactPlayer51 extends React.Component {
 
   timerCallBack = () => {
     let self = this;
-    if (this.videoRef.current.paused || this.videoRef.current.ended) {
+    if (!this.videoRef.current || this.videoRef.current.paused || this.videoRef.current.ended) {
       return;
     }
     let cfn = this.computeFrameNumber();
@@ -140,7 +164,6 @@ class ReactPlayer51 extends React.Component {
     }
     if (this.state.frameNumber in this.frameOverlay) {
       let fm = this.frameOverlay[this.state.frameNumber];
-
       for (let len = fm.length, i=0; i<len; i++) {
         let fmo = fm[i];
 
@@ -166,7 +189,7 @@ class ReactPlayer51 extends React.Component {
     return (
       <div ref={this.parentContainerRef} onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave} className='output-preview-container'>
         <div id='video-container' className='p51-contained-video'>
-          <video onTimeUpdate={this.handleTimeUpdate} onEnded={this.handleEndVideo} ref={this.videoRef} muted>
+          <video onLoadedMetadata={this.handleLoadedMetadata} onTimeUpdate={this.handleTimeUpdate} onEnded={this.handleEndVideo} ref={this.videoRef} muted>
             <source id='video-source' src={this.props.src} type={this.props.type} />
           </video>
         </div>
