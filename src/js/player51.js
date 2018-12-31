@@ -33,9 +33,9 @@ function Player51(media, overlay, fps) {
   this.media = media;
 
   this.frameOverlay = {}; // will be used to store the labels per frame
-  if (typeof(overlay) == "string") {
+  if (typeof(overlay) === "string") {
     this.loadOverlay(overlay);
-  } else if ( (typeof(overlay) == "object") && (overlay != null) && Object.keys(overlay).length > 0) {
+  } else if ( (typeof(overlay) === "object") && (overlay != null) && Object.keys(overlay).length > 0) {
     this.prepareOverlay(overlay);
   }
 
@@ -75,7 +75,7 @@ Player51.prototype.loadOverlay = function(overlayPath) {
 
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
+      if (this.readyState === 4 && this.status === 200) {
         let labelsObject = JSON.parse(this.responseText);
         self.prepareOverlay(labelsObject);
       }
@@ -143,26 +143,18 @@ Player51.prototype.processFrame = function() {
 
       this.canvasContext.strokeRect(x, y, w, h);
       let label = fmo.label + " [" + fmo.index + "]";
-      this.canvasContext.fillText(label, x, y+15);
+      if (typeof(fmo.index)  !== "undefined" && typeof(this.colorArr[fmo.index]) === "undefined") {
+        this.colorArr[fmo.index] = this.generateBoundingBoxColor();
+      }
+      this.ctx.strokeStyle = this.colorArr[fmo.index];
+      this.ctx.strokeRect(x, y, w, h);
+      this.ctx.fillText(label, x, y+15);
     }
   }
 
   this.frameNumber++;
   return;
 };
-
-/**
- * @member setupDOMElements
- * Set up DOM elements, this differs for the React version
- *
- * @param parentElement String id of the parentElement or actual Div object.
- */
-Player51.prototype.setupDOMElements = function(parentElement) {
-  
-
-}
-
-
 
 /**
  * @member render
@@ -181,69 +173,99 @@ Player51.prototype.render = function(parentElement) {
   // to the rendered fully into the browser and configured in a way that
   // appropriately sizes the parent.  If and when the parent is resized, then
   // this code will not recognize that (and is not "responsive").
-  let theWidth = parent.offsetWidth;
-  let theHeight = parent.offsetHeight;
 
-  if (document.getElementById('output-preview-container') === undefined) {
-    this.eleDivVideo = document.createElement("div");
-    this.eleDivVideo.className = "p51-contained-video";
-    this.eleVideo = document.createElement("video");
-    this.eleVideo.setAttribute("width", theWidth);
-    this.eleVideo.setAttribute("height", theHeight);
-    this.eleVideo.muted = true;  // this works whereas .setAttribute does not
-    this.eleVideoSource = document.createElement("source");
-    this.eleVideoSource.setAttribute("src", this.media.src);
-    this.eleVideoSource.setAttribute("type", this.media.type);
-    parent.appendChild(this.eleDivCanvas);
+  this.eleDivVideo = document.createElement("div");
+  this.eleDivVideo.className = "p51-contained-video";
+  this.eleVideo = document.createElement("video");
+  this.eleVideo.muted = true;  // this works whereas .setAttribute does not
+  this.eleVideoSource = document.createElement("source");
+  this.eleVideoSource.setAttribute("src", this.media.src);
+  this.eleVideoSource.setAttribute("type", this.media.type);
+  this.eleVideo.appendChild(this.eleVideoSource);
+  this.eleDivVideo.appendChild(this.eleVideo);
+  parent.appendChild(this.eleDivVideo);
 
-    this.eleDivVideoControls = document.createElement("div");
-    this.eleDivVideoControls.className = "p51-video-controls";
-    this.elePlayPauseButton = document.createElement("button");
-    this.elePlayPauseButton.setAttribute("type", "button");
-    this.elePlayPauseButton.className = "p51-play-pause";
-    this.elePlayPauseButton.innerHTML = "Play";
-    this.eleSeekBar = document.createElement("input");
-    this.eleSeekBar.setAttribute("type", "range");
-    this.eleSeekBar.setAttribute("value", "0");
-    this.eleSeekBar.className = "p51-seek-bar";
-    this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-    this.eleDivVideoControls.appendChild(this.eleSeekBar);
-    parent.appendChild(this.eleDivVideoControls);
-  } else {
-    this.parent = document.getElementById('output-preview-container');
-    this.eleVideo = document.getElementById('video');
-    this.eleCanvas = document.getElementById('canvas');
-    this.elePlayPauseButton = document.getElementById('play-pause');
-    this.eleSeekBar = document.getElementById('seekbar');
-    this.eleDivVideoControls = document.getElementById('controls');
-  }
+  this.eleCanvas = document.createElement("canvas");
+
+  this.eleDivCanvas = document.createElement("div");
+  this.eleDivCanvas.className = "p51-contained-canvas";
+  this.eleDivCanvas.appendChild(this.eleCanvas);
+  parent.appendChild(this.eleDivCanvas);
+
+  this.eleDivVideoControls = document.createElement("div");
+  this.eleDivVideoControls.className = "p51-video-controls";
+  this.elePlayPauseButton = document.createElement("button");
+  this.elePlayPauseButton.setAttribute("type", "button");
+  this.elePlayPauseButton.className = "p51-play-pause";
+  this.elePlayPauseButton.innerHTML = "Play";
+  this.eleSeekBar = document.createElement("input");
+  this.eleSeekBar.setAttribute("type", "range");
+  this.eleSeekBar.setAttribute("value", "0");
+  this.eleSeekBar.className = "p51-seek-bar";
+  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
+  this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  parent.appendChild(this.eleDivVideoControls);
   
 
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
-  // this.canvasWidth = theWidth;
-  // this.canvasHeight = theHeight;
-  this.canvasContext = this.eleCanvas.getContext("2d");
-  this.canvasContext.strokeStyle = "#fff";
-  this.canvasContext.fillStyle = "#fff";
-  this.canvasContext.lineWidth = 1;
-  this.canvasContext.font = "14px sans-serif";
   let self = this;
+
+  this.eleVideo.addEventListener("loadedmetadata", function() {
+    // Get the true height/width of the video after it loads
+    let theWidth = self.eleVideo.videoWidth;
+    let theHeight = self.eleVideo.videoHeight;
+
+    parent.style.width = (self.eleVideo.videoWidth + "px");
+    parent.style.height = (self.eleVideo.videoHeight + "px");
+
+    self.eleVideo.setAttribute("width", theWidth);
+    self.eleVideo.setAttribute("height", theHeight);
+    self.eleCanvas.setAttribute("width", theWidth);
+    self.eleCanvas.setAttribute("height", theHeight);
+    // Make sure that the video does not overflow a normal screen size
+
+    if (self.eleVideo.videoWidth >= 1440) {
+      parent.style.width = "1280px";
+      parent.style.height = "720px";
+      self.eleCanvas.width = "1280";
+      self.eleCanvas.height = "720";
+      self.eleVideo.width = "1280";
+      self.eleVideo.height = "720";
+      self.canvasWidth = self.eleCanvas.width;
+      self.canvasHeight = self.eleCanvas.height;
+    } else {
+      self.eleCanvas.width = self.eleVideo.videoWidth;
+      self.eleCanvas.height = self.eleVideo.videoHeight;
+      self.frameDuration = 1.0 / self.frameRate;
+      self.canvasWidth = self.eleCanvas.width;
+      self.canvasHeight = self.eleCanvas.height;
+    }
+
+    self.canvasWidth = theWidth;
+    self.canvasHeight = theHeight;
+    self.canvasContext = self.eleCanvas.getContext("2d");
+    self.canvasContext.strokeStyle = "#fff";
+    self.canvasContext.fillStyle = "#fff";
+    self.canvasContext.lineWidth = 1;
+    self.canvasContext.font = "14px sans-serif";
+  });
+
   // Event listener for the play/pause button
   this.elePlayPauseButton.addEventListener("click", function() {
-    if (self.eleVideo.paused == true) {
+    if (self.eleVideo.paused === true) {
       // Play the video
       self.eleVideo.play();
       self.videoIsPlaying = true;
 
-      // Update the button text to 'Pause'
+      // Update the button text to "Pause"
       self.elePlayPauseButton.innerHTML = "Pause";
     } else {
       // Pause the video
       self.eleVideo.pause();
       self.videoIsPlaying = false;
 
-      // Update the button text to 'Play'
+      // Update the button text to "Play"
       self.elePlayPauseButton.innerHTML = "Play";
     }
   });
@@ -310,7 +332,7 @@ Player51.prototype.timerCallback = function() {
     return;
   }
   let cfn = this.computeFrameNumber();
-  if (cfn != this.frameNumber) {
+  if (cfn !== this.frameNumber) {
     this.frameNumber = cfn;
     this.processFrame();
   }
@@ -318,5 +340,11 @@ Player51.prototype.timerCallback = function() {
   setTimeout(function () {
       self.timerCallback();
     }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
+};
+
+
+Player51.prototype.generateBoundingBoxColor = function() {
+  let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
+  return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];
 };
 
