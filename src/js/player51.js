@@ -13,7 +13,7 @@
 
 
 // ES6 module export
-export {Player51};
+export default Player51;
 
 
 /**
@@ -35,7 +35,7 @@ function Player51(media, overlay, fps) {
   this.frameOverlay = {}; // will be used to store the labels per frame
   if (typeof(overlay) == "string") {
     this.loadOverlay(overlay);
-  } else if ( (typeof(overlay) == "object") && (overlay != null) ) {
+  } else if ( (typeof(overlay) == "object") && (overlay != null) && Object.keys(overlay).length > 0) {
     this.prepareOverlay(overlay);
   }
 
@@ -151,6 +151,18 @@ Player51.prototype.processFrame = function() {
   return;
 };
 
+/**
+ * @member setupDOMElements
+ * Set up DOM elements, this differs for the React version
+ *
+ * @param parentElement String id of the parentElement or actual Div object.
+ */
+Player51.prototype.setupDOMElements = function(parentElement) {
+  
+
+}
+
+
 
 /**
  * @member render
@@ -165,7 +177,6 @@ Player51.prototype.render = function(parentElement) {
   } else {
     parent = parentElement;
   }
-
   // Using the widths of the parent is a bit limiting: it requires the parent
   // to the rendered fully into the browser and configured in a way that
   // appropriately sizes the parent.  If and when the parent is resized, then
@@ -173,53 +184,51 @@ Player51.prototype.render = function(parentElement) {
   let theWidth = parent.offsetWidth;
   let theHeight = parent.offsetHeight;
 
-  this.eleDivVideo = document.createElement("div");
-  this.eleDivVideo.className = "p51-contained-video";
-  this.eleVideo = document.createElement("video");
-  this.eleVideo.setAttribute("width", theWidth);
-  this.eleVideo.setAttribute("height", theHeight);
-  this.eleVideo.muted = true;  // this works whereas .setAttribute does not
-  this.eleVideoSource = document.createElement("source");
-  this.eleVideoSource.setAttribute("src", this.media.src);
-  this.eleVideoSource.setAttribute("type", this.media.type);
-  this.eleVideo.appendChild(this.eleVideoSource);
-  this.eleDivVideo.appendChild(this.eleVideo);
-  parent.appendChild(this.eleDivVideo);
+  if (document.getElementById('output-preview-container') === undefined) {
+    this.eleDivVideo = document.createElement("div");
+    this.eleDivVideo.className = "p51-contained-video";
+    this.eleVideo = document.createElement("video");
+    this.eleVideo.setAttribute("width", theWidth);
+    this.eleVideo.setAttribute("height", theHeight);
+    this.eleVideo.muted = true;  // this works whereas .setAttribute does not
+    this.eleVideoSource = document.createElement("source");
+    this.eleVideoSource.setAttribute("src", this.media.src);
+    this.eleVideoSource.setAttribute("type", this.media.type);
+    parent.appendChild(this.eleDivCanvas);
 
-  this.eleDivCanvas = document.createElement("div");
-  this.eleDivCanvas.className = "p51-contained-canvas";
-  this.eleCanvas = document.createElement("canvas");
-  this.eleCanvas.setAttribute("width", theWidth);
-  this.eleCanvas.setAttribute("height", theHeight);
-  this.eleDivCanvas.appendChild(this.eleCanvas);
-  parent.appendChild(this.eleDivCanvas);
-
-  this.eleDivVideoControls = document.createElement("div");
-  this.eleDivVideoControls.className = "p51-video-controls";
-  this.elePlayPauseButton = document.createElement("button");
-  this.elePlayPauseButton.setAttribute("type", "button");
-  this.elePlayPauseButton.className = "p51-play-pause";
-  this.elePlayPauseButton.innerHTML = "Play";
-  this.eleSeekBar = document.createElement("input");
-  this.eleSeekBar.setAttribute("type", "range");
-  this.eleSeekBar.setAttribute("value", "0");
-  this.eleSeekBar.className = "p51-seek-bar";
-  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-  this.eleDivVideoControls.appendChild(this.eleSeekBar);
-  parent.appendChild(this.eleDivVideoControls);
+    this.eleDivVideoControls = document.createElement("div");
+    this.eleDivVideoControls.className = "p51-video-controls";
+    this.elePlayPauseButton = document.createElement("button");
+    this.elePlayPauseButton.setAttribute("type", "button");
+    this.elePlayPauseButton.className = "p51-play-pause";
+    this.elePlayPauseButton.innerHTML = "Play";
+    this.eleSeekBar = document.createElement("input");
+    this.eleSeekBar.setAttribute("type", "range");
+    this.eleSeekBar.setAttribute("value", "0");
+    this.eleSeekBar.className = "p51-seek-bar";
+    this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
+    this.eleDivVideoControls.appendChild(this.eleSeekBar);
+    parent.appendChild(this.eleDivVideoControls);
+  } else {
+    this.parent = document.getElementById('output-preview-container');
+    this.eleVideo = document.getElementById('video');
+    this.eleCanvas = document.getElementById('canvas');
+    this.elePlayPauseButton = document.getElementById('play-pause');
+    this.eleSeekBar = document.getElementById('seekbar');
+    this.eleDivVideoControls = document.getElementById('controls');
+  }
+  
 
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
-  this.canvasWidth = theWidth;
-  this.canvasHeight = theHeight;
+  // this.canvasWidth = theWidth;
+  // this.canvasHeight = theHeight;
   this.canvasContext = this.eleCanvas.getContext("2d");
   this.canvasContext.strokeStyle = "#fff";
   this.canvasContext.fillStyle = "#fff";
   this.canvasContext.lineWidth = 1;
   this.canvasContext.font = "14px sans-serif";
-
   let self = this;
-
   // Event listener for the play/pause button
   this.elePlayPauseButton.addEventListener("click", function() {
     if (self.eleVideo.paused == true) {
