@@ -160,6 +160,7 @@ Player51.prototype.processFrame = function() {
   return;
 };
 
+
 /**
  * @member render
  * Render a new player for this media within the DOM element provided
@@ -347,6 +348,11 @@ Player51.prototype.timerCallback = function() {
 };
 
 
+/**
+ * @member generateBoundingBoxColor
+ *
+ * Called to generate a random bounding box color to use in rendering.
+ */
 Player51.prototype.generateBoundingBoxColor = function() {
   let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
   return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];
