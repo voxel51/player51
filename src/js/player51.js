@@ -9,6 +9,7 @@
  *
  * Copyright 2017-2018, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
+ * Brandon Paris, brandon@voxel51.com
  */
 
 
@@ -48,6 +49,7 @@ function Player51(media, overlay, fps) {
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
   this.videoIsPlaying = false;
   this.boolDrawFrameNumber = false;
+  this.colorArr = {};
 };
 
 
@@ -143,12 +145,14 @@ Player51.prototype.processFrame = function() {
 
       this.canvasContext.strokeRect(x, y, w, h);
       let label = fmo.label + " [" + fmo.index + "]";
-      if (typeof(fmo.index)  !== "undefined" && typeof(this.colorArr[fmo.index]) === "undefined") {
+      console.log(this)
+      if (typeof(fmo.index) !== "undefined" &&
+          typeof(this.colorArr[fmo.index]) === "undefined") {
         this.colorArr[fmo.index] = this.generateBoundingBoxColor();
       }
-      this.ctx.strokeStyle = this.colorArr[fmo.index];
-      this.ctx.strokeRect(x, y, w, h);
-      this.ctx.fillText(label, x, y+15);
+      this.canvasContext.strokeStyle = this.colorArr[fmo.index];
+      this.canvasContext.strokeRect(x, y, w, h);
+      this.canvasContext.fillText(label, x, y+15);
     }
   }
 
@@ -205,7 +209,7 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
   parent.appendChild(this.eleDivVideoControls);
-  
+
 
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
