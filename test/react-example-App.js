@@ -29,7 +29,7 @@ class Player51Component extends Component {
   }
 
 
-  /** ComponentDidMoint
+  /** ComponentDidMount
    *
    * @method: ComponentDidMount is called once after the React Component is
    * rendered (it is actually called after the component is passed to the HTML
