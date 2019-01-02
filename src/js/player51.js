@@ -94,11 +94,76 @@ Player51.prototype.loadOverlay = function(overlayPath) {
  *
  * The overlay is represented as a dictionary of lists indexed by frame
  * numbers.
+ *
+ * Documentation about the way the rawjson can be represented
+ * Format 1 -- Object Based:
+ * {
+ *   "objects": [
+ *     {
+ *       "label": "the class/label/name of thing to show",
+ *       "index": "a unique index for the object",
+ *       "frame_number": 100, // the integer frame number for this object
+ *       "bounding_box": {
+ *         "top_left": {
+ *           "x": 0.1, // floating number in relative 0:1 coordinates
+ *           "y": 0.1, // floating number in relative 0:1 coordinates
+ *         },
+ *         "bottom_right": {
+ *           "x": 0.2, // floating number in relative 0:1 coordinates
+ *           "y": 0.2, // floating number in relative 0:1 coordinates
+ *         }
+ *       }
+ *     },
+ *     ...
+ *   ]
+ * }
+ *
+ * Format 2 -- Frame Based:
+ * {
+ *   "frames": {
+ *     "100": { // key is a string representation of the integer frame number
+ *       "frame_number": 100,  // integer frame number
+ *       "objects": {
+ *         "objects: [
+ *           ... // Each object here is like one in the Format 1
+ *         ]
+ *       }
+ *     }
+ *   }
+ * }
+ *
+ * The prepareOverlay code tries to intelligently decipher which of these
+ * formats is present in the rawjson file.
  */
 Player51.prototype.prepareOverlay = function (rawjson) {
-  for (let len = rawjson.objects.length, i=0; i< len; i++) {
-    let o = rawjson.objects[i];
 
+  // Format 1
+  if (typeof(rawjson.objects) !== "undefined") {
+    this._prepareOverlay_auxFormat1Objects(rawjson.objects);
+  }
+
+  // Format 2
+  if (typeof(rawjson.frames) !== "undefined") {
+    let frame_keys = Object.keys(rawjson.frames);
+    for (let frame_key_i in frame_keys) {
+      let frame_key = frame_keys[frame_key_i];
+      let f = rawjson.frames[frame_key];
+      this._prepareOverlay_auxFormat1Objects(f.objects.objects);
+    }
+  }
+};
+
+
+/**
+ * Helper function to parse one of the objects in the Format 1 of the overlay
+ * and add it the overlay representation.
+ *
+ * Args:
+ *   objects is an Array of Objects with each entry an object in Format 1 above.
+ */
+Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
+  for (let len = objects.length, i=0; i< len; i++) {
+    let o = objects[i];
     if (o.frame_number in this.frameOverlay) {
       let thelist = this.frameOverlay[o.frame_number];
       thelist.push(o);
@@ -109,7 +174,7 @@ Player51.prototype.prepareOverlay = function (rawjson) {
       this.frameOverlay[o.frame_number] = newlist;
     }
   }
-};
+}
 
 
 /**
