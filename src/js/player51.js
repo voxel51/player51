@@ -9,11 +9,12 @@
  *
  * Copyright 2017-2018, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
+ * Brandon Paris, brandon@voxel51.com
  */
 
 
 // ES6 module export
-export {Player51};
+export default Player51;
 
 
 /**
@@ -33,9 +34,9 @@ function Player51(media, overlay, fps) {
   this.media = media;
 
   this.frameOverlay = {}; // will be used to store the labels per frame
-  if (typeof(overlay) == "string") {
+  if (typeof(overlay) === "string") {
     this.loadOverlay(overlay);
-  } else if ( (typeof(overlay) == "object") && (overlay != null) ) {
+  } else if ( (typeof(overlay) === "object") && (overlay != null) && Object.keys(overlay).length > 0) {
     this.prepareOverlay(overlay);
   }
 
@@ -48,6 +49,7 @@ function Player51(media, overlay, fps) {
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
   this.videoIsPlaying = false;
   this.boolDrawFrameNumber = false;
+  this.colorArr = {};
 };
 
 
@@ -75,7 +77,7 @@ Player51.prototype.loadOverlay = function(overlayPath) {
 
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
+      if (this.readyState === 4 && this.status === 200) {
         let labelsObject = JSON.parse(this.responseText);
         self.prepareOverlay(labelsObject);
       }
@@ -143,6 +145,13 @@ Player51.prototype.processFrame = function() {
 
       this.canvasContext.strokeRect(x, y, w, h);
       let label = fmo.label + " [" + fmo.index + "]";
+      console.log(this)
+      if (typeof(fmo.index) !== "undefined" &&
+          typeof(this.colorArr[fmo.index]) === "undefined") {
+        this.colorArr[fmo.index] = this.generateBoundingBoxColor();
+      }
+      this.canvasContext.strokeStyle = this.colorArr[fmo.index];
+      this.canvasContext.strokeRect(x, y, w, h);
       this.canvasContext.fillText(label, x, y+15);
     }
   }
@@ -150,7 +159,6 @@ Player51.prototype.processFrame = function() {
   this.frameNumber++;
   return;
 };
-
 
 /**
  * @member render
@@ -165,19 +173,14 @@ Player51.prototype.render = function(parentElement) {
   } else {
     parent = parentElement;
   }
-
   // Using the widths of the parent is a bit limiting: it requires the parent
   // to the rendered fully into the browser and configured in a way that
   // appropriately sizes the parent.  If and when the parent is resized, then
   // this code will not recognize that (and is not "responsive").
-  let theWidth = parent.offsetWidth;
-  let theHeight = parent.offsetHeight;
 
   this.eleDivVideo = document.createElement("div");
   this.eleDivVideo.className = "p51-contained-video";
   this.eleVideo = document.createElement("video");
-  this.eleVideo.setAttribute("width", theWidth);
-  this.eleVideo.setAttribute("height", theHeight);
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
   this.eleVideoSource = document.createElement("source");
   this.eleVideoSource.setAttribute("src", this.media.src);
@@ -186,11 +189,10 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivVideo.appendChild(this.eleVideo);
   parent.appendChild(this.eleDivVideo);
 
+  this.eleCanvas = document.createElement("canvas");
+
   this.eleDivCanvas = document.createElement("div");
   this.eleDivCanvas.className = "p51-contained-canvas";
-  this.eleCanvas = document.createElement("canvas");
-  this.eleCanvas.setAttribute("width", theWidth);
-  this.eleCanvas.setAttribute("height", theHeight);
   this.eleDivCanvas.appendChild(this.eleCanvas);
   parent.appendChild(this.eleDivCanvas);
 
@@ -208,33 +210,66 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
   parent.appendChild(this.eleDivVideoControls);
 
+
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
-  this.canvasWidth = theWidth;
-  this.canvasHeight = theHeight;
-  this.canvasContext = this.eleCanvas.getContext("2d");
-  this.canvasContext.strokeStyle = "#fff";
-  this.canvasContext.fillStyle = "#fff";
-  this.canvasContext.lineWidth = 1;
-  this.canvasContext.font = "14px sans-serif";
-
   let self = this;
+
+  this.eleVideo.addEventListener("loadedmetadata", function() {
+    // Get the true height/width of the video after it loads
+    let theWidth = self.eleVideo.videoWidth;
+    let theHeight = self.eleVideo.videoHeight;
+
+    parent.style.width = (self.eleVideo.videoWidth + "px");
+    parent.style.height = (self.eleVideo.videoHeight + "px");
+
+    self.eleVideo.setAttribute("width", theWidth);
+    self.eleVideo.setAttribute("height", theHeight);
+    self.eleCanvas.setAttribute("width", theWidth);
+    self.eleCanvas.setAttribute("height", theHeight);
+    // Make sure that the video does not overflow a normal screen size
+
+    if (self.eleVideo.videoWidth >= 1440) {
+      parent.style.width = "1280px";
+      parent.style.height = "720px";
+      self.eleCanvas.width = "1280";
+      self.eleCanvas.height = "720";
+      self.eleVideo.width = "1280";
+      self.eleVideo.height = "720";
+      self.canvasWidth = self.eleCanvas.width;
+      self.canvasHeight = self.eleCanvas.height;
+    } else {
+      self.eleCanvas.width = self.eleVideo.videoWidth;
+      self.eleCanvas.height = self.eleVideo.videoHeight;
+      self.frameDuration = 1.0 / self.frameRate;
+      self.canvasWidth = self.eleCanvas.width;
+      self.canvasHeight = self.eleCanvas.height;
+    }
+
+    self.canvasWidth = theWidth;
+    self.canvasHeight = theHeight;
+    self.canvasContext = self.eleCanvas.getContext("2d");
+    self.canvasContext.strokeStyle = "#fff";
+    self.canvasContext.fillStyle = "#fff";
+    self.canvasContext.lineWidth = 1;
+    self.canvasContext.font = "14px sans-serif";
+  });
 
   // Event listener for the play/pause button
   this.elePlayPauseButton.addEventListener("click", function() {
-    if (self.eleVideo.paused == true) {
+    if (self.eleVideo.paused === true) {
       // Play the video
       self.eleVideo.play();
       self.videoIsPlaying = true;
 
-      // Update the button text to 'Pause'
+      // Update the button text to "Pause"
       self.elePlayPauseButton.innerHTML = "Pause";
     } else {
       // Pause the video
       self.eleVideo.pause();
       self.videoIsPlaying = false;
 
-      // Update the button text to 'Play'
+      // Update the button text to "Play"
       self.elePlayPauseButton.innerHTML = "Play";
     }
   });
@@ -301,7 +336,7 @@ Player51.prototype.timerCallback = function() {
     return;
   }
   let cfn = this.computeFrameNumber();
-  if (cfn != this.frameNumber) {
+  if (cfn !== this.frameNumber) {
     this.frameNumber = cfn;
     this.processFrame();
   }
@@ -309,5 +344,11 @@ Player51.prototype.timerCallback = function() {
   setTimeout(function () {
       self.timerCallback();
     }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
+};
+
+
+Player51.prototype.generateBoundingBoxColor = function() {
+  let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
+  return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];
 };
 
