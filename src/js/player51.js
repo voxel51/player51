@@ -43,7 +43,7 @@ function Player51(media, overlay, fps) {
   // initialize members to default or null values
   this.canvasWidth = null;
   this.canvasHeight = null;
-  this.frameNumber = 0;
+  this.frameNumber = undefined;
   this.frameRate = fps;
   this.frameDuration = 1.0/this.frameRate;
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
@@ -118,7 +118,7 @@ Player51.prototype.prepareOverlay = function (rawjson) {
  * Handles the rendering of a specific frame, noting that rendering has two
  * different meanings in Player51.  The Player51.render function is used to
  * actually create the Player51 and inject it into the DOM.  This
- * PLayer51.processFrame function is responsible for drawing when a new video
+ * Player51.processFrame function is responsible for drawing when a new video
  * frame has been drawn by the underlying player.
  */
 Player51.prototype.processFrame = function() {
@@ -145,7 +145,6 @@ Player51.prototype.processFrame = function() {
 
       this.canvasContext.strokeRect(x, y, w, h);
       let label = fmo.label + " [" + fmo.index + "]";
-      console.log(this)
       if (typeof(fmo.index) !== "undefined" &&
           typeof(this.colorArr[fmo.index]) === "undefined") {
         this.colorArr[fmo.index] = this.generateBoundingBoxColor();
@@ -159,6 +158,7 @@ Player51.prototype.processFrame = function() {
   this.frameNumber++;
   return;
 };
+
 
 /**
  * @member render
@@ -241,7 +241,6 @@ Player51.prototype.render = function(parentElement) {
     } else {
       self.eleCanvas.width = self.eleVideo.videoWidth;
       self.eleCanvas.height = self.eleVideo.videoHeight;
-      self.frameDuration = 1.0 / self.frameRate;
       self.canvasWidth = self.eleCanvas.width;
       self.canvasHeight = self.eleCanvas.height;
     }
@@ -347,6 +346,11 @@ Player51.prototype.timerCallback = function() {
 };
 
 
+/**
+ * @member generateBoundingBoxColor
+ *
+ * Called to generate a random bounding box color to use in rendering.
+ */
 Player51.prototype.generateBoundingBoxColor = function() {
   let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
   return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];

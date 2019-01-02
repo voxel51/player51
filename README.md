@@ -93,7 +93,7 @@ Start a simple web-server.
 
 ```
 cd /path/to/player51
-python3 -m http.server
+python2 test/httpdtester.py
 ```
 
 Then point your browser at <http://0.0.0.0:8000/test/simple.html> (note that Google Chrome will not support scrubbing in this simple web-server setting).
