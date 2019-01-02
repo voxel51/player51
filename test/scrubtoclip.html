@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Video Player Test: Scrub to Clip</title>
+    <style>
+      body {
+        background: black;
+        color:#CCCCCC; 
+      }
+      #test-container {
+        width: 640px;
+        height: 360px;
+        position: relative;
+      }
+
+      #test-container:hover {
+        opacity: .9;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Video Player Test: Scrub to Clip </h1>
+
+    <div id="test-container" />
+
+    <script type="module"> 
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Player51 Simple: Example code running.");
+
+        let player = new Player51(
+          {
+            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4#t=30,33",
+            type: "video/mp4"
+          },
+          "/test/player51-test-data/8Xxvx8V-hnc-001.json", 
+          25
+        );
+
+        console.log("Player51 created.");
+
+        player.boolDrawFrameNumber = true;
+        player.render('test-container');
+
+        console.log("Player51 rendered and ready.");
+
+      });
+    </script>
+
+    <!--
+    <video src="/test/player51-test-data/8Xxvx8V-hnc-001.mp4#t=10,15" type="video/mp4" />
+    -->
+  </body>
+</html>
