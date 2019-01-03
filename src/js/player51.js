@@ -302,7 +302,9 @@ Player51.prototype.processFrame = function() {
       }
       this.canvasContext.strokeStyle = this.colorArr[fmo.index];
       this.canvasContext.strokeRect(x, y, w, h);
-      this.canvasContext.fillText(label, x, y+15);
+      if (!this._boolThumbnailMode) {
+        this.canvasContext.fillText(label, x, y+15);
+      }
     }
   }
 
@@ -487,10 +489,12 @@ Player51.prototype.render = function(parentElement) {
  * 2. The video plays on mouse-over.
  * 3. The video is set to loop.
  * 4. The caller can associated an action with clicking anywhere on the frame.
+ * 5. Less information is visualized.
  *
  * Caller probably wants to set the size of the video via forceSize()
  */
 Player51.prototype.thumbnailMode = function() {
+  this._boolThumbnailMode = true;
 }
 
 /**
