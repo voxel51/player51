@@ -102,6 +102,7 @@ function Player51(media, overlay, fps) {
 
   // private members
   this._boolThumbnailMode = false;
+  this._thumbnailClickAction = undefined;
   this._boolForcedSize = false;
   this._boolForcedMax = false;
   this._boolLoop = false;
@@ -612,6 +613,10 @@ Player51.prototype.render = function(parentElement) {
     }
   });
 
+  if (typeof this._thumbnailClickAction !== "undefined") {
+    parent.addEventListener("click", this._thumbnailClickAction);
+  }
+
   this._isRendered = true;
 }
 
@@ -627,10 +632,15 @@ Player51.prototype.render = function(parentElement) {
  * 5. Less information is visualized.
  *
  * Caller probably wants to set the size of the video via forceSize()
+ *
+ * Args:
+ *  action: (optional) a callback function to associate with any click in the
+ *  video player.
  */
-Player51.prototype.thumbnailMode = function() {
+Player51.prototype.thumbnailMode = function(action) {
   this._boolThumbnailMode = true;
   this.loop(true);
+  this._thumbnailClickAction = action;
 }
 
 /**
