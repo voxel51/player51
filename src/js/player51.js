@@ -473,11 +473,6 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
   parent.appendChild(this.eleDivVideoControls);
 
-
-  console.log(window.getComputedStyle(this.eleDivVideo, null).getPropertyValue('padding-left'));
-  console.log(window.getComputedStyle(this.eleDivVideo, null).getPropertyValue('padding-right'));
-
-
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
   let self = this;
