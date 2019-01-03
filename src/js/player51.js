@@ -54,6 +54,8 @@
  */
 
 
+import {parseMediaFragmentsUri} from './mediafragments.js';
+
 // ES6 module export
 export default Player51;
 
@@ -102,7 +104,66 @@ function Player51(media, overlay, fps) {
   this._forcedWidth = -1;
   this._forcedHeight = -1;
   this._isRendered = false;
+
+  // check if a fragment was passed in via the media and work accordingly
+  this._hasMediaFragment = false;  // will be true if the src has a fragment
+  this._mfBeginT = null; // Time
+  this._mfEndT = null;
+  this._mfBeginF = null; // Frame
+  this._mfEndF = null;
+  this._lockToMF = false; // when we have a media fragment passed in, by
+    // default, we force the player to stay within that fragment.  If the video is
+    // looping, for example, then it will always go to the beginning of the
+    // fragment.  However, as soon as the user scrubs the video, we turn off the
+    // importance of the fragment so that the user can watch the whole video.
+    // @todo an interface component needs to be added to show that we are in a
+    // fragment and allow locking / unlocking of the fragment.
+
+  let mfParse = parseMediaFragmentsUri(this.media.src);
+
+  if (typeof mfParse.hash.t !== "undefined") {
+    this._mfBeginT = mfParse.hash.t[0].startNormalized;
+    this._mfEndT = mfParse.hash.t[0].endNormalized;
+    this._mfBeginF = this.computeFrameNumber(this._mfBeginT);
+    this._mfEndF = this.computeFrameNumber(this._mfEndT);
+    this._hasMediaFragment = true;
+    this._lockToMF = true;
+  }
 };
+
+
+/**
+ * @member checkForFragmentReset
+ *
+ * If the player has a media fragment and has exceeded the fragment, then reset
+ * it back to the beginning if we are looping, else pause the video.
+ *
+ * The default html5 video player functionality only pauses once and then does
+ * not respond to the fragment.
+ *
+ * Args: frame number current
+ * Returns: frame number after possible reset.
+ */
+Player51.prototype.checkForFragmentReset = function(fn) {
+  if ( (!this._hasMediaFragment) ||
+       (!this.videoIsPlaying) ||
+       (!this._lockToMF) ) {
+    return fn;
+  }
+
+  if (fn >= this._mfEndF) {
+    if (this._boolLoop) {
+      this.eleVideo.currentTime = this._mfBeginT;
+      this.eleVideo.play();
+      return this._mfBeginF;
+    }
+
+    this.videoIsPlaying = false;
+    this.eleVideo.pause();
+  }
+
+  return fn;
+}
 
 
 /**
@@ -111,9 +172,11 @@ function Player51(media, overlay, fps) {
  * Uses information about the currentTime from the HTML5 video player and the
  * frameRate of the video to compute the current frame number.
  */
-Player51.prototype.computeFrameNumber = function() {
-  let currentFrameNumber = this.eleVideo.currentTime * this.frameRate +
-    this.frameZeroOffset;
+Player51.prototype.computeFrameNumber = function(time) {
+  if (typeof time === "undefined") {
+    time = this.eleVideo.currentTime;
+  }
+  let currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
   return Math.floor(currentFrameNumber);
 };
 
@@ -460,21 +523,24 @@ Player51.prototype.render = function(parentElement) {
     // Update the video time
     self.eleVideo.currentTime = time;
 
+    // Unlock the fragment so the user can browse the whole video
+    self._lockToMF = false;
+
     if (self.videoIsPlaying) {
       self.elePlayPauseButton.innerHTML = "Pause";
     }
   });
 
   this.eleVideo.addEventListener("ended", function() {
-    console.log("Video ended.");
     self.videoIsPlaying = false;
     self.elePlayPauseButton.innerHTML = "Play";
   });
 
   this.eleVideo.addEventListener("pause", function () {
-    console.log("Video paused.");
     // Update the button text to "Play"
     self.elePlayPauseButton.innerHTML = "Play";
+
+    self.checkForFragmentReset(self.computeFrameNumber());
   });
 
   // Update the seek bar as the video plays
@@ -507,6 +573,7 @@ Player51.prototype.render = function(parentElement) {
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
     if (self._boolThumbnailMode) {
+      self.videoIsPlaying = true;
       self.eleVideo.play();
     } else {
       self.eleDivVideoControls.style.opacity = "0.9";
@@ -515,6 +582,7 @@ Player51.prototype.render = function(parentElement) {
 
   parent.addEventListener("mouseleave", function() {
     if (self._boolThumbnailMode) {
+      self.videoIsPlaying = false;
       self.eleVideo.pause();
     } else {
       self.eleDivVideoControls.style.opacity = "0";
@@ -539,6 +607,7 @@ Player51.prototype.render = function(parentElement) {
  */
 Player51.prototype.thumbnailMode = function() {
   this._boolThumbnailMode = true;
+  this.loop(true);
 }
 
 /**
@@ -553,6 +622,11 @@ Player51.prototype.timerCallback = function() {
     return;
   }
   let cfn = this.computeFrameNumber();
+
+  // check if we have a media fragment and should be looping
+  // if so, reset the playing location appropriately
+  cfn = this.checkForFragmentReset(cfn);
+
   if (cfn !== this.frameNumber) {
     this.frameNumber = cfn;
     this.processFrame();
