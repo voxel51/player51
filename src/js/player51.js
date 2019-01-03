@@ -474,6 +474,10 @@ Player51.prototype.render = function(parentElement) {
   parent.appendChild(this.eleDivVideoControls);
 
 
+  console.log(window.getComputedStyle(this.eleDivVideo, null).getPropertyValue('padding-left'));
+  console.log(window.getComputedStyle(this.eleDivVideo, null).getPropertyValue('padding-right'));
+
+
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
   let self = this;
@@ -511,6 +515,15 @@ Player51.prototype.render = function(parentElement) {
     self.eleCanvas.height = self.height;
     self.canvasWidth = self.width;
     self.canvasHeight = self.height;
+
+    // need to size the controls too.
+    // The controls are tuned using margins when padding exists.
+    self.eleDivVideoControls.style.width = (self.width + "px");
+    self.eleDivVideoControls.style.paddingLeft = "0px";
+    self.eleDivVideoControls.style.paddingRight = "0px";
+    self.eleDivVideoControls.style.marginLeft = self.paddingLeft;
+    self.eleDivVideoControls.style.marginRight = self.paddingLeft;
+    self.eleDivVideoControls.style.bottom = self.paddingBottom;
 
     // @todo move this elsewhere
     self.canvasContext = self.eleCanvas.getContext("2d");
