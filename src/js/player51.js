@@ -98,8 +98,10 @@ function Player51(media, overlay, fps) {
   this._boolThumbnailMode = false;
   this._boolForcedSize = false;
   this._boolForcedMax = false;
+  this._boolLoop = false;
   this._forcedWidth = -1;
   this._forcedHeight = -1;
+  this._isRendered = false;
 };
 
 
@@ -171,6 +173,24 @@ Player51.prototype.loadOverlay = function(overlayPath) {
   xmlhttp.open("GET", overlayPath, true);
   xmlhttp.send();
 };
+
+
+/**
+ * @member loop
+ *
+ * Force the video to loop.
+ */
+Player51.prototype.loop = function(boolLoop) {
+  if (typeof boolLoop === "undefined") {
+    boolLoop = true;
+  }
+
+  this._boolLoop = boolLoop;
+
+  if (this._isRendered) {
+    this.eleVideo.toggleAttribute("loop", this._boolLoop);
+  }
+}
 
 
 /**
@@ -335,6 +355,9 @@ Player51.prototype.render = function(parentElement) {
   this.eleDivVideo.className = "p51-contained-video";
   this.eleVideo = document.createElement("video");
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
+  if (this._boolLoop) {
+    this.eleVideo.toggleAttribute("loop", true);
+  }
   this.eleVideoSource = document.createElement("source");
   this.eleVideoSource.setAttribute("src", this.media.src);
   this.eleVideoSource.setAttribute("type", this.media.type);
@@ -390,8 +413,6 @@ Player51.prototype.render = function(parentElement) {
       self.height = self._forcedHeight;
     }
 
-    console.log("size is " + self.width + " x " + self.height);
-
     parent.style.width = (self.width + "px");
     parent.style.height = (self.height + "px");
 
@@ -446,6 +467,12 @@ Player51.prototype.render = function(parentElement) {
     self.elePlayPauseButton.innerHTML = "Play";
   });
 
+  this.eleVideo.addEventListener("pause", function () {
+    console.log("Video paused.");
+    // Update the button text to "Play"
+    self.elePlayPauseButton.innerHTML = "Play";
+  });
+
   // Update the seek bar as the video plays
   this.eleVideo.addEventListener("timeupdate", function() {
     // Calculate the slider value
@@ -472,12 +499,25 @@ Player51.prototype.render = function(parentElement) {
     }, false);
 
   parent.addEventListener("mouseenter", function() {
-    self.eleDivVideoControls.style.opacity = "0.9";
+    // Two different behaviors.
+    // 1.  Regular Mode: show controls.
+    // 2.  Thumbnail Mode: play video
+    if (self._boolThumbnailMode) {
+      self.eleVideo.play();
+    } else {
+      self.eleDivVideoControls.style.opacity = "0.9";
+    }
   });
 
   parent.addEventListener("mouseleave", function() {
-    self.eleDivVideoControls.style.opacity = "0";
+    if (self._boolThumbnailMode) {
+      self.eleVideo.pause();
+    } else {
+      self.eleDivVideoControls.style.opacity = "0";
+    }
   });
+
+  this._isRendered = true;
 }
 
 
