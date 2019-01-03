@@ -67,6 +67,10 @@ Note that the `build.bash` script sets a variable `NODE_ENV` to `prod` which for
 Some background information on rollup.
 - <https://code.lengstorf.com/learn-rollup-js/>
 
+# Usage Notes
+
+The container div must be set to `position: relative`.
+
 # Examples and Testing
 
 Assume you have a running python installation.  
