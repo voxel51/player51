@@ -95,6 +95,10 @@ function Player51(media, overlay, fps) {
   this.colorArr = {};
   this.width = -1;
   this.height = -1;
+  this.paddingLeft = 0;
+  this.paddingRight = 0;
+  this.paddingTop = 0;
+  this.paddingBottom = 0;
 
   // private members
   this._boolThumbnailMode = false;
@@ -400,6 +404,9 @@ Player51.prototype.processFrame = function() {
  * @member render
  * Render a new player for this media within the DOM element provided
  *
+ * Note that the player parts inherit certain properties from the parent div,
+ * such as padding.
+ *
  * @param parentElement String id of the parentElement or actual Div object.
  */
 Player51.prototype.render = function(parentElement) {
@@ -409,13 +416,23 @@ Player51.prototype.render = function(parentElement) {
   } else {
     parent = parentElement;
   }
-  // Using the widths of the parent is a bit limiting: it requires the parent
-  // to the rendered fully into the browser and configured in a way that
-  // appropriately sizes the parent.  If and when the parent is resized, then
-  // this code will not recognize that (and is not "responsive").
+
+  // this is how we get the padding
+  this.paddingLeft = window.getComputedStyle(parent, null).getPropertyValue('padding-left');
+  this.paddingRight = window.getComputedStyle(parent, null).getPropertyValue('padding-right');
+  this.paddingTop = window.getComputedStyle(parent, null).getPropertyValue('padding-top');
+  this.paddingBottom = window.getComputedStyle(parent, null).getPropertyValue('padding-bottom');
+  this.paddingLeftN = parseInt(this.paddingLeft.substr(0, this.paddingLeft.length-2));
+  this.paddingRightN = parseInt(this.paddingRight.substr(0, this.paddingRight.length-2));
+  this.paddingTopN = parseInt(this.paddingTop.substr(0, this.paddingTop.length-2));
+  this.paddingBottomN = parseInt(this.paddingBottom.substr(0, this.paddingBottom.length-2));
 
   this.eleDivVideo = document.createElement("div");
   this.eleDivVideo.className = "p51-contained-video";
+  this.eleDivVideo.style.paddingLeft = this.paddingLeft;
+  this.eleDivVideo.style.paddingRight = this.paddingRight;
+  this.eleDivVideo.style.paddingTop = this.paddingTop;
+  this.eleDivVideo.style.paddingBottom = this.paddingBottom;
   this.eleVideo = document.createElement("video");
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
   if (this._boolLoop) {
@@ -432,11 +449,17 @@ Player51.prototype.render = function(parentElement) {
 
   this.eleDivCanvas = document.createElement("div");
   this.eleDivCanvas.className = "p51-contained-canvas";
+  this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
+  this.eleDivCanvas.style.paddingRight = this.paddingRight;
+  this.eleDivCanvas.style.paddingTop = this.paddingTop;
+  this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
   this.eleDivCanvas.appendChild(this.eleCanvas);
   parent.appendChild(this.eleDivCanvas);
 
   this.eleDivVideoControls = document.createElement("div");
   this.eleDivVideoControls.className = "p51-video-controls";
+  this.eleDivVideoControls.style.paddingLeft = this.paddingLeft;
+  this.eleDivVideoControls.style.paddingRight = this.paddingRight;
   this.elePlayPauseButton = document.createElement("button");
   this.elePlayPauseButton.setAttribute("type", "button");
   this.elePlayPauseButton.className = "p51-play-pause";
@@ -456,8 +479,8 @@ Player51.prototype.render = function(parentElement) {
 
   this.eleVideo.addEventListener("loadedmetadata", function() {
     // first set height to that of the container
-    self.width = parent.offsetWidth;
-    self.height = parent.offsetHeight;
+    self.width = parent.offsetWidth - self.paddingLeftN - self.paddingRightN;
+    self.height = parent.offsetHeight - self.paddingTopN - self.paddingBottomN;
 
     // if the caller wants to maximize to native pixel resolution
     if (self._boolForcedMax) {
