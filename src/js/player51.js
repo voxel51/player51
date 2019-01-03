@@ -459,6 +459,10 @@ Player51.prototype.render = function(parentElement) {
 
     // Update the video time
     self.eleVideo.currentTime = time;
+
+    if (self.videoIsPlaying) {
+      self.elePlayPauseButton.innerHTML = "Pause";
+    }
   });
 
   this.eleVideo.addEventListener("ended", function() {
