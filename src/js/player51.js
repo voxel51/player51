@@ -7,6 +7,47 @@
  * render available annotations and markup overlayed on top of the image or
  * video.
  *
+ * Usage:
+ *
+ * There are full examples in the `test/` directory.  But a simple example of
+ * usage is here.
+   ```
+    <div id="test-container" />
+
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Player51 Simple: Example code running.");
+
+        let player = new Player51(
+          {
+            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+            type: "video/mp4"
+          },
+          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
+          25
+        );
+
+        console.log("Player51 created.");
+
+        player.render('test-container');
+
+        console.log("Player51 rendered and ready.");
+
+      });
+    </script>
+
+   ```
+
+ * Note that default behavior is to mirror the size of the enclosing container.
+ * You can, however, alter this in two ways.
+ * 1.  You can call `player.forceMaximize()` which will force the video and its
+ *      enclosing container to the "native" resolution of the video up to 720p.
+ * 2.  You can call `player.forceSize(width, height)` to force the video and
+ *      its enclosing container to the width and height you pass in.
+ * Both such calls need to be made before the render call.
+ *
  * Copyright 2017-2018, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
@@ -50,6 +91,15 @@ function Player51(media, overlay, fps) {
   this.videoIsPlaying = false;
   this.boolDrawFrameNumber = false;
   this.colorArr = {};
+  this.width = -1;
+  this.height = -1;
+
+  // private members
+  this._boolThumbnailMode = false;
+  this._boolForcedSize = false;
+  this._boolForcedMax = false;
+  this._forcedWidth = -1;
+  this._forcedHeight = -1;
 };
 
 
@@ -64,6 +114,42 @@ Player51.prototype.computeFrameNumber = function() {
     this.frameZeroOffset;
   return Math.floor(currentFrameNumber);
 };
+
+
+/**
+ * @member forceSize
+ *
+ * Forces a manual size to the video and canvas.
+ *
+ * Must be called before render; will not work dynamically.  Will not actually
+ * be effected until render is called (and the loadedmetadata handler happens)
+ */
+Player51.prototype.forceSize = function(width, height) {
+  if (this._boolForcedMax) {
+    console.log("Warning!  Both forceSize and forcedMax were called.");
+    console.log("Warning!  forceSize wins.");
+  }
+  this._boolForcedSize = true;
+  this._forcedWidth = width;
+  this._forcedHeight = height;
+}
+
+
+/**
+ * @member forceMax
+ *
+ * Forces the video to max to native video resolution up to 720p
+ *
+ * Must be called before render; will not work dynamically.  Will not actually
+ * be effected until render is called (and the loadedmetadata handler happens)
+ */
+Player51.prototype.forceMax = function(width, height) {
+  if (this._boolForcedSize) {
+    console.log("Warning!  Both forceSize and forcedMax were called.");
+    console.log("Warning!  forceSize wins.");
+  }
+  this._boolForcedMax = true;
+}
 
 
 /**
@@ -281,37 +367,42 @@ Player51.prototype.render = function(parentElement) {
   let self = this;
 
   this.eleVideo.addEventListener("loadedmetadata", function() {
-    // Get the true height/width of the video after it loads
-    let theWidth = self.eleVideo.videoWidth;
-    let theHeight = self.eleVideo.videoHeight;
+    // first set height to that of the container
+    self.width = parent.offsetWidth;
+    self.height = parent.offsetHeight;
 
-    parent.style.width = (self.eleVideo.videoWidth + "px");
-    parent.style.height = (self.eleVideo.videoHeight + "px");
+    // if the caller wants to maximize to native pixel resolution
+    if (self._boolForcedMax) {
+      self.width = self.eleVideo.videoWidth;
+      self.height = self.eleVideo.videoHeight;
 
-    self.eleVideo.setAttribute("width", theWidth);
-    self.eleVideo.setAttribute("height", theHeight);
-    self.eleCanvas.setAttribute("width", theWidth);
-    self.eleCanvas.setAttribute("height", theHeight);
-    // Make sure that the video does not overflow a normal screen size
-
-    if (self.eleVideo.videoWidth >= 1440) {
-      parent.style.width = "1280px";
-      parent.style.height = "720px";
-      self.eleCanvas.width = "1280";
-      self.eleCanvas.height = "720";
-      self.eleVideo.width = "1280";
-      self.eleVideo.height = "720";
-      self.canvasWidth = self.eleCanvas.width;
-      self.canvasHeight = self.eleCanvas.height;
-    } else {
-      self.eleCanvas.width = self.eleVideo.videoWidth;
-      self.eleCanvas.height = self.eleVideo.videoHeight;
-      self.canvasWidth = self.eleCanvas.width;
-      self.canvasHeight = self.eleCanvas.height;
+      if (self.width >= 1440) {
+        self.width = 1280;
+        self.height = 720;
+      }
     }
 
-    self.canvasWidth = theWidth;
-    self.canvasHeight = theHeight;
+    // height priority in sizing is a forced size.
+    if (self._boolForcedSize) {
+      self.width = self._forcedWidth;
+      self.height = self._forcedHeight;
+    }
+
+    console.log("size is " + self.width + " x " + self.height);
+
+    parent.style.width = (self.width + "px");
+    parent.style.height = (self.height + "px");
+
+    self.eleVideo.setAttribute("width", self.width);
+    self.eleVideo.setAttribute("height", self.height);
+    self.eleCanvas.setAttribute("width", self.width);
+    self.eleCanvas.setAttribute("height", self.height);
+    self.eleCanvas.width = self.width;
+    self.eleCanvas.height = self.height;
+    self.canvasWidth = self.width;
+    self.canvasHeight = self.height;
+
+    // @todo move this elsewhere
     self.canvasContext = self.eleCanvas.getContext("2d");
     self.canvasContext.strokeStyle = "#fff";
     self.canvasContext.fillStyle = "#fff";
@@ -387,6 +478,20 @@ Player51.prototype.render = function(parentElement) {
   });
 }
 
+
+/**
+ * @member thumbnailMode
+ *
+ * This changes the behavior of Player51 in the following way
+ * 1. The controls are never available.
+ * 2. The video plays on mouse-over.
+ * 3. The video is set to loop.
+ * 4. The caller can associated an action with clicking anywhere on the frame.
+ *
+ * Caller probably wants to set the size of the video via forceSize()
+ */
+Player51.prototype.thumbnailMode = function() {
+}
 
 /**
  * @member timerCallback
