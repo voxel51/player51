@@ -12,10 +12,6 @@
         height: 360px;
         position: relative;
       }
-
-      #test-container:hover {
-        opacity: .9;
-      }
     </style>
     <link rel="stylesheet" href="/src/css/player51.css">
   </head>
@@ -43,6 +39,7 @@
 
         console.log("Player51 created.");
 
+        //player.forceMax();  // uncomment and video will maximize to pixel resolution
         player.render('test-container');
 
         console.log("Player51 rendered and ready.");
