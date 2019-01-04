@@ -361,6 +361,13 @@ Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
  * frame has been drawn by the underlying player.
  */
 Player51.prototype.processFrame = function() {
+
+  // if we have seen this function called prior to actually setting up the
+  // data, then we need to stop and return.
+  if (typeof(this.canvasContext) === "undefined") {
+    return;
+  }
+
   // Since we are rendering on a transparent canvas, we need to clean it
   // every time.
   this.canvasContext.clearRect(0,0,this.canvasWidth, this.canvasHeight);
