@@ -637,6 +637,30 @@ Player51.prototype.render = function(parentElement) {
 
 
 /**
+ * @member resetToFragment
+ *
+ * If the player has a media fragment, reset to the initial state:
+ * - locks to the fragment
+ * - sets the scrub head to the beginning of the fragment
+ *
+ * Maintains the playing state.
+ *
+ * Args:
+ * Returns: true if reset happened
+ */
+Player51.prototype.resetToFragment = function() {
+  if (!this._hasMediaFragment) {
+    return false;
+  }
+
+  this.eleVideo.currentTime = this._mfBeginT;
+  this._lockToMF = true;
+
+  return true;
+}
+
+
+/**
  * @member thumbnailMode
  *
  * This changes the behavior of Player51 in the following way
