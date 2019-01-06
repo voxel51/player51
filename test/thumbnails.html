@@ -4,16 +4,26 @@
     <title>Player51 Video Player Example: Thumbnails</title>
     <style>
       body {
-        background: black;
-        color:#CCCCCC; 
+        background: white;
+        color:#222222; 
+        font-family: sans-serif;
+      }
+      .container {
+        width=80%;
+        display: flex;
+        background: firebrick;
+        padding: 5rem;
+        flex-direction: column;
       }
       #test-container1 {
+        flex: 0;
         width: 640px;
         height: 360px;
         position: relative;
         padding: 20px;
       }
       #test-container2 {
+        flex: 0;
         width: 640px;
         height: 360px;
         position: relative;
@@ -33,9 +43,10 @@
     In thumbnail mode, the Player51 will just play a video and invoke a 
     configurable action upon being clicked.
 
-    <div id="test-container1"></div>
-
-    <div id="test-container2"></div>
+    <div class="container">
+      <div id="test-container1"></div>
+      <div id="test-container2"></div>
+    </div>
 
     <script type="module"> 
       import Player51 from '/src/js/player51.js';
@@ -74,6 +85,7 @@
         console.log("Second Player51 created.");
 
         player2.thumbnailMode(function(){console.log("CLICKED 2!");});
+        player2.boolDrawTimestamp = true;
         player2.forceSize(160, 90);
         //player2.forceSize(320, 180);
         player2.render('test-container2');

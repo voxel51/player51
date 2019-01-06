@@ -92,13 +92,17 @@ function Player51(media, overlay, fps) {
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
   this.videoIsPlaying = false;
   this.boolDrawFrameNumber = false;
-  this.colorArr = {};
+  this.boolDrawTimestamp = false;  // draw time indicator when playing
   this.width = -1;
   this.height = -1;
   this.paddingLeft = 0;
   this.paddingRight = 0;
   this.paddingTop = 0;
   this.paddingBottom = 0;
+
+  // some properties for drawing
+  this.colorArr = {};
+  this.metadataOverlayBGColor = "rgba(33, 33, 55, 0.6)";
 
   // private members
   this._boolThumbnailMode = false;
@@ -184,6 +188,36 @@ Player51.prototype.computeFrameNumber = function(time) {
   let currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
   return Math.floor(currentFrameNumber);
 };
+
+
+/**
+ * @member currentTimestamp
+ *
+ * Retrieves the current time  of the video being played in a human-readable
+ * format.
+ */
+Player51.prototype.currentTimestamp = function(decimals=1) {
+  let numSeconds = this.eleVideo.currentTime;
+  let hours = Math.floor(numSeconds / 3600);
+  numSeconds = numSeconds % 3600;
+  let minutes = Math.floor(numSeconds / 60);
+  let seconds = numSeconds % 60;
+
+  return this._seconds_to_hhmmss_aux(hours) + ":" +
+         this._seconds_to_hhmmss_aux(minutes) + ":" +
+         this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
+}
+Player51.prototype._seconds_to_hhmmss_aux = function(number) {
+  let str = '';
+  if (number == 0) {
+    str = '00';
+  } else if (number < 10) {
+    str += '0' + number;
+  } else {
+    str = `${number}`;
+  }
+  return str;
+}
 
 
 /**
@@ -359,6 +393,9 @@ Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
  * actually create the Player51 and inject it into the DOM.  This
  * Player51.processFrame function is responsible for drawing when a new video
  * frame has been drawn by the underlying player.
+ *
+ * @todo need to use double-buffering instead of rendering direct to the
+ * canvas to avoid flickering.
  */
 Player51.prototype.processFrame = function() {
 
@@ -370,12 +407,35 @@ Player51.prototype.processFrame = function() {
 
   // Since we are rendering on a transparent canvas, we need to clean it
   // every time.
+  // @todo double-buffering
   this.canvasContext.clearRect(0,0,this.canvasWidth, this.canvasHeight);
 
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.boolDrawFrameNumber) {
     this.canvasContext.fillText(this.frameNumber, 15, 30, 70);
+  }
+
+  if (this.boolDrawTimestamp) {
+    // @todo better handling of the context paintbrush styles
+    let fontheight = parseInt(0.1*this.canvasHeight);
+
+    let hhmmss = this.currentTimestamp();
+    let tw = this.canvasContext.measureText(hhmmss).width;
+    let pad = 4;
+    let pad2 = 2; // pad divided by 2
+    let w = tw + pad + pad;
+    let h = fontheight + pad + pad;
+    let x = 4;
+    let y = this.canvasHeight - 4 - pad - pad - fontheight;
+
+    this.canvasContext.fillStyle = this.metadataOverlayBGColor;
+    this.canvasContext.fillRect(x, y, w, h);
+
+    this.canvasContext.font = `${fontheight}px sans-serif`;
+    this.canvasContext.fillStyle = "rgba(255, 255, 255, 1.0)";
+
+    this.canvasContext.fillText(hhmmss, x+pad, y+pad+fontheight-pad2, tw+8);
   }
 
   if (this.frameNumber in this.frameOverlay) {
