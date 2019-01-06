@@ -489,6 +489,13 @@ Player51.prototype.render = function(parentElement) {
     self.width = parent.offsetWidth - self.paddingLeftN - self.paddingRightN;
     self.height = parent.offsetHeight - self.paddingTopN - self.paddingBottomN;
 
+    // We cannot just take the window dimensions because the aspect ratio of
+    // the video must be preserved.
+    // Preservation is based on maintaining the height of the parent.
+    let aspectV = self.eleVideo.videoWidth / self.eleVideo.videoHeight;
+
+    self.width = self.height * aspectV;
+
     // if the caller wants to maximize to native pixel resolution
     if (self._boolForcedMax) {
       self.width = self.eleVideo.videoWidth;
@@ -633,6 +640,30 @@ Player51.prototype.render = function(parentElement) {
   }
 
   this._isRendered = true;
+}
+
+
+/**
+ * @member resetToFragment
+ *
+ * If the player has a media fragment, reset to the initial state:
+ * - locks to the fragment
+ * - sets the scrub head to the beginning of the fragment
+ *
+ * Maintains the playing state.
+ *
+ * Args:
+ * Returns: true if reset happened
+ */
+Player51.prototype.resetToFragment = function() {
+  if (!this._hasMediaFragment) {
+    return false;
+  }
+
+  this.eleVideo.currentTime = this._mfBeginT;
+  this._lockToMF = true;
+
+  return true;
 }
 
 
