@@ -92,7 +92,7 @@ function Player51(media, overlay, fps) {
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
   this.videoIsPlaying = false;
   this.boolDrawFrameNumber = false;
-  this.boolDrawHHMMSS = false;  // draw time indicator when playing
+  this.boolDrawTimestamp = false;  // draw time indicator when playing
   this.width = -1;
   this.height = -1;
   this.paddingLeft = 0;
@@ -191,17 +191,17 @@ Player51.prototype.computeFrameNumber = function(time) {
 
 
 /**
- * @member currentHHMMSS
+ * @member currentTimestamp
  *
  * Retrieves the current time  of the video being played in a human-readable
  * format.
  */
-Player51.prototype.currentHHMMSS = function(decimals=1) {
-  let num_seconds = this.eleVideo.currentTime;
-  let hours = Math.floor(num_seconds / 3600);
-  num_seconds = num_seconds % 3600;
-  let minutes = Math.floor(num_seconds / 60);
-  let seconds = num_seconds % 60;
+Player51.prototype.currentTimestamp = function(decimals=1) {
+  let numSeconds = this.eleVideo.currentTime;
+  let hours = Math.floor(numSeconds / 3600);
+  numSeconds = numSeconds % 3600;
+  let minutes = Math.floor(numSeconds / 60);
+  let seconds = numSeconds % 60;
 
   return this._seconds_to_hhmmss_aux(hours) + ":" +
          this._seconds_to_hhmmss_aux(minutes) + ":" +
@@ -416,11 +416,11 @@ Player51.prototype.processFrame = function() {
     this.canvasContext.fillText(this.frameNumber, 15, 30, 70);
   }
 
-  if (this.boolDrawHHMMSS) {
+  if (this.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
     let fontheight = parseInt(0.1*this.canvasHeight);
 
-    let hhmmss = this.currentHHMMSS();
+    let hhmmss = this.currentTimestamp();
     let tw = this.canvasContext.measureText(hhmmss).width;
     let pad = 4;
     let pad2 = 2; // pad divided by 2
