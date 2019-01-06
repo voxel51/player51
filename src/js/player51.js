@@ -489,6 +489,13 @@ Player51.prototype.render = function(parentElement) {
     self.width = parent.offsetWidth - self.paddingLeftN - self.paddingRightN;
     self.height = parent.offsetHeight - self.paddingTopN - self.paddingBottomN;
 
+    // We cannot just take the window dimensions because the aspect ratio of
+    // the video must be preserved.
+    // Preservation is based on maintaining the height of the parent.
+    let aspectV = self.eleVideo.videoWidth / self.eleVideo.videoHeight;
+
+    self.width = self.height * aspectV;
+
     // if the caller wants to maximize to native pixel resolution
     if (self._boolForcedMax) {
       self.width = self.eleVideo.videoWidth;
