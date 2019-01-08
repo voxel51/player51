@@ -750,6 +750,8 @@ Player51.prototype.render = function(parentElement) {
     if (self._boolThumbnailMode) {
       self.videoIsPlaying = false;
       self.eleVideo.pause();
+      // clear things we do not want to render any more
+      self.canvasContext.clearRect(0,0,self.canvasWidth, self.canvasHeight);
     } else {
       self.eleDivVideoControls.style.opacity = "0";
     }
