@@ -48,6 +48,11 @@
  *      its enclosing container to the width and height you pass in.
  * Both such calls need to be made before the render call.
  *
+ * TODO: implement an abstraction to for the overlay rendering.  Currently it
+ * is directly tied to a canvas.  But, one can consider implementing this via
+ * div/DOM rendering and bringing the full power of CSS to bear on the
+ * overlays, including animation.
+ *
  * Copyright 2017-2018, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
@@ -77,15 +82,26 @@ function Player51(media, overlay, fps) {
   this.media = media;
 
   this.frameOverlay = {}; // will be used to store the labels per frame
-  if (typeof(overlay) === "string") {
+  // we cannot prepare the overlay before the player is rendered (canvas, etc.)
+  // these are two separate things (can be means data is loaded)
+  this._overlayCanBePrepared = true;
+  this._isOverlayPrepared = false;
+  if ((overlay === null) || (typeof(overlay) === "undefined")) {
+    this._overlayURL = null;
+    this._overlayCanBePrepared = false;
+  } else if (typeof(overlay) === "string") {
+    this._overlayURL = overlay;
+    this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
   } else if ( (typeof(overlay) === "object") && (overlay != null) && Object.keys(overlay).length > 0) {
-    this.prepareOverlay(overlay);
+    this._overlayURL = undefined;
+    this._overlayData = overlay;
   }
 
   // initialize members to default or null values
   this.canvasWidth = null;
   this.canvasHeight = null;
+  this.canvasContext = undefined;
   this.frameNumber = undefined;
   this.frameRate = fps;
   this.frameDuration = 1.0/this.frameRate;
@@ -101,7 +117,7 @@ function Player51(media, overlay, fps) {
   this.paddingBottom = 0;
 
   // some properties for drawing
-  this.metadataOverlayBGColor = "rgba(33, 33, 55, 0.6)";
+  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
 
   // private members
   this._boolThumbnailMode = false;
@@ -114,6 +130,7 @@ function Player51(media, overlay, fps) {
   this._forcedWidth = -1;
   this._forcedHeight = -1;
   this._isRendered = false;
+  this._isSizePrepared = false;
   this._isDataLoaded = false;
 
   // set via poster(); used to show an image while the video itself is loading
@@ -159,7 +176,7 @@ Player51.prototype.autoplay = function(boolAutoplay) {
 
   this._boolAutoplay = boolAutoplay;
 
-  if (this._isRendered) {
+  if (this._isRendered && this._isSizePrepared) {
     this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
   }
 }
@@ -288,11 +305,15 @@ Player51.prototype.forceMax = function(width, height) {
 Player51.prototype.loadOverlay = function(overlayPath) {
   let self = this;
 
+  this._isOverlayPrepared = false;
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
       if (this.readyState === 4 && this.status === 200) {
-        let labelsObject = JSON.parse(this.responseText);
-        self.prepareOverlay(labelsObject);
+        self._overlayData = JSON.parse(this.responseText);
+        self._overlayCanBePrepared = true;
+        if ((!self._isOverlayPrepared) && self._isRendered && self._isSizePrepared) {
+          self.prepareOverlay(self._overlayData);
+        }
       }
   };
   xmlhttp.open("GET", overlayPath, true);
@@ -312,7 +333,7 @@ Player51.prototype.loop = function(boolLoop) {
 
   this._boolLoop = boolLoop;
 
-  if (this._isRendered) {
+  if (this._isRendered && this._isSizePrepared) {
     this.eleVideo.toggleAttribute("loop", this._boolLoop);
   }
 }
@@ -353,6 +374,14 @@ Player51.prototype.poster = function(url) {
  *           "y": 0.2, // floating number in relative 0:1 coordinates
  *         }
  *       }
+ *       "attrs": {
+ *         "attrs": [
+ *           {
+ *             "value": "string value",
+ *             "confidence: 0.5 // numeric confidence
+ *           }
+ *         ]
+ *       }
  *     },
  *     ...
  *   ]
@@ -374,8 +403,15 @@ Player51.prototype.poster = function(url) {
  *
  * The prepareOverlay code tries to intelligently decipher which of these
  * formats is present in the rawjson file.
+ *
+ * Noting potential race condition without using semaphors here
  */
 Player51.prototype.prepareOverlay = function (rawjson) {
+
+  if (this._isOverlayPrepared) {
+    return;
+  }
+  this._isOverlayPrepared = true;
 
   // Format 1
   if (typeof(rawjson.objects) !== "undefined") {
@@ -388,7 +424,14 @@ Player51.prototype.prepareOverlay = function (rawjson) {
     for (let frame_key_i in frame_keys) {
       let frame_key = frame_keys[frame_key_i];
       let f = rawjson.frames[frame_key];
-      this._prepareOverlay_auxFormat1Objects(f.objects.objects);
+      if (typeof(f.objects) !== "undefined") {
+        this._prepareOverlay_auxFormat1Objects(f.objects.objects);
+      }
+      if (typeof(f.attrs !== "undefined")) {
+        let o = new FrameAttributesOverlay(f.attrs, this)
+        o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
+        this._prepareOverlay_auxCheckAdd(o, parseInt(frame_key_i));
+      }
     }
   }
 };
@@ -403,18 +446,44 @@ Player51.prototype.prepareOverlay = function (rawjson) {
  */
 Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
   for (let len = objects.length, i=0; i< len; i++) {
-    let o = new ObjectOverlay(objects[i]);
+    let o = new ObjectOverlay(objects[i], this);
     o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
-    if (o.frame_number in this.frameOverlay) {
-      let thelist = this.frameOverlay[o.frame_number];
-      thelist.push(o);
-      this.frameOverlay[o.frame_number] = thelist;
-    } else {
-      // this the first time we are seeing the frame
-      let newlist = [o]
-      this.frameOverlay[o.frame_number] = newlist;
-    }
+    this._prepareOverlay_auxCheckAdd(o);
   }
+}
+
+/**
+ * Add the overlay to the set.
+ *
+ * @arguments
+ *  o the Overlay instance
+ *  fn optional is the frame numnber (if not provided, then the overlay o needs
+ *  a .frame_number propery.
+ */
+Player51.prototype._prepareOverlay_auxCheckAdd = function(o, fn=-1) {
+  if (fn==-1) {
+    fn = o.frame_number;
+  }
+  if (fn in this.frameOverlay) {
+    let thelist = this.frameOverlay[fn];
+    thelist.push(o);
+    this.frameOverlay[fn] = thelist;
+  } else {
+    // this the first time we are seeing the frame
+    let newlist = [o]
+    this.frameOverlay[fn] = newlist;
+  }
+}
+
+/**
+ * @member checkFontHeight
+ */
+Player51.prototype.checkFontHeight = function(h) {
+  if (h == 0) {
+    console.log('PLAYER51 WARN: fontheight 0');
+    return 10;
+  }
+  return h;
 }
 
 
@@ -432,12 +501,7 @@ Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
  */
 Player51.prototype.processFrame = function() {
 
-  // if we have seen this function called prior to actually setting up the
-  // data, then we need to stop and return.
-  if (typeof(this.canvasContext) === "undefined") {
-    console.log('PLAYER51 WARN: processFrame called before a context was available');
-    return;
-  }
+  this.setupCanvasContext();
 
   // Since we are rendering on a transparent canvas, we need to clean it
   // every time.
@@ -452,7 +516,14 @@ Player51.prototype.processFrame = function() {
 
   if (this.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
-    let fontheight = parseInt(0.1*this.canvasHeight);
+    // working on a new way of forcing certain font sizes
+    let fontheight = 24;
+    let fh_in_window = fontheight / this.canvasMultiplier;
+    if (fh_in_window < 12) {
+      fontheight = 8 * this.canvasMultiplier;
+    }
+    fontheight = this.checkFontHeight(fontheight);
+    this.canvasContext.font = `${fontheight}px sans-serif`;
 
     let hhmmss = this.currentTimestamp();
     let tw = this.canvasContext.measureText(hhmmss).width;
@@ -460,23 +531,23 @@ Player51.prototype.processFrame = function() {
     let pad2 = 2; // pad divided by 2
     let w = tw + pad + pad;
     let h = fontheight + pad + pad;
-    let x = 4;
-    let y = this.canvasHeight - 4 - pad - pad - fontheight;
+    let x = 10;
+    let y = this.canvasHeight - 10 - pad - pad - fontheight;
 
     this.canvasContext.fillStyle = this.metadataOverlayBGColor;
     this.canvasContext.fillRect(x, y, w, h);
 
-    this.canvasContext.font = `${fontheight}px sans-serif`;
-    this.canvasContext.fillStyle = "rgba(255, 255, 255, 1.0)";
-
+    this.canvasContext.fillStyle = colorGenerator.white;
     this.canvasContext.fillText(hhmmss, x+pad, y+pad+fontheight-pad2, tw+8);
   }
 
-  if (this.frameNumber in this.frameOverlay) {
-    let fm = this.frameOverlay[this.frameNumber];
+  if (this._isOverlayPrepared) {
+    if (this.frameNumber in this.frameOverlay) {
+      let fm = this.frameOverlay[this.frameNumber];
 
-    for (let len = fm.length, i=0; i<len; i++) {
-      fm[i].draw(this.canvasContext);
+      for (let len = fm.length, i=0; i<len; i++) {
+        fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
+      }
     }
   }
 
@@ -679,6 +750,8 @@ Player51.prototype.render = function(parentElement) {
     if (self._boolThumbnailMode) {
       self.videoIsPlaying = false;
       self.eleVideo.pause();
+      // clear things we do not want to render any more
+      self.canvasContext.clearRect(0,0,self.canvasWidth, self.canvasHeight);
     } else {
       self.eleDivVideoControls.style.opacity = "0";
     }
@@ -689,6 +762,9 @@ Player51.prototype.render = function(parentElement) {
   }
 
   this._isRendered = true;
+  if ((this._isSizePrepared) && (this._overlayCanBePrepared) && (!this._isOverlayPrepared)) {
+    this.prepareOverlay(this._overlayData);
+  }
 }
 
 /**
@@ -860,6 +936,7 @@ Player51.prototype.updateSizeAndPadding = function() {
   this.eleCanvas.setAttribute("height", canvasHeight);
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
+  this.canvasMultiplier = canvasWidth / this.width;
 
   this.parent.setAttribute("width", this.width);
   this.parent.setAttribute("height", this.height);
@@ -958,6 +1035,10 @@ Player51.prototype.updateSizeAndPadding = function() {
     this.eleDivVideoControls.style.left = this.paddingLeft;
   }
 
+  this._isSizePrepared = true;
+  if ((this._isRendered) && (this._overlayCanBePrepared) && (!this._isOverlayPrepared)) {
+    this.prepareOverlay(this._overlayData);
+  }
 }
 
 
@@ -1004,8 +1085,7 @@ ColorGenerator.prototype._generateColorSet = function(n=36) {
   this._colorSet = new Array(n);
   for (let i=0;i<n;i++) {
     this._colorSet[i] = (
-      `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA}`);
-    console.log(this._colorSet[i]);
+      `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`);
   }
 }
 
@@ -1035,11 +1115,147 @@ let colorGenerator = new ColorGenerator();
 function Overlay()
 {
 }
-Overlay.prototype.draw = function(context) {
+Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   console.log('ERROR: draw called on abstract type');
 }
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   console.log('ERROR: setup called on abstract type');
+}
+
+
+/**
+ * A Class for rendering an FrameAttributesOverlay on the Video
+ *
+ * @argument d is an array with the following structure
+ *    [
+ *      "name": "name of the attribute",
+ *      "value": "value for the attribute",
+ *      "confidence": confidence of the attribute
+ *    ]
+ *
+ */
+function FrameAttributesOverlay(d, player)
+{
+  Overlay.call(this);
+
+  this.player = player;
+
+  this.attrs = d.attrs;
+  this.attrText = null; // will store a list of strings (one for each object in d.attrs)
+
+  this.attrFontHeight = null;
+  this.maxAttrTextWidth = -1;
+
+  // Location and Size to draw these
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+  this.textPadder = null;
+}
+FrameAttributesOverlay.prototype = Object.create(Overlay.prototype);
+FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
+
+/**
+ * @method setup
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @constructor
+ */
+FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  if (typeof(this.attrs) !== undefined) {
+    this._parseAttrs();
+  }
+
+  this.attrFontHeight = Math.min(20, 0.09*canvasHeight);
+  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
+  // this is *0.4 instead of / 2 because it looks better
+  this.textPadder = 10;
+
+  this.x = this.textPadder;
+  this.y = this.textPadder;
+
+  // this.w is set up by the _setupWidths function
+
+  this.h = this.attrText.length*(this.attrFontHeight+this.textPadder) + this.textPadder;
+
+  if (typeof(context) === "undefined") {
+    return;
+  }
+
+  this._setupWidths(context, canvasWidth, canvasHeight);
+}
+
+/**
+ * @method _parseAttrs
+ *
+ * Private method to parse the attributes objects provided at creation and set
+ * them up as renderable strings for the overlay.
+ */
+FrameAttributesOverlay.prototype._parseAttrs = function () {
+
+  if (this.attrText === null) {
+    this.attrText = new Array(this.attrs.length);
+  }
+
+  for (let len=this.attrs.length, a=0;a<len;a++) {
+    let at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
+    this.attrText[a] = at.replace(new RegExp('_', 'g'), ' ');
+  }
+}
+
+FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth, canvasHeight) {
+  context.font = `${this.attrFontHeight}px sans-serif`;
+  let mw = 0;
+  for (let a=0;a<this.attrText.length;a++) {
+    let aw = context.measureText(this.attrText[a]).width;
+    if (aw == 0) {
+      console.log(`PLAYER51 WARN: rendering context broken`);
+      return;
+    }
+    if (aw > mw) {
+      mw = aw;
+    }
+  }
+  this.maxAttrTextWidth = mw;
+
+  this.w = this.maxAttrTextWidth + 2*this.textPadder;
+}
+
+/** @method draw
+ *
+ * Basic rendering function for drawing the overlay instance.
+ */
+FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
+  if (typeof(context) === "undefined") {
+    return;
+  }
+
+  if (this.w === null) {
+    this._setupWidths(context, canvasWidth, canvasHeight);
+    // If something went wrong in trying to estimate the sizes of things, then
+    // we still cannot draw.
+    if (this.w <= 0) {
+      console.log(`PLAYER51 WARN: FAO draw before setup; invalid canvas`);
+      return;
+    }
+  }
+
+  if (!this.player._boolThumbnailMode) {
+    context.fillStyle = this.player.metadataOverlayBGColor;
+    context.fillRect(this.x, this.y, this.w, this.h);
+
+    context.font = `${this.attrFontHeight}px sans-serif`;
+    context.fillStyle = colorGenerator.white;
+
+    // Rendering y is at the baseline of the text.  Handle this by adding
+    // one row (attrFontHeight and textPadder)
+    for (let a=0;a<this.attrText.length;a++) {
+      context.fillText(this.attrText[a],
+        this.x + this.textPadder,
+        this.y + (a+1)*(this.attrFontHeight + this.textPadder));
+    }
+  }
 }
 
 
@@ -1061,9 +1277,11 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
  *         }
  *       }
  */
-function ObjectOverlay(d)
+function ObjectOverlay(d, player)
 {
   Overlay.call(this);
+
+  this.player = player;
 
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
@@ -1072,6 +1290,11 @@ function ObjectOverlay(d)
 
   this.frame_number = d.frame_number;
   this.bounding_box = d.bounding_box;
+
+  this._attrs = d.attrs.attrs;
+  this.attrText = null;
+  this.attrTextWidth = -1;
+  this.attrFontHeight = null;
 
   this.x = null;
   this.y = null;
@@ -1091,13 +1314,93 @@ function ObjectOverlay(d)
 ObjectOverlay.prototype = Object.create(Overlay.prototype);
 ObjectOverlay.prototype.constructor = ObjectOverlay;
 
+/**
+ * @method setup
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @constructor
+ */
+ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  if (typeof(this._attrs) !== undefined) {
+    this._parseAttrs();
+  }
 
-ObjectOverlay.prototype.draw = function(context) {
+  this.x = this.bounding_box.top_left.x * canvasWidth;
+  this.y = this.bounding_box.top_left.y * canvasHeight;
+  this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) * canvasWidth;
+  this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) * canvasHeight;
+  this.color = colorGenerator.color(this.index);
+
+  this.headerFontHeight = Math.min(20, 0.09*canvasHeight);
+  this.headerFontHeight = this.player.checkFontHeight(this.headerFontHeight);
+  this.attrFontHeight = Math.min(18, 0.088*canvasHeight);
+  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
+  this.headerHeight = Math.min(26, 0.13*canvasHeight);
+  // this is *0.4 instead of / 2 because it looks better
+  this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
+
+  if (typeof(context) === "undefined") {
+    return;
+  }
+
+  this._setupFontWidths(context, canvasWidth, canvasHeight);
+}
+
+ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth, canvasHeight) {
+  context.font = `${this.headerFontHeight}px sans-serif`;
+  this.labelTextWidth = context.measureText(this.labelUpper).width;
+  this.indexTextWidth = context.measureText(this.indexStr).width;
+
+  context.font = `${this.attrFontHeight}px sans-serif`;
+  this.attrFontWidth = context.measureText(this.attrText).width;
+
+  if ((this.labelTextWidth + this.indexTextWidth + this.labelIndexPadding + 2*this.textPadder) <= this.w) {
+    this.headerWidth = this.w;
+  } else {
+    this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2*this.textPadder + this.labelIndexPadding;
+  }
+}
+
+/**
+ * @method _parseAttrs
+ *
+ * Private method to parse the attributes objects provided at creation and set
+ * them up as a renderable string for the overlay.
+ */
+ObjectOverlay.prototype._parseAttrs = function (attrs) {
+  if (typeof(attrs) === "undefined") {
+    attrs = this._attrs;
+  }
+  if (this.attrText === null) {
+    this.attrText = '';
+  }
+  for (let a=0;a<attrs.length;a++) {
+    this.attrText = this.attrText + `${attrs[a].value}`;
+    if (a < attrs.length-1) {
+      this.attrText = this.attrText + ', ';
+    }
+  }
+  this.attrText = this.attrText.replace(new RegExp('_', 'g'), ' ');
+}
+
+/** @method draw
+ *
+ * Basic rendering function for drawing the overlay instance.
+ */
+ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
+  if (typeof(context) === "undefined") {
+    return;
+  }
+
+  if (this.labelTextWidth === null) {
+    this._setupFontWidths(context, canvasWidth, canvasHeight);
+  }
+
   context.strokeStyle = this.color;
   context.fillStyle = this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
-  if (!this._boolThumbnailMode) {
+  if (!this.player._boolThumbnailMode) {
     // fill and stroke to account for line thickness variation
     context.strokeRect(this.x, this.y - this.headerHeight,
       this.headerWidth, this.headerHeight);
@@ -1112,29 +1415,14 @@ ObjectOverlay.prototype.draw = function(context) {
     context.fillText(this.indexStr,
       this.x + this.headerWidth - 4*this.textPadder - this.indexTextWidth,
       this.y - this.textPadder);
+
+    context.font = `${this.attrFontHeight}px sans-serif`;
+    if ((typeof(this.attrFontWidth) === "undefined") ||
+        (this.attrFontWidth === null)) {
+      this.attrFontWidth = context.measureText(this.attrText).width;
+    }
+    context.fillText(this.attrText,
+      this.x + this.textPadder,
+      this.y + this.attrFontHeight + 3*this.textPadder);
   }
 }
-
-ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-  this.x = this.bounding_box.top_left.x * canvasWidth;
-  this.y = this.bounding_box.top_left.y * canvasHeight;
-  this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) * canvasWidth;
-  this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) * canvasHeight;
-  this.color = colorGenerator.color(this.index);
-
-  this.headerFontHeight = Math.min(20, 0.9*canvasHeight);
-  this.headerHeight = Math.min(26, 0.13*canvasHeight);
-  // this is *0.4 instead of / 2 because it looks better
-  this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
-
-  context.font = `${this.fontHeight}px sans-serif`;
-  this.labelTextWidth = context.measureText(this.labelUpper).width;
-  this.indexTextWidth = context.measureText(this.indexStr).width;
-
-  if ((this.labelTextWidth + this.indexTextWidth + this.labelIndexPadding + 2*this.textPadder) <= this.w) {
-    this.headerWidth = this.w;
-  } else {
-    this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2*this.textPadder + this.labelIndexPadding;
-  }
-}
-
