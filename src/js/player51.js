@@ -59,6 +59,8 @@ import {parseMediaFragmentsUri} from './mediafragments.js';
 // ES6 module export
 export default Player51;
 
+// Global Objects Needed in this Module;
+let colorGenerator = new ColorGenerator();
 
 /**
  * Player51 Class Definition
@@ -101,7 +103,6 @@ function Player51(media, overlay, fps) {
   this.paddingBottom = 0;
 
   // some properties for drawing
-  this.colorArr = {};
   this.metadataOverlayBGColor = "rgba(33, 33, 55, 0.6)";
 
   // private members
@@ -404,7 +405,8 @@ Player51.prototype.prepareOverlay = function (rawjson) {
  */
 Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
   for (let len = objects.length, i=0; i< len; i++) {
-    let o = objects[i];
+    let o = new ObjectOverlay(objects[i]);
+    o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
     if (o.frame_number in this.frameOverlay) {
       let thelist = this.frameOverlay[o.frame_number];
       thelist.push(o);
@@ -476,24 +478,7 @@ Player51.prototype.processFrame = function() {
     let fm = this.frameOverlay[this.frameNumber];
 
     for (let len = fm.length, i=0; i<len; i++) {
-      let fmo = fm[i];
-
-      let x = fmo.bounding_box.top_left.x * this.canvasWidth;
-      let y = fmo.bounding_box.top_left.y * this.canvasHeight;
-      let w = (fmo.bounding_box.bottom_right.x - fmo.bounding_box.top_left.x) * this.canvasWidth;
-      let h = (fmo.bounding_box.bottom_right.y - fmo.bounding_box.top_left.y) * this.canvasHeight;
-
-      this.canvasContext.strokeRect(x, y, w, h);
-      let label = fmo.label + " [" + fmo.index + "]";
-      if (typeof(fmo.index) !== "undefined" &&
-          typeof(this.colorArr[fmo.index]) === "undefined") {
-        this.colorArr[fmo.index] = this.generateBoundingBoxColor();
-      }
-      this.canvasContext.strokeStyle = this.colorArr[fmo.index];
-      this.canvasContext.strokeRect(x, y, w, h);
-      if (!this._boolThumbnailMode) {
-        this.canvasContext.fillText(label, x, y+15);
-      }
+      fm[i].draw(this.canvasContext);
     }
   }
 
@@ -954,15 +939,109 @@ Player51.prototype.updateSizeAndPadding = function() {
 }
 
 
+/**
+ * A Class to encapsulate the creation of suitable colors for drawing the
+ * overlays and maintaining their identity over the entire video.
+ */
+function ColorGenerator()
+{
+  // member will store all colors created
+  this.colors = {};
+}
 
+/**
+ * @member color
+ *
+ * Provide a color based on an index.
+ */
+ColorGenerator.prototype.color = function(index) {
+  if (index in this.colors) {
+    return this.colors[index];
+  } else {
+    this.colors[index] = this.generateNewColor();
+  }
+}
 
 /**
  * @member generateBoundingBoxColor
  *
  * Called to generate a random bounding box color to use in rendering.
  */
-Player51.prototype.generateBoundingBoxColor = function() {
+ColorGenerator.prototype.generateNewColor = function() {
   let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
   return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];
 };
+
+
+/**
+ * A Class defining the generic interface for how to render overlays on the
+ * video.
+ *
+ * Each sub-class must overload the setup and the draw functions.
+ */
+function Overlay()
+{
+}
+Overlay.prototype.draw = function(context) {
+  console.log('ERROR: draw called on abstract type');
+}
+Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  console.log('ERROR: setup called on abstract type');
+}
+
+
+/**
+ * A Class for rendering an Overlay on the Video
+ *
+ * @argument d is a dictionary with the following structure
+ *       "label": "the class/label/name of thing to show",
+ *       "index": "a unique index for the object",
+ *       "frame_number": 100, // the integer frame number for this object
+ *       "bounding_box": {
+ *         "top_left": {
+ *           "x": 0.1, // floating number in relative 0:1 coordinates
+ *           "y": 0.1, // floating number in relative 0:1 coordinates
+ *         },
+ *         "bottom_right": {
+ *           "x": 0.2, // floating number in relative 0:1 coordinates
+ *           "y": 0.2, // floating number in relative 0:1 coordinates
+ *         }
+ *       }
+ */
+function ObjectOverlay(d)
+{
+  Overlay.call(this);
+
+  this.label = d.label;
+  this.index = d.index;
+
+  this.frame_number = d.frame_number;
+  this.bounding_box = d.bounding_box;
+
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+  this.color = null;
+}
+ObjectOverlay.prototype = Object.create(Overlay.prototype);
+ObjectOverlay.prototype.constructor = ObjectOverlay;
+
+
+ObjectOverlay.prototype.draw = function(context) {
+  let label = this.label + " [" + this.index + "]";
+  context.strokeStyle = this.color;
+  context.strokeRect(this.x, this.y, this.w, this.h);
+  if (!this._boolThumbnailMode) {
+    context.fillText(label, this.x, this.y+15);
+  }
+}
+
+ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  this.x = this.bounding_box.top_left.x * canvasWidth;
+  this.y = this.bounding_box.top_left.y * canvasHeight;
+  this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) * canvasWidth;
+  this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) * canvasHeight;
+  this.color = colorGenerator.color(this.index);
+}
 
