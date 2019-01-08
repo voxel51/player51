@@ -82,10 +82,20 @@ function Player51(media, overlay, fps) {
   this.media = media;
 
   this.frameOverlay = {}; // will be used to store the labels per frame
-  if (typeof(overlay) === "string") {
+  // we cannot prepare the overlay before the player is rendered (canvas, etc.)
+  // these are two separate things (can be means data is loaded)
+  this._overlayCanBePrepared = true;
+  this._isOverlayPrepared = false;
+  if ((overlay === null) || (typeof(overlay) === "undefined")) {
+    this._overlayURL = null;
+    this._overlayCanBePrepared = false;
+  } else if (typeof(overlay) === "string") {
+    this._overlayURL = overlay;
+    this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
   } else if ( (typeof(overlay) === "object") && (overlay != null) && Object.keys(overlay).length > 0) {
-    this.prepareOverlay(overlay);
+    this._overlayURL = undefined;
+    this._overlayData = overlay;
   }
 
   // initialize members to default or null values
@@ -120,6 +130,7 @@ function Player51(media, overlay, fps) {
   this._forcedWidth = -1;
   this._forcedHeight = -1;
   this._isRendered = false;
+  this._isSizePrepared = false;
   this._isDataLoaded = false;
 
   // set via poster(); used to show an image while the video itself is loading
@@ -165,7 +176,7 @@ Player51.prototype.autoplay = function(boolAutoplay) {
 
   this._boolAutoplay = boolAutoplay;
 
-  if (this._isRendered) {
+  if (this._isRendered && this._isSizePrepared) {
     this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
   }
 }
@@ -294,11 +305,15 @@ Player51.prototype.forceMax = function(width, height) {
 Player51.prototype.loadOverlay = function(overlayPath) {
   let self = this;
 
+  this._isOverlayPrepared = false;
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
       if (this.readyState === 4 && this.status === 200) {
-        let labelsObject = JSON.parse(this.responseText);
-        self.prepareOverlay(labelsObject);
+        self._overlayData = JSON.parse(this.responseText);
+        self._overlayCanBePrepared = true;
+        if ((!self._isOverlayPrepared) && self._isRendered && self._isSizePrepared) {
+          self.prepareOverlay(self._overlayData);
+        }
       }
   };
   xmlhttp.open("GET", overlayPath, true);
@@ -318,7 +333,7 @@ Player51.prototype.loop = function(boolLoop) {
 
   this._boolLoop = boolLoop;
 
-  if (this._isRendered) {
+  if (this._isRendered && this._isSizePrepared) {
     this.eleVideo.toggleAttribute("loop", this._boolLoop);
   }
 }
@@ -388,8 +403,15 @@ Player51.prototype.poster = function(url) {
  *
  * The prepareOverlay code tries to intelligently decipher which of these
  * formats is present in the rawjson file.
+ *
+ * Noting potential race condition without using semaphors here
  */
 Player51.prototype.prepareOverlay = function (rawjson) {
+
+  if (this._isOverlayPrepared) {
+    return;
+  }
+  this._isOverlayPrepared = true;
 
   // Format 1
   if (typeof(rawjson.objects) !== "undefined") {
@@ -453,6 +475,17 @@ Player51.prototype._prepareOverlay_auxCheckAdd = function(o, fn=-1) {
   }
 }
 
+/**
+ * @member checkFontHeight
+ */
+Player51.prototype.checkFontHeight = function(h) {
+  if (h == 0) {
+    console.log('PLAYER51 WARN: fontheight 0');
+    return 10;
+  }
+  return h;
+}
+
 
 /**
  * @member processFrame
@@ -489,6 +522,7 @@ Player51.prototype.processFrame = function() {
     if (fh_in_window < 12) {
       fontheight = 8 * this.canvasMultiplier;
     }
+    fontheight = this.checkFontHeight(fontheight);
     this.canvasContext.font = `${fontheight}px sans-serif`;
 
     let hhmmss = this.currentTimestamp();
@@ -497,8 +531,8 @@ Player51.prototype.processFrame = function() {
     let pad2 = 2; // pad divided by 2
     let w = tw + pad + pad;
     let h = fontheight + pad + pad;
-    let x = 4;
-    let y = this.canvasHeight - 4 - pad - pad - fontheight;
+    let x = 10;
+    let y = this.canvasHeight - 10 - pad - pad - fontheight;
 
     this.canvasContext.fillStyle = this.metadataOverlayBGColor;
     this.canvasContext.fillRect(x, y, w, h);
@@ -507,11 +541,13 @@ Player51.prototype.processFrame = function() {
     this.canvasContext.fillText(hhmmss, x+pad, y+pad+fontheight-pad2, tw+8);
   }
 
-  if (this.frameNumber in this.frameOverlay) {
-    let fm = this.frameOverlay[this.frameNumber];
+  if (this._isOverlayPrepared) {
+    if (this.frameNumber in this.frameOverlay) {
+      let fm = this.frameOverlay[this.frameNumber];
 
-    for (let len = fm.length, i=0; i<len; i++) {
-      fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
+      for (let len = fm.length, i=0; i<len; i++) {
+        fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
+      }
     }
   }
 
@@ -724,6 +760,9 @@ Player51.prototype.render = function(parentElement) {
   }
 
   this._isRendered = true;
+  if ((this._isSizePrepared) && (this._overlayCanBePrepared) && (!this._isOverlayPrepared)) {
+    this.prepareOverlay(this._overlayData);
+  }
 }
 
 /**
@@ -994,6 +1033,10 @@ Player51.prototype.updateSizeAndPadding = function() {
     this.eleDivVideoControls.style.left = this.paddingLeft;
   }
 
+  this._isSizePrepared = true;
+  if ((this._isRendered) && (this._overlayCanBePrepared) && (!this._isOverlayPrepared)) {
+    this.prepareOverlay(this._overlayData);
+  }
 }
 
 
@@ -1040,7 +1083,7 @@ ColorGenerator.prototype._generateColorSet = function(n=36) {
   this._colorSet = new Array(n);
   for (let i=0;i<n;i++) {
     this._colorSet[i] = (
-      `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA}`);
+      `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`);
   }
 }
 
@@ -1123,10 +1166,10 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHe
   }
 
   this.attrFontHeight = Math.min(20, 0.09*canvasHeight);
+  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = 10;
 
-  // XXX TODO
   this.x = this.textPadder;
   this.y = this.textPadder;
 
@@ -1187,11 +1230,11 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
   }
 
   if (this.w === null) {
-    console.log('PLAYER51 WARN: FAO draw before setup.');
     this._setupWidths(context, canvasWidth, canvasHeight);
     // If something went wrong in trying to estimate the sizes of things, then
     // we still cannot draw.
     if (this.w <= 0) {
+      console.log(`PLAYER51 WARN: FAO draw before setup; invalid canvas`);
       return;
     }
   }
@@ -1287,7 +1330,9 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.color = colorGenerator.color(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09*canvasHeight);
+  this.headerFontHeight = this.player.checkFontHeight(this.headerFontHeight);
   this.attrFontHeight = Math.min(18, 0.088*canvasHeight);
+  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
   this.headerHeight = Math.min(26, 0.13*canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
