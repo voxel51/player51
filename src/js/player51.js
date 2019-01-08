@@ -91,6 +91,7 @@ function Player51(media, overlay, fps) {
   // initialize members to default or null values
   this.canvasWidth = null;
   this.canvasHeight = null;
+  this.canvasContext = undefined;
   this.frameNumber = undefined;
   this.frameRate = fps;
   this.frameDuration = 1.0/this.frameRate;
@@ -106,7 +107,7 @@ function Player51(media, overlay, fps) {
   this.paddingBottom = 0;
 
   // some properties for drawing
-  this.metadataOverlayBGColor = "rgba(33, 33, 55, 0.6)";
+  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
 
   // private members
   this._boolThumbnailMode = false;
@@ -467,12 +468,16 @@ Player51.prototype._prepareOverlay_auxCheckAdd = function(o, fn=-1) {
  */
 Player51.prototype.processFrame = function() {
 
+  /*
   // if we have seen this function called prior to actually setting up the
   // data, then we need to stop and return.
   if (typeof(this.canvasContext) === "undefined") {
     console.log('PLAYER51 WARN: processFrame called before a context was available');
     return;
   }
+  */
+
+  this.setupCanvasContext();
 
   // Since we are rendering on a transparent canvas, we need to clean it
   // every time.
@@ -895,6 +900,7 @@ Player51.prototype.updateSizeAndPadding = function() {
   this.eleCanvas.setAttribute("height", canvasHeight);
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
+  this.canvasMultiplier = canvasWidth / this.width;
 
   this.parent.setAttribute("width", this.width);
   this.parent.setAttribute("height", this.height);
@@ -1121,17 +1127,17 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHe
     this._parseAttrs();
   }
 
-  this.attrFontHeight = Math.min(14, 0.086*canvasHeight);
+  this.attrFontHeight = Math.min(20, 0.09*canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = 10;
 
   // XXX TODO
   this.x = this.textPadder;
-  this.y = 200; //this.textPadder;
+  this.y = this.textPadder;
 
   // this.w is set up by the _setupWidths function
 
-  this.h = this.attrText.length*this.attrFontHeight + 2*this.textPadder;
+  this.h = this.attrText.length*this.attrFontHeight + 3*this.textPadder;
 
   if (typeof(context) === "undefined") {
     return;
@@ -1163,6 +1169,10 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth, c
   let mw = 0;
   for (let a=0;a<this.attrText.length;a++) {
     let aw = context.measureText(this.attrText[a]).width;
+    if (aw == 0) {
+      console.log(`PLAYER51 WARN: rendering context broken`);
+      return;
+    }
     if (aw > mw) {
       mw = aw;
     }
@@ -1182,7 +1192,13 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
   }
 
   if (this.w === null) {
-    this._setupFontWidths(context, canvasWidth, canvasHeight);
+    console.log('PLAYER51 WARN: FAO draw before setup.');
+    this._setupWidths(context, canvasWidth, canvasHeight);
+    // If something went wrong in trying to estimate the sizes of things, then
+    // we still cannot draw.
+    if (this.w <= 0) {
+      return;
+    }
   }
 
   if (!this.player._boolThumbnailMode) {
@@ -1192,10 +1208,12 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
     context.font = `${this.attrFontHeight}px sans-serif`;
     context.fillStyle = colorGenerator.white;
 
+    // Rendering y is at the baseline of the text.  Handle this by adding
+    // one row (attrFontHeight and textPadder)
     for (let a=0;a<this.attrText.length;a++) {
       context.fillText(this.attrText[a],
         this.x + this.textPadder,
-        this.y + a*this.attrFontHeight + a*3*this.textPadder);
+        this.y + (a+1)*(this.attrFontHeight + this.textPadder));
     }
   }
 }
@@ -1274,7 +1292,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.color = colorGenerator.color(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09*canvasHeight);
-  this.attrFontHeight = Math.min(14, 0.086*canvasHeight);
+  this.attrFontHeight = Math.min(18, 0.088*canvasHeight);
   this.headerHeight = Math.min(26, 0.13*canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
@@ -1356,6 +1374,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
       this.x + this.headerWidth - 4*this.textPadder - this.indexTextWidth,
       this.y - this.textPadder);
 
+    context.font = `${this.attrFontHeight}px sans-serif`;
     if ((typeof(this.attrFontWidth) === "undefined") ||
         (this.attrFontWidth === null)) {
       this.attrFontWidth = context.measureText(this.attrText).width;
