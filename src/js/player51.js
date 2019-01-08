@@ -402,7 +402,7 @@ Player51.prototype.prepareOverlay = function (rawjson) {
       let frame_key = frame_keys[frame_key_i];
       let f = rawjson.frames[frame_key];
       if (typeof(f.objects) !== "undefined") {
-        //this._prepareOverlay_auxFormat1Objects(f.objects.objects);
+        this._prepareOverlay_auxFormat1Objects(f.objects.objects);
       }
       if (typeof(f.attrs !== "undefined")) {
         let o = new FrameAttributesOverlay(f.attrs, this)
@@ -502,7 +502,7 @@ Player51.prototype.processFrame = function() {
   if (this.frameNumber in this.frameOverlay) {
     let fm = this.frameOverlay[this.frameNumber];
 
-    console.log(fm);
+    //console.log(fm);
 
     for (let len = fm.length, i=0; i<len; i++) {
       fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
@@ -1141,11 +1141,11 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHe
  * them up as renderable strings for the overlay.
  */
 FrameAttributesOverlay.prototype._parseAttrs = function () {
-  console.log('bar');
+  //console.log('bar');
   if (this.attrText === null) {
     this.attrText = new Array(this.attrs.length);
   }
-  console.log(this.attrs);
+  //console.log(this.attrs);
 
   for (let len=this.attrs.length, a=0;a<len;a++) {
     console.log(0);
