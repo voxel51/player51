@@ -751,16 +751,19 @@ Player51.prototype.updateSizeAndPadding = function() {
   this.paddingTopN = parseInt(this.paddingTop.substr(0, this.paddingTop.length-2));
   this.paddingBottomN = parseInt(this.paddingBottom.substr(0, this.paddingBottom.length-2));
 
-  // first set height to that of the container
-  this.width = this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN;
-  this.height = this.parent.offsetHeight - this.paddingTopN - this.paddingBottomN;
-
   // We cannot just take the window dimensions because the aspect ratio of
   // the video must be preserved.
   // Preservation is based on maintaining the height of the parent.
-  let aspectV = this.eleVideo.videoWidth / this.eleVideo.videoHeight;
 
-  this.width = this.height * aspectV;
+  // Try to maintain height of container first.  If fails, then set width.
+  // Fails means that the width of the video is too wide for the container.
+  this.height = this.parent.offsetHeight - this.paddingTopN - this.paddingBottomN;
+  this.width = this.height * this.eleVideo.videoWidth / this.eleVideo.videoHeight;
+
+  if (this.width > this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN) {
+    this.width = this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN;
+    this.height = this.width * this.eleVideo.videoHeight / this.eleVideo.videoWidth;
+  }
 
   // if the caller wants to maximize to native pixel resolution
   if (this._boolForcedMax) {
@@ -839,7 +842,7 @@ Player51.prototype.updateSizeAndPadding = function() {
     // on the video, this impacts their left location too.
     this.eleDivVideoControls.style.paddingLeft = 0;
     this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = this.paddingBottom;
+    this.eleDivVideoControls.style.bottom = (this.paddingBottomN + this.paddingTopN)+"px";
     this.eleDivVideoControls.style.left = this.paddingLeft;
   } else {
     this.parent.style.width = (this.width + "px");
