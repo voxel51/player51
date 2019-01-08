@@ -407,7 +407,7 @@ Player51.prototype.prepareOverlay = function (rawjson) {
       if (typeof(f.attrs !== "undefined")) {
         let o = new FrameAttributesOverlay(f.attrs, this)
         o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
-        this._prepareOverlay_auxCheckAdd(o);
+        this._prepareOverlay_auxCheckAdd(o, parseInt(frame_key_i));
       }
     }
   }
@@ -431,16 +431,24 @@ Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
 
 /**
  * Add the overlay to the set.
+ *
+ * @arguments
+ *  o the Overlay instance
+ *  fn optional is the frame numnber (if not provided, then the overlay o needs
+ *  a .frame_number propery.
  */
-Player51.prototype._prepareOverlay_auxCheckAdd = function(o) {
-  if (o.frame_number in this.frameOverlay) {
-    let thelist = this.frameOverlay[o.frame_number];
+Player51.prototype._prepareOverlay_auxCheckAdd = function(o, fn=-1) {
+  if (fn==-1) {
+    fn = o.frame_number;
+  }
+  if (fn in this.frameOverlay) {
+    let thelist = this.frameOverlay[fn];
     thelist.push(o);
-    this.frameOverlay[o.frame_number] = thelist;
+    this.frameOverlay[fn] = thelist;
   } else {
     // this the first time we are seeing the frame
     let newlist = [o]
-    this.frameOverlay[o.frame_number] = newlist;
+    this.frameOverlay[fn] = newlist;
   }
 }
 
@@ -501,8 +509,6 @@ Player51.prototype.processFrame = function() {
 
   if (this.frameNumber in this.frameOverlay) {
     let fm = this.frameOverlay[this.frameNumber];
-
-    //console.log(fm);
 
     for (let len = fm.length, i=0; i<len; i++) {
       fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
@@ -1088,7 +1094,7 @@ function FrameAttributesOverlay(d, player)
 
   this.player = player;
 
-  this.attrs = d;
+  this.attrs = d.attrs;
   this.attrText = null; // will store a list of strings (one for each object in d.attrs)
 
   this.attrFontHeight = null;
@@ -1141,14 +1147,12 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHe
  * them up as renderable strings for the overlay.
  */
 FrameAttributesOverlay.prototype._parseAttrs = function () {
-  //console.log('bar');
+
   if (this.attrText === null) {
     this.attrText = new Array(this.attrs.length);
   }
-  //console.log(this.attrs);
 
   for (let len=this.attrs.length, a=0;a<len;a++) {
-    console.log(0);
     let at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
     this.attrText[a] = at.replace(new RegExp('_', 'g'), ' ');
   }
@@ -1173,7 +1177,6 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth, c
  * Basic rendering function for drawing the overlay instance.
  */
 FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
-  console.log('frame attr overlay draw');
   if (typeof(context) === "undefined") {
     return;
   }
@@ -1181,7 +1184,6 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
   if (this.w === null) {
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-
 
   if (!this.player._boolThumbnailMode) {
     context.fillStyle = this.player.metadataOverlayBGColor;
@@ -1191,8 +1193,6 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
     context.fillStyle = colorGenerator.white;
 
     for (let a=0;a<this.attrText.length;a++) {
-      console.log(`fillText: ${this.attrText[a]}, ${this.x}, ${this.y}, ${this.textPadder}, ${this.attrFontWidth}, ${this.attrFontHeight}`);
-
       context.fillText(this.attrText[a],
         this.x + this.textPadder,
         this.y + a*this.attrFontHeight + a*3*this.textPadder);
