@@ -1137,7 +1137,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHe
 
   // this.w is set up by the _setupWidths function
 
-  this.h = this.attrText.length*this.attrFontHeight + 3*this.textPadder;
+  this.h = this.attrText.length*(this.attrFontHeight+this.textPadder) + this.textPadder;
 
   if (typeof(context) === "undefined") {
     return;
