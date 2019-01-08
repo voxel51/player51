@@ -575,6 +575,10 @@ Player51.prototype.render = function(parentElement) {
         self.eleVideo.currentTime = 1;
       }
     }
+
+    if (self._boolAutoplay) {
+      self.elePlayPauseButton.innerHTML = "Pause";
+    }
   });
 
   // Event listener for the play/pause button
@@ -631,6 +635,10 @@ Player51.prototype.render = function(parentElement) {
 
     // Update the slider value
     self.eleSeekBar.value = value;
+
+    // This seems like a waste but it handles all of the user corner cases for
+    // when the video may start playing in a way out of our control.
+    self.elePlayPauseButton.innerHTML = "Pause";
   });
 
   // Pause the video when the seek handle is being dragged
@@ -721,8 +729,10 @@ Player51.prototype.setupCanvasContext = function () {
   this.canvasContext = this.eleCanvas.getContext("2d");
   this.canvasContext.strokeStyle = "#fff";
   this.canvasContext.fillStyle = "#fff";
-  this.canvasContext.lineWidth = 1;
+  this.canvasContext.lineWidth = 3;
   this.canvasContext.font = "14px sans-serif";
+  // easier for setting offsets
+  this.canvasContext.textBaseline = "bottom";
 }
 
 
@@ -834,10 +844,24 @@ Player51.prototype.updateSizeAndPadding = function() {
   // set context and locations in context well
   this.eleVideo.setAttribute("width", this.width);
   this.eleVideo.setAttribute("height", this.height);
-  this.eleCanvas.setAttribute("width", this.width);
-  this.eleCanvas.setAttribute("height", this.height);
-  this.canvasWidth = this.width;
-  this.canvasHeight = this.height;
+
+  // Current functionality is to set a fixed size canvas so that we can
+  // guarantee of consistent L&F for the overlays.
+  // But, the right way to do this is probably define an abstraction to the
+  // canvas size and then make the canvas the closest match to the actual
+  // display size so that we do not kill so much member in creating the video
+  // player.
+  //this.eleCanvas.setAttribute("width", this.width);
+  //this.eleCanvas.setAttribute("height", this.height);
+  //this.canvasWidth = this.width;
+  //this.canvasHeight = this.height;
+
+  let canvasWidth = 1280;
+  let canvasHeight = canvasWidth * this.eleVideo.videoHeight / this.eleVideo.videoWidth;
+  this.eleCanvas.setAttribute("width", canvasWidth);
+  this.eleCanvas.setAttribute("height", canvasHeight);
+  this.canvasWidth = canvasWidth;
+  this.canvasHeight = canvasHeight;
 
   this.parent.setAttribute("width", this.width);
   this.parent.setAttribute("height", this.height);
@@ -947,6 +971,10 @@ function ColorGenerator()
 {
   // member will store all colors created
   this.colors = {};
+
+  // standard colors
+  this.white = "#ffffff";
+  this.black = "#000000";
 }
 
 /**
@@ -1013,7 +1041,9 @@ function ObjectOverlay(d)
   Overlay.call(this);
 
   this.label = d.label;
+  this.labelUpper = this.label.toUpperCase();
   this.index = d.index;
+  this.indexStr = `${this.index}`;
 
   this.frame_number = d.frame_number;
   this.bounding_box = d.bounding_box;
@@ -1023,17 +1053,40 @@ function ObjectOverlay(d)
   this.w = null;
   this.h = null;
   this.color = null;
+
+  // this is the height of the header box into which we draw the label
+  this.headerHeight = null;
+  this.headerWidth = null;
+  this.headerFontHeight = null;
+  this.textPadder = null;
+  this.labelTextWidth = null;
+  this.indexTextWidth = null;
+  this.labelIndexPadding = 51;  // extra space forced between label and index in header
 }
 ObjectOverlay.prototype = Object.create(Overlay.prototype);
 ObjectOverlay.prototype.constructor = ObjectOverlay;
 
 
 ObjectOverlay.prototype.draw = function(context) {
-  let label = this.label + " [" + this.index + "]";
   context.strokeStyle = this.color;
+  context.fillStyle = this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
+
   if (!this._boolThumbnailMode) {
-    context.fillText(label, this.x, this.y+15);
+    // fill and stroke to account for line thickness variation
+    context.strokeRect(this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight);
+    context.fillRect(this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight);
+
+    context.font = `${this.headerFontHeight}px sans-serif`;
+    context.fillStyle = colorGenerator.white;
+    context.fillText(this.labelUpper,
+      this.x + this.textPadder, this.y - this.textPadder);
+
+    context.fillText(this.indexStr,
+      this.x + this.headerWidth - 4*this.textPadder - this.indexTextWidth,
+      this.y - this.textPadder);
   }
 }
 
@@ -1043,5 +1096,20 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) * canvasWidth;
   this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) * canvasHeight;
   this.color = colorGenerator.color(this.index);
+
+  this.headerFontHeight = Math.min(20, 0.9*canvasHeight);
+  this.headerHeight = Math.min(26, 0.13*canvasHeight);
+  // this is *0.4 instead of / 2 because it looks better
+  this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
+
+  context.font = `${this.fontHeight}px sans-serif`;
+  this.labelTextWidth = context.measureText(this.labelUpper).width;
+  this.indexTextWidth = context.measureText(this.indexStr).width;
+
+  if ((this.labelTextWidth + this.indexTextWidth + this.labelIndexPadding + 2*this.textPadder) <= this.w) {
+    this.headerWidth = this.w;
+  } else {
+    this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2*this.textPadder + this.labelIndexPadding;
+  }
 }
 
