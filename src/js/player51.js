@@ -59,8 +59,6 @@ import {parseMediaFragmentsUri} from './mediafragments.js';
 // ES6 module export
 export default Player51;
 
-// Global Objects Needed in this Module;
-let colorGenerator = new ColorGenerator();
 
 /**
  * Player51 Class Definition
@@ -975,6 +973,11 @@ function ColorGenerator()
   // standard colors
   this.white = "#ffffff";
   this.black = "#000000";
+
+  this._colorSet = undefined;
+  this._colorS = "70%";
+  this._colorL = "40%";
+  this._colorA = "0.875";
 }
 
 /**
@@ -990,15 +993,37 @@ ColorGenerator.prototype.color = function(index) {
   }
 }
 
+
 /**
- * @member generateBoundingBoxColor
+ * @member @private _generateColorSet
+ *
+ * Generates the entire dictionary of colors.
+ */
+ColorGenerator.prototype._generateColorSet = function(n=36) {
+  let delta = 360/n;
+  this._colorSet = new Array(n);
+  for (let i=0;i<n;i++) {
+    this._colorSet[i] = (
+      `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA}`);
+    console.log(this._colorSet[i]);
+  }
+}
+
+/**
+ * @member generateNewColor
  *
  * Called to generate a random bounding box color to use in rendering.
  */
 ColorGenerator.prototype.generateNewColor = function() {
-  let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
-  return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];
+  if (typeof(this._colorSet) === "undefined") {
+    this._generateColorSet();
+  }
+  return this._colorSet[Math.floor(Math.random()*this._colorSet.length)];
 };
+
+
+// Instantiate one colorGenerator for global use
+let colorGenerator = new ColorGenerator();
 
 
 /**
