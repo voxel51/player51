@@ -468,15 +468,6 @@ Player51.prototype._prepareOverlay_auxCheckAdd = function(o, fn=-1) {
  */
 Player51.prototype.processFrame = function() {
 
-  /*
-  // if we have seen this function called prior to actually setting up the
-  // data, then we need to stop and return.
-  if (typeof(this.canvasContext) === "undefined") {
-    console.log('PLAYER51 WARN: processFrame called before a context was available');
-    return;
-  }
-  */
-
   this.setupCanvasContext();
 
   // Since we are rendering on a transparent canvas, we need to clean it
@@ -492,7 +483,13 @@ Player51.prototype.processFrame = function() {
 
   if (this.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
-    let fontheight = parseInt(0.1*this.canvasHeight);
+    // working on a new way of forcing certain font sizes
+    let fontheight = 24;
+    let fh_in_window = fontheight / this.canvasMultiplier;
+    if (fh_in_window < 12) {
+      fontheight = 8 * this.canvasMultiplier;
+    }
+    this.canvasContext.font = `${fontheight}px sans-serif`;
 
     let hhmmss = this.currentTimestamp();
     let tw = this.canvasContext.measureText(hhmmss).width;
@@ -506,9 +503,7 @@ Player51.prototype.processFrame = function() {
     this.canvasContext.fillStyle = this.metadataOverlayBGColor;
     this.canvasContext.fillRect(x, y, w, h);
 
-    this.canvasContext.font = `${fontheight}px sans-serif`;
     this.canvasContext.fillStyle = colorGenerator.white;
-
     this.canvasContext.fillText(hhmmss, x+pad, y+pad+fontheight-pad2, tw+8);
   }
 
