@@ -101,7 +101,6 @@ function Player51(media, overlay, fps) {
   this.paddingBottom = 0;
 
   // some properties for drawing
-  this.colorArr = {};
   this.metadataOverlayBGColor = "rgba(33, 33, 55, 0.6)";
 
   // private members
@@ -404,7 +403,8 @@ Player51.prototype.prepareOverlay = function (rawjson) {
  */
 Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
   for (let len = objects.length, i=0; i< len; i++) {
-    let o = objects[i];
+    let o = new ObjectOverlay(objects[i]);
+    o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
     if (o.frame_number in this.frameOverlay) {
       let thelist = this.frameOverlay[o.frame_number];
       thelist.push(o);
@@ -476,24 +476,7 @@ Player51.prototype.processFrame = function() {
     let fm = this.frameOverlay[this.frameNumber];
 
     for (let len = fm.length, i=0; i<len; i++) {
-      let fmo = fm[i];
-
-      let x = fmo.bounding_box.top_left.x * this.canvasWidth;
-      let y = fmo.bounding_box.top_left.y * this.canvasHeight;
-      let w = (fmo.bounding_box.bottom_right.x - fmo.bounding_box.top_left.x) * this.canvasWidth;
-      let h = (fmo.bounding_box.bottom_right.y - fmo.bounding_box.top_left.y) * this.canvasHeight;
-
-      this.canvasContext.strokeRect(x, y, w, h);
-      let label = fmo.label + " [" + fmo.index + "]";
-      if (typeof(fmo.index) !== "undefined" &&
-          typeof(this.colorArr[fmo.index]) === "undefined") {
-        this.colorArr[fmo.index] = this.generateBoundingBoxColor();
-      }
-      this.canvasContext.strokeStyle = this.colorArr[fmo.index];
-      this.canvasContext.strokeRect(x, y, w, h);
-      if (!this._boolThumbnailMode) {
-        this.canvasContext.fillText(label, x, y+15);
-      }
+      fm[i].draw(this.canvasContext);
     }
   }
 
@@ -590,6 +573,10 @@ Player51.prototype.render = function(parentElement) {
         self.eleVideo.currentTime = 1;
       }
     }
+
+    if (self._boolAutoplay) {
+      self.elePlayPauseButton.innerHTML = "Pause";
+    }
   });
 
   // Event listener for the play/pause button
@@ -646,6 +633,10 @@ Player51.prototype.render = function(parentElement) {
 
     // Update the slider value
     self.eleSeekBar.value = value;
+
+    // This seems like a waste but it handles all of the user corner cases for
+    // when the video may start playing in a way out of our control.
+    self.elePlayPauseButton.innerHTML = "Pause";
   });
 
   // Pause the video when the seek handle is being dragged
@@ -736,8 +727,10 @@ Player51.prototype.setupCanvasContext = function () {
   this.canvasContext = this.eleCanvas.getContext("2d");
   this.canvasContext.strokeStyle = "#fff";
   this.canvasContext.fillStyle = "#fff";
-  this.canvasContext.lineWidth = 1;
+  this.canvasContext.lineWidth = 3;
   this.canvasContext.font = "14px sans-serif";
+  // easier for setting offsets
+  this.canvasContext.textBaseline = "bottom";
 }
 
 
@@ -849,10 +842,24 @@ Player51.prototype.updateSizeAndPadding = function() {
   // set context and locations in context well
   this.eleVideo.setAttribute("width", this.width);
   this.eleVideo.setAttribute("height", this.height);
-  this.eleCanvas.setAttribute("width", this.width);
-  this.eleCanvas.setAttribute("height", this.height);
-  this.canvasWidth = this.width;
-  this.canvasHeight = this.height;
+
+  // Current functionality is to set a fixed size canvas so that we can
+  // guarantee of consistent L&F for the overlays.
+  // But, the right way to do this is probably define an abstraction to the
+  // canvas size and then make the canvas the closest match to the actual
+  // display size so that we do not kill so much member in creating the video
+  // player.
+  //this.eleCanvas.setAttribute("width", this.width);
+  //this.eleCanvas.setAttribute("height", this.height);
+  //this.canvasWidth = this.width;
+  //this.canvasHeight = this.height;
+
+  let canvasWidth = 1280;
+  let canvasHeight = canvasWidth * this.eleVideo.videoHeight / this.eleVideo.videoWidth;
+  this.eleCanvas.setAttribute("width", canvasWidth);
+  this.eleCanvas.setAttribute("height", canvasHeight);
+  this.canvasWidth = canvasWidth;
+  this.canvasHeight = canvasHeight;
 
   this.parent.setAttribute("width", this.width);
   this.parent.setAttribute("height", this.height);
@@ -954,15 +961,180 @@ Player51.prototype.updateSizeAndPadding = function() {
 }
 
 
+/**
+ * A Class to encapsulate the creation of suitable colors for drawing the
+ * overlays and maintaining their identity over the entire video.
+ */
+function ColorGenerator()
+{
+  // member will store all colors created
+  this.colors = {};
+
+  // standard colors
+  this.white = "#ffffff";
+  this.black = "#000000";
+
+  this._colorSet = undefined;
+  this._colorS = "70%";
+  this._colorL = "40%";
+  this._colorA = "0.875";
+}
+
+/**
+ * @member color
+ *
+ * Provide a color based on an index.
+ */
+ColorGenerator.prototype.color = function(index) {
+  if (index in this.colors) {
+    return this.colors[index];
+  } else {
+    this.colors[index] = this.generateNewColor();
+  }
+}
 
 
 /**
- * @member generateBoundingBoxColor
+ * @member @private _generateColorSet
+ *
+ * Generates the entire dictionary of colors.
+ */
+ColorGenerator.prototype._generateColorSet = function(n=36) {
+  let delta = 360/n;
+  this._colorSet = new Array(n);
+  for (let i=0;i<n;i++) {
+    this._colorSet[i] = (
+      `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA}`);
+    console.log(this._colorSet[i]);
+  }
+}
+
+/**
+ * @member generateNewColor
  *
  * Called to generate a random bounding box color to use in rendering.
  */
-Player51.prototype.generateBoundingBoxColor = function() {
-  let BOUNDING_BOX_COLORS = ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"];
-  return BOUNDING_BOX_COLORS[Math.floor(Math.random() * 10)];
+ColorGenerator.prototype.generateNewColor = function() {
+  if (typeof(this._colorSet) === "undefined") {
+    this._generateColorSet();
+  }
+  return this._colorSet[Math.floor(Math.random()*this._colorSet.length)];
 };
+
+
+// Instantiate one colorGenerator for global use
+let colorGenerator = new ColorGenerator();
+
+
+/**
+ * A Class defining the generic interface for how to render overlays on the
+ * video.
+ *
+ * Each sub-class must overload the setup and the draw functions.
+ */
+function Overlay()
+{
+}
+Overlay.prototype.draw = function(context) {
+  console.log('ERROR: draw called on abstract type');
+}
+Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  console.log('ERROR: setup called on abstract type');
+}
+
+
+/**
+ * A Class for rendering an Overlay on the Video
+ *
+ * @argument d is a dictionary with the following structure
+ *       "label": "the class/label/name of thing to show",
+ *       "index": "a unique index for the object",
+ *       "frame_number": 100, // the integer frame number for this object
+ *       "bounding_box": {
+ *         "top_left": {
+ *           "x": 0.1, // floating number in relative 0:1 coordinates
+ *           "y": 0.1, // floating number in relative 0:1 coordinates
+ *         },
+ *         "bottom_right": {
+ *           "x": 0.2, // floating number in relative 0:1 coordinates
+ *           "y": 0.2, // floating number in relative 0:1 coordinates
+ *         }
+ *       }
+ */
+function ObjectOverlay(d)
+{
+  Overlay.call(this);
+
+  this.label = d.label;
+  this.labelUpper = this.label.toUpperCase();
+  this.index = d.index;
+  this.indexStr = `${this.index}`;
+
+  this.frame_number = d.frame_number;
+  this.bounding_box = d.bounding_box;
+
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+  this.color = null;
+
+  // this is the height of the header box into which we draw the label
+  this.headerHeight = null;
+  this.headerWidth = null;
+  this.headerFontHeight = null;
+  this.textPadder = null;
+  this.labelTextWidth = null;
+  this.indexTextWidth = null;
+  this.labelIndexPadding = 51;  // extra space forced between label and index in header
+}
+ObjectOverlay.prototype = Object.create(Overlay.prototype);
+ObjectOverlay.prototype.constructor = ObjectOverlay;
+
+
+ObjectOverlay.prototype.draw = function(context) {
+  context.strokeStyle = this.color;
+  context.fillStyle = this.color;
+  context.strokeRect(this.x, this.y, this.w, this.h);
+
+  if (!this._boolThumbnailMode) {
+    // fill and stroke to account for line thickness variation
+    context.strokeRect(this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight);
+    context.fillRect(this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight);
+
+    context.font = `${this.headerFontHeight}px sans-serif`;
+    context.fillStyle = colorGenerator.white;
+    context.fillText(this.labelUpper,
+      this.x + this.textPadder, this.y - this.textPadder);
+
+    context.fillText(this.indexStr,
+      this.x + this.headerWidth - 4*this.textPadder - this.indexTextWidth,
+      this.y - this.textPadder);
+  }
+}
+
+ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  this.x = this.bounding_box.top_left.x * canvasWidth;
+  this.y = this.bounding_box.top_left.y * canvasHeight;
+  this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) * canvasWidth;
+  this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) * canvasHeight;
+  this.color = colorGenerator.color(this.index);
+
+  this.headerFontHeight = Math.min(20, 0.9*canvasHeight);
+  this.headerHeight = Math.min(26, 0.13*canvasHeight);
+  // this is *0.4 instead of / 2 because it looks better
+  this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
+
+  context.font = `${this.fontHeight}px sans-serif`;
+  this.labelTextWidth = context.measureText(this.labelUpper).width;
+  this.indexTextWidth = context.measureText(this.indexStr).width;
+
+  if ((this.labelTextWidth + this.indexTextWidth + this.labelIndexPadding + 2*this.textPadder) <= this.w) {
+    this.headerWidth = this.w;
+  } else {
+    this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2*this.textPadder + this.labelIndexPadding;
+  }
+}
 
