@@ -10,24 +10,25 @@
       }
       .container {
         width=80%;
-        display: flex;
         background: firebrick;
-        padding: 5rem;
-        flex-direction: column;
+        padding: 2rem;
+
+        display: flex;
+        flex-direction: row;
       }
       #test-container1 {
-        flex: 0;
-        width: 640px;
-        height: 360px;
+        padding-right: 2em;
+        padding-bottom: 2em;
         position: relative;
-        padding: 20px;
+        flex: 0 0 auto;  
+        /* noting that just 'flex: 0' breaks player51 layout */
       }
       #test-container2 {
-        flex: 0;
-        width: 640px;
-        height: 360px;
+        padding-right: 2em;
+        padding-bottom: 2em;
         position: relative;
-        padding: 20px;
+        flex: 0 0 auto;  
+        /* noting that just 'flex: 0' breaks player51 layout */
       }
 
       #test-container:hover {
