@@ -110,10 +110,16 @@ function Player51(media, overlay, fps) {
   this._boolBorderBox = false;  // is the container a border-box?
   this._boolForcedSize = false;
   this._boolForcedMax = false;
+  this._boolAutoplay = false;
   this._boolLoop = false;
   this._forcedWidth = -1;
   this._forcedHeight = -1;
   this._isRendered = false;
+  this._isDataLoaded = false;
+
+  // set via poster(); used to show an image while the video itself is loading
+  this._boolHasPoster = false;
+  this._posterURL = '';
 
   // check if a fragment was passed in via the media and work accordingly
   this._hasMediaFragment = false;  // will be true if the src has a fragment
@@ -141,6 +147,23 @@ function Player51(media, overlay, fps) {
   }
 };
 
+
+/**
+ * @member autoplay
+ *
+ * Force the video to autoplay when rendered.
+ */
+Player51.prototype.autoplay = function(boolAutoplay) {
+  if (typeof boolAutoplay === "undefined") {
+    boolAutoplay = true;
+  }
+
+  this._boolAutoplay = boolAutoplay;
+
+  if (this._isRendered) {
+    this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
+  }
+}
 
 /**
  * @member checkForFragmentReset
@@ -295,6 +318,15 @@ Player51.prototype.loop = function(boolLoop) {
   }
 }
 
+/**
+ * @member poster
+ *
+ * Set a poster frame URL to display while the video itself is loading
+ */
+Player51.prototype.poster = function(url) {
+  this._boolHasPoster = true;
+  this._posterURL = url;
+}
 
 /**
  * @member prepareOverlay
@@ -403,6 +435,7 @@ Player51.prototype.processFrame = function() {
   // if we have seen this function called prior to actually setting up the
   // data, then we need to stop and return.
   if (typeof(this.canvasContext) === "undefined") {
+    console.log('PLAYER51 WARN: processFrame called before a context was available');
     return;
   }
 
@@ -499,8 +532,14 @@ Player51.prototype.render = function(parentElement) {
   this.eleVideo.className = "p51-contained-video";
   this.eleVideo.setAttribute("preload", "metadata");
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
+  if (this._boolAutoplay) {
+    this.eleVideo.toggleAttribute("autoplay", true);
+  }
   if (this._boolLoop) {
     this.eleVideo.toggleAttribute("loop", true);
+  }
+  if (this._boolHasPoster) {
+    this.eleVideo.setAttribute("poster", this._posterURL);
   }
   this.eleVideoSource = document.createElement("source");
   this.eleVideoSource.setAttribute("src", this.media.src);
@@ -537,6 +576,20 @@ Player51.prototype.render = function(parentElement) {
   this.eleVideo.addEventListener("loadedmetadata", function() {
     self.updateSizeAndPadding();
     self.setupCanvasContext();
+  });
+
+  this.eleVideo.addEventListener("loadeddata", function() {
+    self._isDataLoaded = true;
+
+    // Handles the case that we have a poster frame to indicate the video is
+    // loading and now we can show the video.
+    if (self._boolHasPoster) {
+      if (self._hasMediaFragment) {
+        self.eleVideo.currentTime = self._mfBeginT;
+      } else {
+        self.eleVideo.currentTime = 1;
+      }
+    }
   });
 
   // Event listener for the play/pause button
@@ -615,6 +668,10 @@ Player51.prototype.render = function(parentElement) {
     // Two different behaviors.
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
+    if (!self._isDataLoaded) {
+      return;
+    }
+
     if (self._boolThumbnailMode) {
       self.videoIsPlaying = true;
       self.eleVideo.play();
@@ -624,6 +681,10 @@ Player51.prototype.render = function(parentElement) {
   });
 
   this.parent.addEventListener("mouseleave", function() {
+    if (!self._isDataLoaded) {
+      return;
+    }
+
     if (self._boolThumbnailMode) {
       self.videoIsPlaying = false;
       self.eleVideo.pause();
