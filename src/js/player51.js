@@ -110,6 +110,7 @@ function Player51(media, overlay, fps) {
   this._boolBorderBox = false;  // is the container a border-box?
   this._boolForcedSize = false;
   this._boolForcedMax = false;
+  this._boolAutoplay = false;
   this._boolLoop = false;
   this._forcedWidth = -1;
   this._forcedHeight = -1;
@@ -141,6 +142,23 @@ function Player51(media, overlay, fps) {
   }
 };
 
+
+/**
+ * @member autoplay
+ *
+ * Force the video to autoplay when rendered.
+ */
+Player51.prototype.autoplay = function(boolAutoplay) {
+  if (typeof boolAutoplay === "undefined") {
+    boolAutoplay = true;
+  }
+
+  this._boolAutoplay = boolAutoplay;
+
+  if (this._isRendered) {
+    this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
+  }
+}
 
 /**
  * @member checkForFragmentReset
@@ -499,6 +517,9 @@ Player51.prototype.render = function(parentElement) {
   this.eleVideo.className = "p51-contained-video";
   this.eleVideo.setAttribute("preload", "metadata");
   this.eleVideo.muted = true;  // this works whereas .setAttribute does not
+  if (this._boolAutoplay) {
+    this.eleVideo.toggleAttribute("autoplay", true);
+  }
   if (this._boolLoop) {
     this.eleVideo.toggleAttribute("loop", true);
   }
