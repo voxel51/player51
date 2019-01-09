@@ -98,45 +98,15 @@ function Player51(media, overlay, fps) {
     this._overlayData = overlay;
   }
 
-  // initialize members to default or null values
+  // Attributes are organized by role; privates have a leading underscore
+
+  // Content Attrbiutes
   this.canvasWidth = null;
   this.canvasHeight = null;
   this.canvasContext = undefined;
-  this.frameNumber = undefined;
   this.frameRate = fps;
   this.frameDuration = 1.0/this.frameRate;
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
-  this.videoIsPlaying = false;
-  this.boolDrawFrameNumber = false;
-  this.boolDrawTimestamp = false;  // draw time indicator when playing
-  this.width = -1;
-  this.height = -1;
-  this.paddingLeft = 0;
-  this.paddingRight = 0;
-  this.paddingTop = 0;
-  this.paddingBottom = 0;
-
-  // some properties for drawing
-  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
-
-  // private members
-  this._boolThumbnailMode = false;
-  this._thumbnailClickAction = undefined;
-  this._boolBorderBox = false;  // is the container a border-box?
-  this._boolForcedSize = false;
-  this._boolForcedMax = false;
-  this._boolAutoplay = false;
-  this._boolLoop = false;
-  this._forcedWidth = -1;
-  this._forcedHeight = -1;
-  this._isRendered = false;
-  this._isSizePrepared = false;
-  this._isDataLoaded = false;
-
-  // set via poster(); used to show an image while the video itself is loading
-  this._boolHasPoster = false;
-  this._posterURL = '';
-
   // check if a fragment was passed in via the media and work accordingly
   this._hasMediaFragment = false;  // will be true if the src has a fragment
   this._mfBeginT = null; // Time
@@ -150,7 +120,6 @@ function Player51(media, overlay, fps) {
     // importance of the fragment so that the user can watch the whole video.
     // @todo an interface component needs to be added to show that we are in a
     // fragment and allow locking / unlocking of the fragment.
-
   let mfParse = parseMediaFragmentsUri(this.media.src);
 
   if (typeof mfParse.hash.t !== "undefined") {
@@ -161,6 +130,40 @@ function Player51(media, overlay, fps) {
     this._hasMediaFragment = true;
     this._lockToMF = true;
   }
+
+
+  // All state attributes are private because we need to manage the state
+  // and state changes internally.
+
+  // Player View Attributes
+  this.width = -1;
+  this.height = -1;
+  this.paddingLeft = 0;
+  this.paddingRight = 0;
+  this.paddingTop = 0;
+  this.paddingBottom = 0;
+  this.boolDrawFrameNumber = false;
+  this.boolDrawTimestamp = false;  // draw time indicator when playing
+  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
+  // set via poster(); used to show an image while the video itself is loading
+  this._boolHasPoster = false;
+  this._posterURL = '';
+  this._boolBorderBox = false;  // is the container a border-box?
+  this._forcedWidth = -1;
+  this._forcedHeight = -1;
+
+  // Player State Attributes
+  this._frameNumber = undefined;
+  this.videoIsPlaying = false;
+  this._boolThumbnailMode = false;
+  this._thumbnailClickAction = undefined;
+  this._boolForcedSize = false;
+  this._boolForcedMax = false;
+  this._boolAutoplay = false;
+  this._boolLoop = false;
+  this._isRendered = false;
+  this._isSizePrepared = false;
+  this._isDataLoaded = false;
 };
 
 
@@ -511,7 +514,7 @@ Player51.prototype.processFrame = function() {
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.boolDrawFrameNumber) {
-    this.canvasContext.fillText(this.frameNumber, 15, 30, 70);
+    this.canvasContext.fillText(this._frameNumber, 15, 30, 70);
   }
 
   if (this.boolDrawTimestamp) {
@@ -542,8 +545,8 @@ Player51.prototype.processFrame = function() {
   }
 
   if (this._isOverlayPrepared) {
-    if (this.frameNumber in this.frameOverlay) {
-      let fm = this.frameOverlay[this.frameNumber];
+    if (this._frameNumber in this.frameOverlay) {
+      let fm = this.frameOverlay[this._frameNumber];
 
       for (let len = fm.length, i=0; i<len; i++) {
         fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
@@ -551,7 +554,7 @@ Player51.prototype.processFrame = function() {
     }
   }
 
-  this.frameNumber++;
+  this._frameNumber++;
   return;
 };
 
@@ -849,8 +852,8 @@ Player51.prototype.timerCallback = function() {
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
 
-  if (cfn !== this.frameNumber) {
-    this.frameNumber = cfn;
+  if (cfn !== this._frameNumber) {
+    this._frameNumber = cfn;
     this.processFrame();
   }
   let self = this;
