@@ -987,7 +987,7 @@ Player51.prototype.updateSizeAndPadding = function() {
     // on the video, this impacts their left location too.
     this.eleDivVideoControls.style.paddingLeft = 0;
     this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = (this.paddingBottomN + this.paddingTopN)+"px";
+    this.eleDivVideoControls.style.bottom = (this.paddingBottomN - 2)+"px";
     this.eleDivVideoControls.style.left = this.paddingLeft;
   } else {
     this.parent.style.width = (this.width + "px");
