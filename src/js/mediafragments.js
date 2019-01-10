@@ -6,6 +6,7 @@
  * And it is a submodule in Player51
  */
 
+import {MediaFragments} from 'player51/Media-Fragments-URI/.user';
 export {
   parseMediaFragmentsUri,
 };
@@ -454,4 +455,3 @@ function parseMediaFragmentsUri(opt_uri) {
     }
   };
 }
-

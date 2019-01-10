@@ -15,7 +15,7 @@
     <div id="test-container" />
 
     <script type="module">
-      import Player51 from '/src/js/player51.js';
+      import Player51 from "/src/js/player51.js";
 
       document.addEventListener("DOMContentLoaded", () => {
         console.log("Player51 Simple: Example code running.");
@@ -31,7 +31,7 @@
 
         console.log("Player51 created.");
 
-        player.render('test-container');
+        player.render("test-container");
 
         console.log("Player51 rendered and ready.");
 
@@ -59,7 +59,7 @@
  */
 
 
-import {parseMediaFragmentsUri} from './mediafragments.js';
+import {parseMediaFragmentsUri} from "./mediafragments.js";
 
 // ES6 module export
 export default Player51;
@@ -71,7 +71,7 @@ export default Player51;
  * INHERITS:  None
  * F-MIXINS:  None
  * @constructor
- * @param media is an object that has 'src' and 'type' attributes.
+ * @param media is an object that has "src" and "type" attributes.
  * @param overlay is data that should be overlayed on the video.  Overlay can
  * be empty (`null`), a string point to a single URL or an object that is
  * preloaded data.
@@ -97,12 +97,12 @@ function Player51(media, overlay, fps) {
   this._mfBeginF = null; // Frame
   this._mfEndF = null;
   this._lockToMF = false; // when we have a media fragment passed in, by
-    // default, we force the player to stay within that fragment.  If the video is
-    // looping, for example, then it will always go to the beginning of the
-    // fragment.  However, as soon as the user scrubs the video, we turn off the
-    // importance of the fragment so that the user can watch the whole video.
-    // @todo an interface component needs to be added to show that we are in a
-    // fragment and allow locking / unlocking of the fragment.
+  // default, we force the player to stay within that fragment.  If the video is
+  // looping, for example, then it will always go to the beginning of the
+  // fragment.  However, as soon as the user scrubs the video, we turn off the
+  // importance of the fragment so that the user can watch the whole video.
+  // @todo an interface component needs to be added to show that we are in a
+  // fragment and allow locking / unlocking of the fragment.
   let mfParse = parseMediaFragmentsUri(this.media.src);
 
   if (typeof mfParse.hash.t !== "undefined") {
@@ -123,7 +123,7 @@ function Player51(media, overlay, fps) {
   //  they will have no impact.
   // set via poster(); used to show an image while the video itself is loading
   this._boolHasPoster = false;   // set via `poster()`
-  this._posterURL = '';   // set via `poster()`
+  this._posterURL = "";   // set via `poster()`
   this._boolForcedSize = false;  // set via `forceSize()`
   this._boolForcedMax = false;  // set via `forceMax()`
   this._forcedWidth = -1;  // set via `forceSize()`
@@ -178,7 +178,7 @@ function Player51(media, overlay, fps) {
     this._overlayURL = null ;
     this._overlayData = overlay;
   }
-};
+}
 
 
 /**
@@ -211,7 +211,7 @@ Player51.prototype.updateFromDynamicState = function() {
   } else {
     this.eleDivVideoControls.style.opacity = "0.0";
   }
-}
+};
 
 /**
  * @member updateFromLoadingState
@@ -234,7 +234,7 @@ Player51.prototype.updateFromLoadingState = function() {
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
   }
-}
+};
 
 /**
  * @member state()
@@ -256,7 +256,7 @@ overlayCanBePrepared: ${this._overlayCanBePrepared}
 isOverlayPrepared: ${this._isOverlayPrepared}
 isPreparingOverlay: ${this._isPreparingOverlay}
 `;
-}
+};
 
 /**
  * @member autoplay
@@ -266,7 +266,7 @@ isPreparingOverlay: ${this._isPreparingOverlay}
 Player51.prototype.autoplay = function(boolAutoplay=true) {
   this._boolAutoplay = boolAutoplay;
   this.updateFromDynamicState();
-}
+};
 
 /**
  * @member checkForFragmentReset
@@ -296,11 +296,11 @@ Player51.prototype.checkForFragmentReset = function(fn) {
     }
     // Important to only update in here since this is only the case that the
     // state has changed.
-    this.updateFromDynamicState()
+    this.updateFromDynamicState();
   }
 
   return fn;
-}
+};
 
 
 /**
@@ -334,18 +334,18 @@ Player51.prototype.currentTimestamp = function(decimals=1) {
   return this._seconds_to_hhmmss_aux(hours) + ":" +
          this._seconds_to_hhmmss_aux(minutes) + ":" +
          this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
-}
+};
 Player51.prototype._seconds_to_hhmmss_aux = function(number) {
-  let str = '';
+  let str = "";
   if (number == 0) {
-    str = '00';
+    str = "00";
   } else if (number < 10) {
-    str += '0' + number;
+    str += "0" + number;
   } else {
     str = `${number}`;
   }
   return str;
-}
+};
 
 
 /**
@@ -364,7 +364,7 @@ Player51.prototype.forceSize = function(width, height) {
   this._boolForcedSize = true;
   this._forcedWidth = width;
   this._forcedHeight = height;
-}
+};
 
 
 /**
@@ -381,7 +381,7 @@ Player51.prototype.forceMax = function(width, height) {
     console.log("Warning!  forceSize wins.");
   }
   this._boolForcedMax = true;
-}
+};
 
 
 /**
@@ -396,10 +396,10 @@ Player51.prototype.loadOverlay = function(overlayPath) {
   this._isOverlayPrepared = false;
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
-      if (this.readyState === 4 && this.status === 200) {
-        self._overlayData = JSON.parse(this.responseText);
-        self.updateFromLoadingState();
-      }
+    if (this.readyState === 4 && this.status === 200) {
+      self._overlayData = JSON.parse(this.responseText);
+      self.updateFromLoadingState();
+    }
   };
   xmlhttp.open("GET", overlayPath, true);
   xmlhttp.send();
@@ -414,7 +414,7 @@ Player51.prototype.loadOverlay = function(overlayPath) {
 Player51.prototype.loop = function(boolLoop=true) {
   this._boolLoop = boolLoop;
   this.updateFromDynamicState();
-}
+};
 
 /**
  * @member poster
@@ -424,7 +424,7 @@ Player51.prototype.loop = function(boolLoop=true) {
 Player51.prototype.poster = function(url) {
   this._boolHasPoster = true;
   this._posterURL = url;
-}
+};
 
 /**
  * @member prepareOverlay
@@ -509,8 +509,8 @@ Player51.prototype.prepareOverlay = function (rawjson) {
       if (typeof(f.objects) !== "undefined") {
         this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
       }
-      if (typeof(f.attrs !== "undefined")) {
-        let o = new FrameAttributesOverlay(f.attrs, this)
+      if (typeof(f.attrs) !== "undefined") {
+        let o = new FrameAttributesOverlay(f.attrs, this);
         o.setup(context, this.canvasWidth, this.canvasHeight);
         this._prepareOverlay_auxCheckAdd(o, parseInt(frame_key));
       }
@@ -536,7 +536,7 @@ Player51.prototype._prepareOverlay_auxFormat1Objects = function(context, objects
     o.setup(context, this.canvasWidth, this.canvasHeight);
     this._prepareOverlay_auxCheckAdd(o);
   }
-}
+};
 
 /**
  * Add the overlay to the set.
@@ -556,21 +556,21 @@ Player51.prototype._prepareOverlay_auxCheckAdd = function(o, fn=-1) {
     this.frameOverlay[fn] = thelist;
   } else {
     // this the first time we are seeing the frame
-    let newlist = [o]
+    let newlist = [o];
     this.frameOverlay[fn] = newlist;
   }
-}
+};
 
 /**
  * @member checkFontHeight
  */
 Player51.prototype.checkFontHeight = function(h) {
   if (h == 0) {
-    console.log('PLAYER51 WARN: fontheight 0');
+    console.log("PLAYER51 WARN: fontheight 0");
     return 10;
   }
   return h;
-}
+};
 
 
 /**
@@ -663,7 +663,7 @@ Player51.prototype.render = function(parentElement) {
     this.parent = parentElement;
   }
 
-  let cBS = window.getComputedStyle(this.parent, null).getPropertyValue('box-sizing');
+  let cBS = window.getComputedStyle(this.parent, null).getPropertyValue("box-sizing");
   this._boolBorderBox = false;
   if (cBS === "border-box") {
     this._boolBorderBox = true;
@@ -717,6 +717,7 @@ Player51.prototype.render = function(parentElement) {
   let self = this;
 
   this.eleVideo.addEventListener("loadedmetadata", function() {
+    console.log("updating size and padding?");
     self.updateSizeAndPadding();
     self.setupCanvasContext();
     self.updateFromLoadingState();
@@ -826,8 +827,8 @@ Player51.prototype.render = function(parentElement) {
   });
 
   this.eleVideo.addEventListener("play", function() {
-      self.timerCallback();
-    }, false);
+    self.timerCallback();
+  }, false);
 
   this.parent.addEventListener("mouseenter", function() {
     // Two different behaviors.
@@ -866,7 +867,7 @@ Player51.prototype.render = function(parentElement) {
 
   this._isRendered = true;
   this.updateFromLoadingState();
-}
+};
 
 /**
  * @member resetToFragment
@@ -891,7 +892,7 @@ Player51.prototype.resetToFragment = function() {
   this.updateFromDynamicState();
 
   return true;
-}
+};
 
 /**
  * @member setupCanvasContext
@@ -900,7 +901,7 @@ Player51.prototype.resetToFragment = function() {
  */
 Player51.prototype.setupCanvasContext = function () {
   if (!this._isRendered) {
-    console.log(`WARN: trying to set up canvas context but player not rendered`);
+    console.log("WARN: trying to set up canvas context but player not rendered");
     return;
   }
   let canvasContext = this.eleCanvas.getContext("2d");
@@ -912,7 +913,7 @@ Player51.prototype.setupCanvasContext = function () {
   canvasContext.textBaseline = "bottom";
 
   return canvasContext;
-}
+};
 
 
 /**
@@ -935,7 +936,7 @@ Player51.prototype.thumbnailMode = function(action) {
   this._boolThumbnailMode = true;
   this.loop(true);
   this._thumbnailClickAction = action;
-}
+};
 
 /**
  * @member timerCallback
@@ -963,10 +964,10 @@ Player51.prototype.timerCallback = function() {
   if (!this._boolManualSeek) {
     let self = this;
     setTimeout(function () {
-        self.timerCallback();
-      }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
+      self.timerCallback();
+    }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
   } else {
-    console.log('NOT SETTING TIME CALLBACK');
+    console.log("NOT SETTING TIME CALLBACK");
   }
 };
 
@@ -979,14 +980,14 @@ Player51.prototype.timerCallback = function() {
  */
 Player51.prototype.updateSizeAndPadding = function() {
   if (!this._isRendered) {
-    console.log('WARN: Player51 trying to update size, but it is not rendered.');
+    console.log("WARN: Player51 trying to update size, but it is not rendered.");
     return;
   }
 
-  this.paddingLeft = window.getComputedStyle(this.parent, null).getPropertyValue('padding-left');
-  this.paddingRight = window.getComputedStyle(this.parent, null).getPropertyValue('padding-right');
-  this.paddingTop = window.getComputedStyle(this.parent, null).getPropertyValue('padding-top');
-  this.paddingBottom = window.getComputedStyle(this.parent, null).getPropertyValue('padding-bottom');
+  this.paddingLeft = window.getComputedStyle(this.parent, null).getPropertyValue("padding-left");
+  this.paddingRight = window.getComputedStyle(this.parent, null).getPropertyValue("padding-right");
+  this.paddingTop = window.getComputedStyle(this.parent, null).getPropertyValue("padding-top");
+  this.paddingBottom = window.getComputedStyle(this.parent, null).getPropertyValue("padding-bottom");
   this.paddingLeftN = parseInt(this.paddingLeft.substr(0, this.paddingLeft.length-2));
   this.paddingRightN = parseInt(this.paddingRight.substr(0, this.paddingRight.length-2));
   this.paddingTopN = parseInt(this.paddingTop.substr(0, this.paddingTop.length-2));
@@ -1148,7 +1149,7 @@ Player51.prototype.updateSizeAndPadding = function() {
 
   this._isSizePrepared = true;
   this.updateFromLoadingState();
-}
+};
 
 
 
@@ -1185,7 +1186,7 @@ ColorGenerator.prototype.color = function(index) {
     this.colors[index] = this.generateNewColor();
   }
   return this.colors[index];
-}
+};
 
 
 /**
@@ -1200,7 +1201,7 @@ ColorGenerator.prototype._generateColorSet = function(n=36) {
     this._colorSet[i] = (
       `hsla(${i*delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`);
   }
-}
+};
 
 /**
  * @member generateNewColor
@@ -1229,11 +1230,11 @@ function Overlay()
 {
 }
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
-  console.log('ERROR: draw called on abstract type');
-}
+  console.log("ERROR: draw called on abstract type");
+};
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-  console.log('ERROR: setup called on abstract type');
-}
+  console.log("ERROR: setup called on abstract type");
+};
 
 
 /**
@@ -1297,7 +1298,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth, canvasHe
   }
 
   this._setupWidths(context, canvasWidth, canvasHeight);
-}
+};
 
 /**
  * @method _parseAttrs
@@ -1313,9 +1314,9 @@ FrameAttributesOverlay.prototype._parseAttrs = function () {
 
   for (let len=this.attrs.length, a=0;a<len;a++) {
     let at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
-    this.attrText[a] = at.replace(new RegExp('_', 'g'), ' ');
+    this.attrText[a] = at.replace(new RegExp("_", "g"), " ");
   }
-}
+};
 
 FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth, canvasHeight) {
   context.font = `${this.attrFontHeight}px sans-serif`;
@@ -1323,7 +1324,7 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth, c
   for (let a=0;a<this.attrText.length;a++) {
     let aw = context.measureText(this.attrText[a]).width;
     if (aw == 0) {
-      console.log(`PLAYER51 WARN: rendering context broken`);
+      console.log("PLAYER51 WARN: rendering context broken");
       return;
     }
     if (aw > mw) {
@@ -1331,9 +1332,8 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth, c
     }
   }
   this.maxAttrTextWidth = mw;
-
   this.w = this.maxAttrTextWidth + 2*this.textPadder;
-}
+};
 
 /** @method draw
  *
@@ -1349,7 +1349,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
     // If something went wrong in trying to estimate the sizes of things, then
     // we still cannot draw.
     if (this.w <= 0) {
-      console.log(`PLAYER51 WARN: FAO draw before setup; invalid canvas`);
+      console.log("PLAYER51 WARN: FAO draw before setup; invalid canvas");
       return;
     }
   }
@@ -1369,7 +1369,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth, canvasHei
         this.y + (a+1)*(this.attrFontHeight + this.textPadder));
     }
   }
-}
+};
 
 
 /**
@@ -1459,7 +1459,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   }
 
   this._setupFontWidths(context, canvasWidth, canvasHeight);
-}
+};
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth, canvasHeight) {
   context.font = `${this.headerFontHeight}px sans-serif`;
@@ -1474,7 +1474,7 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth, canvas
   } else {
     this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2*this.textPadder + this.labelIndexPadding;
   }
-}
+};
 
 /**
  * @method _parseAttrs
@@ -1484,7 +1484,7 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth, canvas
  */
 ObjectOverlay.prototype._parseAttrs = function (attrs) {
   if (this.attrText === null) {
-    this.attrText = '';
+    this.attrText = "";
   }
   if (typeof(attrs) === "undefined") {
     if (typeof(this._attrs) === "undefined")
@@ -1495,11 +1495,11 @@ ObjectOverlay.prototype._parseAttrs = function (attrs) {
   for (let a=0;a<attrs.length;a++) {
     this.attrText = this.attrText + `${attrs[a].value}`;
     if (a < attrs.length-1) {
-      this.attrText = this.attrText + ', ';
+      this.attrText = this.attrText + ", ";
     }
   }
-  this.attrText = this.attrText.replace(new RegExp('_', 'g'), ' ');
-}
+  this.attrText = this.attrText.replace(new RegExp("_", "g"), " ");
+};
 
 /** @method draw
  *
@@ -1543,4 +1543,4 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
       this.x + this.textPadder,
       this.y + this.attrFontHeight + 3*this.textPadder);
   }
-}
+};
