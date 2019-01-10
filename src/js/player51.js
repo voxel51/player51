@@ -495,7 +495,8 @@ Player51.prototype.prepareOverlay = function (rawjson) {
 
   // Format 1
   if (typeof(rawjson.objects) !== "undefined") {
-    this._prepareOverlay_auxFormat1Objects(rawjson.objects);
+    let context = this.setupCanvasContext();
+    this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
   }
 
   // Format 2
