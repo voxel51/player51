@@ -79,64 +79,17 @@ export default Player51;
  * will be guessed.
  */
 function Player51(media, overlay, fps) {
+
   this.media = media;
-
   this.frameOverlay = {}; // will be used to store the labels per frame
-  // we cannot prepare the overlay before the player is rendered (canvas, etc.)
-  // these are two separate things (can be means data is loaded)
-  this._overlayCanBePrepared = true;
-  this._isOverlayPrepared = false;
-  if ((overlay === null) || (typeof(overlay) === "undefined")) {
-    this._overlayURL = null;
-    this._overlayCanBePrepared = false;
-  } else if (typeof(overlay) === "string") {
-    this._overlayURL = overlay;
-    this._overlayCanBePrepared = false;
-    this.loadOverlay(overlay);
-  } else if ( (typeof(overlay) === "object") && (overlay != null) && Object.keys(overlay).length > 0) {
-    this._overlayURL = undefined;
-    this._overlayData = overlay;
-  }
 
-  // initialize members to default or null values
+  // Attributes are organized by role; privates have a leading underscore
+  // Content Attributes
   this.canvasWidth = null;
   this.canvasHeight = null;
-  this.canvasContext = undefined;
-  this.frameNumber = undefined;
   this.frameRate = fps;
   this.frameDuration = 1.0/this.frameRate;
   this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
-  this.videoIsPlaying = false;
-  this.boolDrawFrameNumber = false;
-  this.boolDrawTimestamp = false;  // draw time indicator when playing
-  this.width = -1;
-  this.height = -1;
-  this.paddingLeft = 0;
-  this.paddingRight = 0;
-  this.paddingTop = 0;
-  this.paddingBottom = 0;
-
-  // some properties for drawing
-  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
-
-  // private members
-  this._boolThumbnailMode = false;
-  this._thumbnailClickAction = undefined;
-  this._boolBorderBox = false;  // is the container a border-box?
-  this._boolForcedSize = false;
-  this._boolForcedMax = false;
-  this._boolAutoplay = false;
-  this._boolLoop = false;
-  this._forcedWidth = -1;
-  this._forcedHeight = -1;
-  this._isRendered = false;
-  this._isSizePrepared = false;
-  this._isDataLoaded = false;
-
-  // set via poster(); used to show an image while the video itself is loading
-  this._boolHasPoster = false;
-  this._posterURL = '';
-
   // check if a fragment was passed in via the media and work accordingly
   this._hasMediaFragment = false;  // will be true if the src has a fragment
   this._mfBeginT = null; // Time
@@ -150,7 +103,6 @@ function Player51(media, overlay, fps) {
     // importance of the fragment so that the user can watch the whole video.
     // @todo an interface component needs to be added to show that we are in a
     // fragment and allow locking / unlocking of the fragment.
-
   let mfParse = parseMediaFragmentsUri(this.media.src);
 
   if (typeof mfParse.hash.t !== "undefined") {
@@ -161,24 +113,159 @@ function Player51(media, overlay, fps) {
     this._hasMediaFragment = true;
     this._lockToMF = true;
   }
+
+
+  // All state attributes are private because we need to manage the state
+  // and state changes internally.
+
+  // Player Prerender Attributes
+  //  These attributes must be set before the `render()` function is called or
+  //  they will have no impact.
+  // set via poster(); used to show an image while the video itself is loading
+  this._boolHasPoster = false;   // set via `poster()`
+  this._posterURL = '';   // set via `poster()`
+  this._boolForcedSize = false;  // set via `forceSize()`
+  this._boolForcedMax = false;  // set via `forceMax()`
+  this._forcedWidth = -1;  // set via `forceSize()`
+  this._forcedHeight = -1;  // set via `forceSize()`
+  this._boolThumbnailMode = false;
+  this._thumbnailClickAction = undefined;
+
+  // Player View Attributes
+  this.width = -1;
+  this.height = -1;
+  this.paddingLeft = 0;
+  this.paddingRight = 0;
+  this.paddingTop = 0;
+  this.paddingBottom = 0;
+  this._boolBorderBox = false;  // is the container a border-box?
+
+  this.boolDrawFrameNumber = false;
+  this.boolDrawTimestamp = false;  // draw time indicator when playing
+  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
+  this._boolShowControls = false; // whether to show the controls, part of Dynamic State
+
+  // Player State Attributes
+  // Naming convention:
+  //  _bool --> things the programmer / user can set
+  //  _is --> things that are impacted by code flow
+  // Group 1 --> called Dynamic State in the code
+  this._frameNumber = undefined; // does not cause an updateDynamicState call
+  this._boolAutoplay = false; // set with `autoplay(bool=true)`
+  this._boolLoop = false;  // set with `loop(bool=true)`
+  this._boolPlaying = false;
+  this._boolManualSeek = false;  // is the user manually scrubbing the video?
+
+  // Group 2 --> called the Loading State in the code
+  this._isReadyProcessFrames = false; // DOM rendered, sized and video loaded
+  this._isRendered = false; // DOM rendered
+  this._isSizePrepared = false; // DOM rendered and sized
+  this._isDataLoaded = false; // video loaded
+  // we cannot prepare the overlay before the player is rendered (canvas, etc.)
+  // these are two separate things (can be means data is loaded)
+  this._overlayCanBePrepared = true;
+  this._isOverlayPrepared = false;
+  this._isPreparingOverlay = false;
+  this._overlayData = null;
+  if ((overlay === null) || (typeof(overlay) === "undefined")) {
+    this._overlayURL = null;
+    this._overlayCanBePrepared = false;
+  } else if (typeof(overlay) === "string") {
+    this._overlayURL = overlay;
+    this._overlayCanBePrepared = false;
+    this.loadOverlay(overlay);
+  } else if ( (typeof(overlay) === "object") && (overlay != null) && Object.keys(overlay).length > 0) {
+    this._overlayURL = null ;
+    this._overlayData = overlay;
+  }
 };
 
+
+/**
+ * @member updateFromDynamicState
+ *
+ * This function is the controller: the dynamic state of the player has changed
+ * and we need to set various settings based on it.
+ *
+ * _frameNumber is part of the dynamic state but does not call this function to
+ * be invoke.
+ */
+Player51.prototype.updateFromDynamicState = function() {
+  if ( (!this._isRendered) ||
+       (!this._isSizePrepared) ) {
+    return;
+  }
+
+  this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
+  this.eleVideo.toggleAttribute("loop", this._boolLoop);
+
+  if (this._boolPlaying) {
+    this.eleVideo.play();
+    this.elePlayPauseButton.innerHTML = "Pause";
+  } else {
+    this.eleVideo.pause();
+    this.elePlayPauseButton.innerHTML = "Play";
+  }
+  if (this._boolShowControls) {
+    this.eleDivVideoControls.style.opacity = "0.9";
+  } else {
+    this.eleDivVideoControls.style.opacity = "0.0";
+  }
+}
+
+/**
+ * @member updateFromLoadingState
+ *
+ * This function is a controller: the loading state of the player has changed
+ * Make various actions based on that.
+ */
+Player51.prototype.updateFromLoadingState = function() {
+  if ( (this._isSizePrepared) &&
+       (this._isRendered) ) {
+
+    if (this._isDataLoaded)
+      this._isReadyProcessFrames = true;
+
+    // if we had to download overlay data and it is ready
+    if ( (this._overlayData !== null) && (this.overlayURL !== null) )
+      this._overlayCanBePrepared = true;
+  }
+
+  if (this._overlayCanBePrepared) {
+    this.prepareOverlay(this._overlayData);
+  }
+}
+
+/**
+ * @member state()
+ *
+ * Generate a string that represents the state.
+ */
+Player51.prototype.state = function() {
+  return `
+Player51 State Information:
+frame number: ${this._frameNumber}
+playing: ${this._boolPlaying}
+autoplay:  ${this._boolAutoplay}
+looping:  ${this._boolLoop}
+isReadyProcessFrames: ${this._isReadyProcessFrames}
+isRendered:   ${this._isRendered}
+isSizePrepared:  ${this._isSizePrepared}
+isDataLoaded:  ${this._isDataLoaded}
+overlayCanBePrepared: ${this._overlayCanBePrepared}
+isOverlayPrepared: ${this._isOverlayPrepared}
+isPreparingOverlay: ${this._isPreparingOverlay}
+`;
+}
 
 /**
  * @member autoplay
  *
  * Force the video to autoplay when rendered.
  */
-Player51.prototype.autoplay = function(boolAutoplay) {
-  if (typeof boolAutoplay === "undefined") {
-    boolAutoplay = true;
-  }
-
+Player51.prototype.autoplay = function(boolAutoplay=true) {
   this._boolAutoplay = boolAutoplay;
-
-  if (this._isRendered && this._isSizePrepared) {
-    this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
-  }
+  this.updateFromDynamicState();
 }
 
 /**
@@ -195,7 +282,7 @@ Player51.prototype.autoplay = function(boolAutoplay) {
  */
 Player51.prototype.checkForFragmentReset = function(fn) {
   if ( (!this._hasMediaFragment) ||
-       (!this.videoIsPlaying) ||
+       (!this._boolPlaying) ||
        (!this._lockToMF) ) {
     return fn;
   }
@@ -203,12 +290,13 @@ Player51.prototype.checkForFragmentReset = function(fn) {
   if (fn >= this._mfEndF) {
     if (this._boolLoop) {
       this.eleVideo.currentTime = this._mfBeginT;
-      this.eleVideo.play();
-      return this._mfBeginF;
+      fn = this._mfBeginF;
+    } else {
+      this._boolPlaying = false;
     }
-
-    this.videoIsPlaying = false;
-    this.eleVideo.pause();
+    // Important to only update in here since this is only the case that the
+    // state has changed.
+    this.updateFromDynamicState()
   }
 
   return fn;
@@ -310,10 +398,7 @@ Player51.prototype.loadOverlay = function(overlayPath) {
   xmlhttp.onreadystatechange = function() {
       if (this.readyState === 4 && this.status === 200) {
         self._overlayData = JSON.parse(this.responseText);
-        self._overlayCanBePrepared = true;
-        if ((!self._isOverlayPrepared) && self._isRendered && self._isSizePrepared) {
-          self.prepareOverlay(self._overlayData);
-        }
+        self.updateFromLoadingState();
       }
   };
   xmlhttp.open("GET", overlayPath, true);
@@ -326,16 +411,9 @@ Player51.prototype.loadOverlay = function(overlayPath) {
  *
  * Force the video to loop.
  */
-Player51.prototype.loop = function(boolLoop) {
-  if (typeof boolLoop === "undefined") {
-    boolLoop = true;
-  }
-
+Player51.prototype.loop = function(boolLoop=true) {
   this._boolLoop = boolLoop;
-
-  if (this._isRendered && this._isSizePrepared) {
-    this.eleVideo.toggleAttribute("loop", this._boolLoop);
-  }
+  this.updateFromDynamicState();
 }
 
 /**
@@ -408,32 +486,40 @@ Player51.prototype.poster = function(url) {
  */
 Player51.prototype.prepareOverlay = function (rawjson) {
 
-  if (this._isOverlayPrepared) {
+  if ((this._isOverlayPrepared) || (this._isPreparingOverlay)) {
     return;
   }
-  this._isOverlayPrepared = true;
+
+  // only want this preparation to happen once
+  this._isPreparingOverlay = true;
 
   // Format 1
   if (typeof(rawjson.objects) !== "undefined") {
-    this._prepareOverlay_auxFormat1Objects(rawjson.objects);
+    let context = this.setupCanvasContext();
+    this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
   }
 
   // Format 2
   if (typeof(rawjson.frames) !== "undefined") {
+    let context = this.setupCanvasContext();
     let frame_keys = Object.keys(rawjson.frames);
     for (let frame_key_i in frame_keys) {
       let frame_key = frame_keys[frame_key_i];
       let f = rawjson.frames[frame_key];
       if (typeof(f.objects) !== "undefined") {
-        this._prepareOverlay_auxFormat1Objects(f.objects.objects);
+        this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
       }
       if (typeof(f.attrs !== "undefined")) {
         let o = new FrameAttributesOverlay(f.attrs, this)
-        o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
-        this._prepareOverlay_auxCheckAdd(o, parseInt(frame_key_i));
+        o.setup(context, this.canvasWidth, this.canvasHeight);
+        this._prepareOverlay_auxCheckAdd(o, parseInt(frame_key));
       }
     }
   }
+
+  this._isOverlayPrepared = true;
+  this._isPreparingOverlay = false;
+  this.updateFromLoadingState();
 };
 
 
@@ -444,10 +530,10 @@ Player51.prototype.prepareOverlay = function (rawjson) {
  * Args:
  *   objects is an Array of Objects with each entry an object in Format 1 above.
  */
-Player51.prototype._prepareOverlay_auxFormat1Objects = function(objects) {
+Player51.prototype._prepareOverlay_auxFormat1Objects = function(context, objects) {
   for (let len = objects.length, i=0; i< len; i++) {
     let o = new ObjectOverlay(objects[i], this);
-    o.setup(this.canvasContext, this.canvasWidth, this.canvasHeight);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
     this._prepareOverlay_auxCheckAdd(o);
   }
 }
@@ -501,17 +587,21 @@ Player51.prototype.checkFontHeight = function(h) {
  */
 Player51.prototype.processFrame = function() {
 
-  this.setupCanvasContext();
+  if (!this._isReadyProcessFrames) {
+    return;
+  }
+
+  let context = this.setupCanvasContext();
 
   // Since we are rendering on a transparent canvas, we need to clean it
   // every time.
   // @todo double-buffering
-  this.canvasContext.clearRect(0,0,this.canvasWidth, this.canvasHeight);
+  context.clearRect(0,0,this.canvasWidth, this.canvasHeight);
 
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.boolDrawFrameNumber) {
-    this.canvasContext.fillText(this.frameNumber, 15, 30, 70);
+    context.fillText(this._frameNumber, 15, 30, 70);
   }
 
   if (this.boolDrawTimestamp) {
@@ -523,10 +613,10 @@ Player51.prototype.processFrame = function() {
       fontheight = 8 * this.canvasMultiplier;
     }
     fontheight = this.checkFontHeight(fontheight);
-    this.canvasContext.font = `${fontheight}px sans-serif`;
+    context.font = `${fontheight}px sans-serif`;
 
     let hhmmss = this.currentTimestamp();
-    let tw = this.canvasContext.measureText(hhmmss).width;
+    let tw = context.measureText(hhmmss).width;
     let pad = 4;
     let pad2 = 2; // pad divided by 2
     let w = tw + pad + pad;
@@ -534,24 +624,24 @@ Player51.prototype.processFrame = function() {
     let x = 10;
     let y = this.canvasHeight - 10 - pad - pad - fontheight;
 
-    this.canvasContext.fillStyle = this.metadataOverlayBGColor;
-    this.canvasContext.fillRect(x, y, w, h);
+    context.fillStyle = this.metadataOverlayBGColor;
+    context.fillRect(x, y, w, h);
 
-    this.canvasContext.fillStyle = colorGenerator.white;
-    this.canvasContext.fillText(hhmmss, x+pad, y+pad+fontheight-pad2, tw+8);
+    context.fillStyle = colorGenerator.white;
+    context.fillText(hhmmss, x+pad, y+pad+fontheight-pad2, tw+8);
   }
 
   if (this._isOverlayPrepared) {
-    if (this.frameNumber in this.frameOverlay) {
-      let fm = this.frameOverlay[this.frameNumber];
+    if (this._frameNumber in this.frameOverlay) {
+      let fm = this.frameOverlay[this._frameNumber];
 
       for (let len = fm.length, i=0; i<len; i++) {
-        fm[i].draw(this.canvasContext, this.canvasWidth, this.canvasHeight);
+        fm[i].draw(context, this.canvasWidth, this.canvasHeight);
       }
     }
   }
 
-  this.frameNumber++;
+  this._frameNumber++;
   return;
 };
 
@@ -576,7 +666,6 @@ Player51.prototype.render = function(parentElement) {
   let cBS = window.getComputedStyle(this.parent, null).getPropertyValue('box-sizing');
   this._boolBorderBox = false;
   if (cBS === "border-box") {
-    console.log('PLAYER51 INFO: border-box box-sizing detected');
     this._boolBorderBox = true;
   }
 
@@ -630,43 +719,44 @@ Player51.prototype.render = function(parentElement) {
   this.eleVideo.addEventListener("loadedmetadata", function() {
     self.updateSizeAndPadding();
     self.setupCanvasContext();
+    self.updateFromLoadingState();
   });
 
   this.eleVideo.addEventListener("loadeddata", function() {
     self._isDataLoaded = true;
 
     // Handles the case that we have a poster frame to indicate the video is
-    // loading and now we can show the video.
-    if (self._boolHasPoster) {
+    // loading and now we can show the video.  But when we are not autoplay.
+    // We need to set the state to playing if we are set to autoplay
+    //  (the player itself will handle the autoplaying)
+    if (self._boolAutoplay) {
+      self._boolPlaying = true;
+    } else if (self._boolHasPoster) {
       if (self._hasMediaFragment) {
         self.eleVideo.currentTime = self._mfBeginT;
+        self._frameNumber = self._mfBeginF;
       } else {
-        self.eleVideo.currentTime = 1;
+        self.eleVideo.currentTime = 0;
+        self._frameNumber = 1;
       }
     }
 
-    if (self._boolAutoplay) {
-      self.elePlayPauseButton.innerHTML = "Pause";
+    self.updateFromLoadingState();
+
+    // so that we see overlay and time stamp now that we are ready
+    if ((!self._boolThumbnailMode)&&(!self._boolAutoplay)) {
+      self.processFrame();
     }
   });
 
   // Event listener for the play/pause button
   this.elePlayPauseButton.addEventListener("click", function() {
-    if (self.eleVideo.paused === true) {
-      // Play the video
-      self.eleVideo.play();
-      self.videoIsPlaying = true;
-
-      // Update the button text to "Pause"
-      self.elePlayPauseButton.innerHTML = "Pause";
+    if (self._boolPlaying !== true) {
+      self._boolPlaying = true;
     } else {
-      // Pause the video
-      self.eleVideo.pause();
-      self.videoIsPlaying = false;
-
-      // Update the button text to "Play"
-      self.elePlayPauseButton.innerHTML = "Play";
+      self._boolPlaying = false;
     }
+    self.updateFromDynamicState();
   });
 
   // Event listener for the seek bar
@@ -680,20 +770,49 @@ Player51.prototype.render = function(parentElement) {
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
 
-    if (self.videoIsPlaying) {
-      self.elePlayPauseButton.innerHTML = "Pause";
+    self.updateFromDynamicState();
+  });
+
+  /*  THIS DOES NOT FUNCTION YET
+  // Pause the video when the seek handle is being dragged
+  this.eleSeekBar.addEventListener("mousemove", function() {
+    if (self._boolManualSeek) {
+      let time = self.eleVideo.duration * (self.eleSeekBar.valueAsNumber / 100.0);
+      self.eleVideo.currentTime = time;
+      self.processFrame();
+    }
+  });
+  */
+
+  // Pause the video when the seek handle is being dragged
+  this.eleSeekBar.addEventListener("mousedown", function() {
+    if (!self._boolThumbnailMode) {
+      self._boolManualSeek = true;
+      // Unlock the fragment so the user can browse the whole video
+      self._lockToMF = false;
+      // We need to manually control the video-play state
+      // And turn it back on as needed.
+      self.eleVideo.pause();
+    }
+  });
+
+  // Play the video when the seek handle is dropped
+  this.eleSeekBar.addEventListener("mouseup", function() {
+    self._boolManualSeek = false;
+    if (self._boolPlaying) {
+      self.eleVideo.play();
     }
   });
 
   this.eleVideo.addEventListener("ended", function() {
-    self.videoIsPlaying = false;
-    self.elePlayPauseButton.innerHTML = "Play";
+    self._boolPlaying = false;
+    self.updateFromDynamicState();
   });
 
   this.eleVideo.addEventListener("pause", function () {
-    // Update the button text to "Play"
-    self.elePlayPauseButton.innerHTML = "Play";
-
+    // this is a pause that is fired from the video player itself and not from
+    // the user clicking the play/pause button.
+    // Noting the checkForFragmentReset function calls updateFromDynamicState
     self.checkForFragmentReset(self.computeFrameNumber());
   });
 
@@ -704,22 +823,6 @@ Player51.prototype.render = function(parentElement) {
 
     // Update the slider value
     self.eleSeekBar.value = value;
-
-    // This seems like a waste but it handles all of the user corner cases for
-    // when the video may start playing in a way out of our control.
-    self.elePlayPauseButton.innerHTML = "Pause";
-  });
-
-  // Pause the video when the seek handle is being dragged
-  this.eleSeekBar.addEventListener("mousedown", function() {
-    self.eleVideo.pause();
-  });
-
-  // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener("mouseup", function() {
-    if (self.videoIsPlaying) {
-      self.eleVideo.play();
-    }
   });
 
   this.eleVideo.addEventListener("play", function() {
@@ -735,11 +838,11 @@ Player51.prototype.render = function(parentElement) {
     }
 
     if (self._boolThumbnailMode) {
-      self.videoIsPlaying = true;
-      self.eleVideo.play();
+      self._boolPlaying = true;
     } else {
-      self.eleDivVideoControls.style.opacity = "0.9";
+      self._boolShowControls = true;
     }
+    self.updateFromDynamicState();
   });
 
   this.parent.addEventListener("mouseleave", function() {
@@ -748,13 +851,13 @@ Player51.prototype.render = function(parentElement) {
     }
 
     if (self._boolThumbnailMode) {
-      self.videoIsPlaying = false;
-      self.eleVideo.pause();
+      self._boolPlaying = false;
       // clear things we do not want to render any more
-      self.canvasContext.clearRect(0,0,self.canvasWidth, self.canvasHeight);
+      self.setupCanvasContext().clearRect(0,0,self.canvasWidth, self.canvasHeight);
     } else {
-      self.eleDivVideoControls.style.opacity = "0";
+      self._boolShowControls = false;
     }
+    self.updateFromDynamicState();
   });
 
   if (typeof this._thumbnailClickAction !== "undefined") {
@@ -762,9 +865,7 @@ Player51.prototype.render = function(parentElement) {
   }
 
   this._isRendered = true;
-  if ((this._isSizePrepared) && (this._overlayCanBePrepared) && (!this._isOverlayPrepared)) {
-    this.prepareOverlay(this._overlayData);
-  }
+  this.updateFromLoadingState();
 }
 
 /**
@@ -787,6 +888,8 @@ Player51.prototype.resetToFragment = function() {
   this.eleVideo.currentTime = this._mfBeginT;
   this._lockToMF = true;
 
+  this.updateFromDynamicState();
+
   return true;
 }
 
@@ -800,13 +903,15 @@ Player51.prototype.setupCanvasContext = function () {
     console.log(`WARN: trying to set up canvas context but player not rendered`);
     return;
   }
-  this.canvasContext = this.eleCanvas.getContext("2d");
-  this.canvasContext.strokeStyle = "#fff";
-  this.canvasContext.fillStyle = "#fff";
-  this.canvasContext.lineWidth = 3;
-  this.canvasContext.font = "14px sans-serif";
+  let canvasContext = this.eleCanvas.getContext("2d");
+  canvasContext.strokeStyle = "#fff";
+  canvasContext.fillStyle = "#fff";
+  canvasContext.lineWidth = 3;
+  canvasContext.font = "14px sans-serif";
   // easier for setting offsets
-  this.canvasContext.textBaseline = "bottom";
+  canvasContext.textBaseline = "bottom";
+
+  return canvasContext;
 }
 
 
@@ -849,14 +954,20 @@ Player51.prototype.timerCallback = function() {
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
 
-  if (cfn !== this.frameNumber) {
-    this.frameNumber = cfn;
+  if (cfn !== this._frameNumber) {
+    this._frameNumber = cfn;
     this.processFrame();
   }
-  let self = this;
-  setTimeout(function () {
-      self.timerCallback();
-    }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
+
+  // if we are manually seeking right now, then do not set the manual callback
+  if (!this._boolManualSeek) {
+    let self = this;
+    setTimeout(function () {
+        self.timerCallback();
+      }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
+  } else {
+    console.log('NOT SETTING TIME CALLBACK');
+  }
 };
 
 /**
@@ -1036,10 +1147,13 @@ Player51.prototype.updateSizeAndPadding = function() {
   }
 
   this._isSizePrepared = true;
-  if ((this._isRendered) && (this._overlayCanBePrepared) && (!this._isOverlayPrepared)) {
-    this.prepareOverlay(this._overlayData);
-  }
+  this.updateFromLoadingState();
 }
+
+
+
+/**********************************************************************/
+
 
 
 /**
@@ -1067,11 +1181,10 @@ function ColorGenerator()
  * Provide a color based on an index.
  */
 ColorGenerator.prototype.color = function(index) {
-  if (index in this.colors) {
-    return this.colors[index];
-  } else {
+  if (!(index in this.colors)) {
     this.colors[index] = this.generateNewColor();
   }
+  return this.colors[index];
 }
 
 
@@ -1291,7 +1404,9 @@ function ObjectOverlay(d, player)
   this.frame_number = d.frame_number;
   this.bounding_box = d.bounding_box;
 
-  this._attrs = d.attrs.attrs;
+  if (typeof(d.attrs) !== "undefined") {
+    this._attrs = d.attrs.attrs;
+  }
   this.attrText = null;
   this.attrTextWidth = -1;
   this.attrFontHeight = null;
@@ -1368,12 +1483,15 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth, canvas
  * them up as a renderable string for the overlay.
  */
 ObjectOverlay.prototype._parseAttrs = function (attrs) {
-  if (typeof(attrs) === "undefined") {
-    attrs = this._attrs;
-  }
   if (this.attrText === null) {
     this.attrText = '';
   }
+  if (typeof(attrs) === "undefined") {
+    if (typeof(this._attrs) === "undefined")
+      return;
+    attrs = this._attrs;
+  }
+
   for (let a=0;a<attrs.length;a++) {
     this.attrText = this.attrText + `${attrs[a].value}`;
     if (a < attrs.length-1) {
