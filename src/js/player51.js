@@ -533,8 +533,16 @@ Player51.prototype.prepareOverlay = function (rawjson) {
 Player51.prototype._prepareOverlay_auxFormat1Objects = function(context, objects) {
   for (let len = objects.length, i=0; i< len; i++) {
     let o = new ObjectOverlay(objects[i], this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this._prepareOverlay_auxCheckAdd(o);
+    if (!this.canvasWidth) {
+      setTimeout(() => {
+        o.setup(context, this.canvasWidth, this.canvasHeight);
+        this._prepareOverlay_auxCheckAdd(o);
+      }, 1000);
+    } else {
+      o.setup(context, this.canvasWidth, this.canvasHeight);
+      this._prepareOverlay_auxCheckAdd(o);
+    }
+
   }
 };
 
@@ -717,7 +725,6 @@ Player51.prototype.render = function(parentElement) {
   let self = this;
 
   this.eleVideo.addEventListener("loadedmetadata", function() {
-    console.log("updating size and padding?");
     self.updateSizeAndPadding();
     self.setupCanvasContext();
     self.updateFromLoadingState();
@@ -1439,7 +1446,6 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   if (typeof(this._attrs) !== undefined) {
     this._parseAttrs();
   }
-
   this.x = this.bounding_box.top_left.x * canvasWidth;
   this.y = this.bounding_box.top_left.y * canvasHeight;
   this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) * canvasWidth;
