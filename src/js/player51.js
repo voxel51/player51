@@ -237,6 +237,26 @@ Player51.prototype.updateFromLoadingState = function() {
 }
 
 /**
+ * @member updateStateFromTimeChange
+ *
+ * This function updates the player state when the video current time/frame has
+ * been changed, which happens when the video is playing or when the user
+ * manually scrubs.
+ */
+Player51.prototype.updateStateFromTimeChange = function() {
+  let cfn = this.computeFrameNumber();
+
+  // check if we have a media fragment and should be looping
+  // if so, reset the playing location appropriately
+  cfn = this.checkForFragmentReset(cfn);
+
+  if (cfn !== this._frameNumber) {
+    this._frameNumber = cfn;
+    this.processFrame();
+  }
+}
+
+/**
  * @member state()
  *
  * Generate a string that represents the state.
@@ -766,11 +786,10 @@ Player51.prototype.render = function(parentElement) {
 
     // Update the video time
     self.eleVideo.currentTime = time;
-
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
 
-    self.updateFromDynamicState();
+    self.updateStateFromTimeChange();
   });
 
   /*  THIS DOES NOT FUNCTION YET
@@ -948,16 +967,7 @@ Player51.prototype.timerCallback = function() {
   if (this.eleVideo.paused || this.eleVideo.ended) {
     return;
   }
-  let cfn = this.computeFrameNumber();
-
-  // check if we have a media fragment and should be looping
-  // if so, reset the playing location appropriately
-  cfn = this.checkForFragmentReset(cfn);
-
-  if (cfn !== this._frameNumber) {
-    this._frameNumber = cfn;
-    this.processFrame();
-  }
+  this.updateStateFromTimeChange();
 
   // if we are manually seeking right now, then do not set the manual callback
   if (!this._boolManualSeek) {
