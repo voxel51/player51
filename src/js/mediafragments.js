@@ -11,7 +11,7 @@ export {
 };
 
 if (!Array.prototype.forEach) {
-  Array.prototype.forEach = function(fun /*, thisp */) {
+  Array.prototype.forEach = function (fun /*, thisp */) {
     if (this === void 0 || this === null) {
       throw new TypeError();
     }
@@ -35,7 +35,7 @@ let SEPARATOR = '&';
 // report errors?
 let VERBOSE = true;
 
-let logWarning = function(message) {
+let logWarning = function (message) {
   if (VERBOSE) {
     console.log('Media Fragments URI Parsing Warning: ' + message);
   }
@@ -44,28 +44,28 @@ let logWarning = function(message) {
 // the currently supported media fragments dimensions are: t, xywh, track, id
 // allows for O(1) checks for existence of valid keys
 let dimensions = {
-  t: function(value) {
+  t: function (value) {
     let components = value.split(',');
     if (components.length > 2) {
       return false;
     }
-    let start = components[0]? components[0] : '';
-    let end = components[1]? components[1] : '';
+    let start = components[0] ? components[0] : '';
+    let end = components[1] ? components[1] : '';
     if ((start === '' && end === '') ||
-        (start && !end && value.indexOf(',') !== -1)) {
+      (start && !end && value.indexOf(',') !== -1)) {
       return false;
     }
     // hours:minutes:seconds.milliseconds
     let npt =
-        /^((npt\:)?((\d+\:(\d\d)\:(\d\d))|((\d\d)\:(\d\d))|(\d+))(\.\d*)?)?$/;
+      /^((npt\:)?((\d+\:(\d\d)\:(\d\d))|((\d\d)\:(\d\d))|(\d+))(\.\d*)?)?$/;
     if ((npt.test(start)) &&
-        (npt.test(end))) {
+      (npt.test(end))) {
       start = start.replace(/^npt\:/, '');
       // replace a sole trailing dot, which is legal:
       // npt-sec = 1*DIGIT [ "." *DIGIT ]
       start = start.replace(/\.$/, '');
       end = end.replace(/\.$/, '');
-      let convertToSeconds = function(time) {
+      let convertToSeconds = function (time) {
         if (time === '') {
           return false;
         }
@@ -127,7 +127,7 @@ let dimensions = {
         }
       } else {
         if ((convertToSeconds(start) !== false) ||
-            (convertToSeconds(end) !== false)) {
+          (convertToSeconds(end) !== false)) {
           return {
             value: value,
             unit: 'npt',
@@ -149,7 +149,7 @@ let dimensions = {
     if ((smpte.test(start)) && (smpte.test(end))) {
       // we interpret frames as milliseconds, and further-subdivison-of-frames
       // as microseconds. this allows for relatively easy comparison.
-      let convertToSecondsWithFrames = function(time) {
+      let convertToSecondsWithFrames = function (time) {
         if (time === '') {
           return false;
         }
@@ -198,11 +198,11 @@ let dimensions = {
           return false;
         }
         return hours * 3600 + minutes * 60 + seconds +
-            frames * 0.001 + subframes * 0.000001;
+          frames * 0.001 + subframes * 0.000001;
       };
       if (start && end) {
         if (convertToSecondsWithFrames(start) <
-            convertToSecondsWithFrames(end)) {
+          convertToSecondsWithFrames(end)) {
           return {
             value: value,
             unit: prefix,
@@ -215,7 +215,7 @@ let dimensions = {
         }
       } else {
         if ((convertToSecondsWithFrames(start) !== false) ||
-            (convertToSecondsWithFrames(end) !== false)) {
+          (convertToSecondsWithFrames(end) !== false)) {
           return {
             value: value,
             unit: prefix,
@@ -261,7 +261,7 @@ let dimensions = {
     logWarning('Invalid time dimension.');
     return false;
   },
-  xywh: function(value) {
+  xywh: function (value) {
     // "pixel:" is optional
     let pixelCoordinates = /^(pixel\:)?\d+,\d+,\d+,\d+$/;
     // "percent:" is obligatory
@@ -290,7 +290,7 @@ let dimensions = {
        * checks for valid percent selections
        */
       let checkPercentSelection = (function checkPercentSelection(
-          x, y, w, h) {
+        x, y, w, h) {
         if (!((0 <= x) && (x <= 100))) {
           logWarning('Please ensure that 0 <= x <= 100.');
           return false;
@@ -334,19 +334,19 @@ let dimensions = {
       return false;
     }
   },
-  track: function(value) {
+  track: function (value) {
     return {
       value: value,
       name: value
     };
   },
-  id: function(value) {
+  id: function (value) {
     return {
       value: value,
       name: value
     };
   },
-  chapter: function(value) {
+  chapter: function (value) {
     return {
       value: value,
       chapter: value
@@ -357,10 +357,10 @@ let dimensions = {
 /**
  * splits an octet string into allowed key-value pairs
  */
-let splitKeyValuePairs = function(octetString) {
+let splitKeyValuePairs = function (octetString) {
   let keyValues = {};
   let keyValuePairs = octetString.split(SEPARATOR);
-  keyValuePairs.forEach(function(keyValuePair) {
+  keyValuePairs.forEach(function (keyValuePair) {
     // the key part is up to the first(!) occurrence of '=', further '='-s
     // form part of the value
     let position = keyValuePair.indexOf('=');
@@ -368,8 +368,8 @@ let splitKeyValuePairs = function(octetString) {
       return;
     }
     let components = [
-        keyValuePair.substring(0, position),
-        keyValuePair.substring(position + 1)];
+      keyValuePair.substring(0, position),
+      keyValuePair.substring(position + 1)];
     // we require a value for each key
     if (!components[1]) {
       return;
@@ -408,38 +408,38 @@ function parse(opt_uri) {
 }
 
 function parseMediaFragmentsUri(opt_uri) {
-  let uri = opt_uri? opt_uri : window.location.href;
+  let uri = opt_uri ? opt_uri : window.location.href;
   // retrieve the query part of the URI
   let indexOfHash = uri.indexOf('#');
   let indexOfQuestionMark = uri.indexOf('?');
-  let end = (indexOfHash !== -1? indexOfHash : uri.length);
-  let query = indexOfQuestionMark !== -1?
-      uri.substring(indexOfQuestionMark + 1, end) : '';
+  let end = (indexOfHash !== -1 ? indexOfHash : uri.length);
+  let query = indexOfQuestionMark !== -1 ?
+    uri.substring(indexOfQuestionMark + 1, end) : '';
   // retrieve the hash part of the URI
-  let hash = indexOfHash !== -1? uri.substring(indexOfHash + 1) : '';
+  let hash = indexOfHash !== -1 ? uri.substring(indexOfHash + 1) : '';
   let queryValues = splitKeyValuePairs(query);
   let hashValues = splitKeyValuePairs(hash);
   return {
     query: queryValues,
     hash: hashValues,
-    toString: function() {
-      let buildString = function(name, thing) {
+    toString: function () {
+      let buildString = function (name, thing) {
         let s = '\n[' + name + ']:\n';
-        if (!Object.keys) Object.keys = function(o) {
+        if (!Object.keys) Object.keys = function (o) {
           if (o !== Object(o)) {
             throw new TypeError('Object.keys called on non-object');
           }
           let ret = [], p;
           for (p in o) {
-            if (Object.prototype.hasOwnProperty.call(o,p)) ret.push(p);
+            if (Object.prototype.hasOwnProperty.call(o, p)) ret.push(p);
           }
           return ret;
         };
-        Object.keys(thing).forEach(function(key) {
+        Object.keys(thing).forEach(function (key) {
           s += '  * ' + key + ':\n';
-          thing[key].forEach(function(value) {
+          thing[key].forEach(function (value) {
             s += '    [\n';
-            Object.keys(value).forEach(function(valueKey) {
+            Object.keys(value).forEach(function (valueKey) {
               s += '      - ' + valueKey + ': ' + value[valueKey] + '\n';
             });
             s += '   ]\n';
@@ -448,10 +448,9 @@ function parseMediaFragmentsUri(opt_uri) {
         return s;
       };
       let string =
-          buildString('Query', queryValues) +
-          buildString('Hash', hashValues);
+        buildString('Query', queryValues) +
+        buildString('Hash', hashValues);
       return string;
     }
   };
 }
-
