@@ -713,6 +713,13 @@ Player51.prototype.render = function (parentElement) {
   }
   if (this._boolHasPoster) {
     this.eleVideo.setAttribute("poster", this._posterURL);
+    if (this._boolForcedSize) {
+      const sizeStyleString = "width:" + this._forcedWidth +
+          "px; height:" + this._forcedHeight + "px;";
+      this.eleVideo.setAttribute("style", sizeStyleString);
+      this.eleDivVideo.setAttribute("style", sizeStyleString);
+      this.parent.setAttribute("style", sizeStyleString);
+    }
   }
   this.eleVideoSource = document.createElement("source");
   this.eleVideoSource.setAttribute("src", this.media.src);
