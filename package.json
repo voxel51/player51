@@ -7,14 +7,12 @@
     "test": "test"
   },
   "dependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
     "babel-plugin-external-helpers": "^6.22.0",
     "rollup": "^0.67.3",
     "rollup-plugin-babel": "^4.0.3",
-    "rollup-plugin-node-resolve": "^3.4.0"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.1.6",
-    "@babel/preset-env": "^7.1.6",
+    "rollup-plugin-node-resolve": "^3.4.0",
     "cssnano": "^4.1.7",
     "eslint-plugin-react": "^7.11.1",
     "postcss-cli": "^6.0.1",
