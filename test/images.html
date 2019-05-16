@@ -30,17 +30,16 @@
 
         let player = new Player51(
           {
-            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
-            type: "video/mp4"
+            src: "/test/player51-test-data/car2.jpeg",
+            type: "image/jpeg"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
-          25
+          "/test/player51-test-data/image.json",
         );
 
         console.log("Player51 created.");
 
-        //player.forceMax();
-        player.forceSize(1000, 500);
+        player.forceMax();
+        //player.forceSize(1000, 500);
         player.render('test-container');
 
       });

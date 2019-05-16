@@ -75,6 +75,7 @@ export default Player51;
  * F-MIXINS:  None
  * @constructor
  * @param media is an object that has "src" and "type" attributes.
+ * type must be specified as either image or video
  * @param overlay is data that should be overlayed on the video.  Overlay can
  * be empty (`null`), a string point to a single URL or an object that is
  * preloaded data.
@@ -92,7 +93,6 @@ function Player51(media, overlay, fps) {
     } else if (this.mediaType === "image") {
         this.player = new ImageViewer51(this.media, overlay);
     }
-    console.log(this.player);
 }
 
 
