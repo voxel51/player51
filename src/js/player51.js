@@ -8,9 +8,13 @@
  * video.
  *
  * Usage:
- *
  * There are full examples in the `test/` directory.  But a simple example of
  * usage is here.
+ *
+ * To switch between types of media, specify the type attribute in media in the following format.
+ * <media type>/<media format>
+ * examples: image/jpg, video/mp4
+
    ```
     <div id="test-container" />
 
@@ -42,9 +46,9 @@
 
  * Note that default behavior is to mirror the size of the enclosing container.
  * You can, however, alter this in two ways.
- * 1.  You can call `player.forceMaximize()` which will force the video and its
- *      enclosing container to the "native" resolution of the video up to 720p.
- * 2.  You can call `player.forceSize(width, height)` to force the video and
+ * 1.  You can call `player.forceMax()` which will force the video or image and its
+ *      enclosing container to the "native" resolution of the video or image up to 720p.
+ * 2.  You can call `player.forceSize(width, height)` to force the video or image and
  *      its enclosing container to the width and height you pass in.
  * Both such calls need to be made before the render call.
  *
@@ -76,11 +80,12 @@ export default Player51;
  * @constructor
  * @param media is an object that has "src" and "type" attributes.
  * type must be specified as either image or video
- * @param overlay is data that should be overlayed on the video.  Overlay can
- * be empty (`null`), a string point to a single URL or an object that is
- * preloaded data.
+ * @param overlay is data that should be overlayed on the video or image.
+ * In the case of videos: Overlay can be empty (`null`),
+ * a string pointing to a single URL or an object that is preloaded data.
+ * In the case of images: Overlay can be a string pointing to a single URL.
  * @param fps is the frame-rate of the media.  If it is not provided then it
- * will be guessed.
+ * will be guessed. Ignore in the case of images.
  *
 */
 function Player51(media, overlay, fps) {

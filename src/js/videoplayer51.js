@@ -15,7 +15,7 @@
 
 
 import { parseMediaFragmentsUri } from "./mediafragments.js";
-import { ObjectOverlay, FrameAttributesOverlay } from "./overlay.js";
+import { MediaPlayer, ObjectOverlay, FrameAttributesOverlay } from "./mediaplayer.js";
 
 // ES6 module export
 export { VideoPlayer51 };
@@ -28,6 +28,8 @@ export { VideoPlayer51 };
  * F-MIXINS:  None
  * @constructor
  * @param media is an object that has "src" and "type" attributes.
+ * type must be in the format video/<format>
+ * ex. type: "video/mp4"
  * @param overlay is data that should be overlayed on the video.  Overlay can
  * be empty (`null`), a string point to a single URL or an object that is
  * preloaded data.
@@ -35,6 +37,7 @@ export { VideoPlayer51 };
  * will be guessed.
  */
 function VideoPlayer51(media, overlay, fps) {
+    MediaPlayer.call(this);
 
 	this.media = media;
     this.frameOverlay = {}; // will be used to store the labels per frame
@@ -79,8 +82,6 @@ function VideoPlayer51(media, overlay, fps) {
 	// set via poster(); used to show an image while the video itself is loading
 	this._boolHasPoster = false;   // set via `poster()`
     this._posterURL = "";   // set via `poster()`
-    this._boolForcedSize = false;  // set via `forceSize()`
-    this._boolForcedMax = false;  // set via `forceMax()`
     this._forcedWidth = -1;  // set via `forceSize()`
     this._forcedHeight = -1;  // set via `forceSize()`
     this._boolThumbnailMode = false;
@@ -134,6 +135,8 @@ function VideoPlayer51(media, overlay, fps) {
 	    this._overlayData = overlay;
 	}
 }
+VideoPlayer51.prototype = Object.create(MediaPlayer.prototype);
+VideoPlayer51.prototype.constructor = VideoPlayer51;
 
 
 /**
@@ -318,42 +321,6 @@ VideoPlayer51.prototype._seconds_to_hhmmss_aux = function (number) {
 		str = `${number}`;
 	}
 	return str;
-};
-
-
-/**
- * @member forceSize
- *
- * Forces a manual size to the video and canvas.
- *
- * Must be called before render; will not work dynamically.  Will not actually
- * be effected until render is called (and the loadedmetadata handler happens)
- */
-VideoPlayer51.prototype.forceSize = function (width, height) {
-	if (this._boolForcedMax) {
-		console.log("Warning!  Both forceSize and forcedMax were called.");
-		console.log("Warning!  forceSize wins.");
-	}
-	this._boolForcedSize = true;
-	this._forcedWidth = width;
-	this._forcedHeight = height;
-};
-
-
-/**
- * @member forceMax
- *
- * Forces the video to max to native video resolution up to 720p
- *
- * Must be called before render; will not work dynamically.  Will not actually
- * be effected until render is called (and the loadedmetadata handler happens)
- */
-VideoPlayer51.prototype.forceMax = function (width, height) {
-	if (this._boolForcedSize) {
-		console.log("Warning!  Both forceSize and forcedMax were called.");
-		console.log("Warning!  forceSize wins.");
-	}
-	this._boolForcedMax = true;
 };
 
 
@@ -543,18 +510,6 @@ VideoPlayer51.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
 		let newlist = [o];
 		this.frameOverlay[fn] = newlist;
 	}
-};
-
-
-/**
- * @member checkFontHeight
- */
-VideoPlayer51.prototype.checkFontHeight = function (h) {
-	if (h == 0) {
-		console.log("PLAYER51 WARN: fontheight 0");
-		return 10;
-	}
-	return h;
 };
 
 
@@ -875,27 +830,6 @@ VideoPlayer51.prototype.resetToFragment = function () {
 
 	this.updateFromDynamicState();
 	return true;
-};
-
-
-/**
- * @member setupCanvasContext
- *
- * Set up the canvas context for default styles.
- */
-VideoPlayer51.prototype.setupCanvasContext = function () {
-	if (!this._isRendered) {
-		console.log("WARN: trying to set up canvas context but player not rendered");
-		return;
-	}
-	let canvasContext = this.eleCanvas.getContext("2d");
-	canvasContext.strokeStyle = "#fff";
-	canvasContext.fillStyle = "#fff";
-	canvasContext.lineWidth = 3;
-	canvasContext.font = "14px sans-serif";
-	// easier for setting offsets
-	canvasContext.textBaseline = "bottom";
-	return canvasContext;
 };
 
 
