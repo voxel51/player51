@@ -5,7 +5,7 @@
     <style>
       body {
         background: white;
-        color:#222222; 
+        color:#222222;
         font-family: sans-serif;
       }
       .container {
@@ -20,16 +20,24 @@
         padding-right: 2em;
         padding-bottom: 2em;
         position: relative;
-        flex: 0 0 auto;  
+        flex: 0 0 auto;
         /* noting that just 'flex: 0' breaks player51 layout */
       }
       #test-container2 {
         padding-right: 2em;
         padding-bottom: 2em;
         position: relative;
-        flex: 0 0 auto;  
+        flex: 0 0 auto;
         /* noting that just 'flex: 0' breaks player51 layout */
       }
+      #test-container3 {
+          padding-right: 2em;
+          padding-bottom: 2em;
+          position: relative;
+          flex: 0 0 auto;
+          /* noting that just 'flex: 0' breaks player51 layout */
+      }
+
 
       #test-container:hover {
         opacity: .9;
@@ -40,16 +48,17 @@
 
   <body>
 
-    <h1> Player51: Video Player Example: Thumbnail Mode</h1>
-    In thumbnail mode, the Player51 will just play a video and invoke a 
+    <h1> Player51: Thumbnail Mode</h1>
+    In thumbnail mode, the Player51 will just play a video and invoke a
     configurable action upon being clicked.
 
     <div class="container">
       <div id="test-container1"></div>
       <div id="test-container2"></div>
+      <div id="test-container3"></div>
     </div>
 
-    <script type="module"> 
+    <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -92,6 +101,32 @@
         player2.render('test-container2');
 
         console.log("Second Player51 rendered and ready.");
+
+
+        let player3 = new Player51(
+          {
+            src: "/test/player51-test-data/test.png",
+            type: "image/png"
+          },
+          "/test/player51-test-data/image.json",
+        );
+
+        console.log("Third Player51 created.");
+
+        player3.thumbnailMode(function(){console.log("CLICKED 3!");});
+        player3.forceSize(160, 90);
+        //player2.forceSize(320, 180);
+        player3.render('test-container3');
+
+        console.log("Third Player51 rendered and ready.");
+
+
+
+
+
+
+
+
       });
     </script>
   </body>

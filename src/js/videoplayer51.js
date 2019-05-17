@@ -589,6 +589,8 @@ VideoPlayer51.prototype.processFrame = function () {
  */
 VideoPlayer51.prototype.render = function (parentElement) {
     this.staticRender(parentElement);
+    this.dynamicRender();
+
 
     if (this._boolAutoplay) {
 		this.eleVideo.toggleAttribute("autoplay", true);
@@ -749,10 +751,6 @@ VideoPlayer51.prototype.render = function (parentElement) {
 		}
 		self.updateFromDynamicState();
 	});
-
-	if (typeof this._thumbnailClickAction !== "undefined") {
-		this.parent.addEventListener("click", this._thumbnailClickAction);
-	}
 
 	this._isRendered = true;
 	this.updateFromLoadingState();

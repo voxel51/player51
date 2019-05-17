@@ -37,12 +37,52 @@ function MediaPlayer(mediaType) {
     this._isSizePrepared = false;
 
     // Player Prerender Attributes
-    //  These attributes must be set before the `render()` function or they Will
-    //  have no effect.
     this._forcedWidth = -1;  // set via `forceSize()`
     this._forcedHeight = -1;  // set via `forceSize()`
     this._boolThumbnailMode = false;
     this._thumbnailClickAction = undefined;
+    this._boolHasPoster = false;   // set via `poster()`
+    this._posterURL = "";   // set via `poster()`
+}
+
+
+/**
+ *
+ * @member poster
+ *
+ * Define abstract function poster to be implemented in subclasses
+ */
+MediaPlayer.prototype.poster = function(url) {
+}
+
+
+/**
+ *
+ * @member loop
+ *
+ * Define abstract function loop to be implemented in subclasses
+ */
+MediaPlayer.prototype.loop = function() {
+}
+
+
+/**
+ *
+ * @member autoplay
+ *
+ * Define abstract function autoplay to be implemented in subclasses
+ */
+MediaPlayer.prototype.autoplay = function() {
+}
+
+
+/**
+ *
+ * @member resetToFragment
+ *
+ * Define abstract function resetToFragment to be implemented in subclasses
+ */
+MediaPlayer.prototype.resetToFragment = function() {
 }
 
 
@@ -169,6 +209,19 @@ MediaPlayer.prototype.staticRender = function (parentElement) {
     this.parent.appendChild(this.eleDivCanvas);
 
     this._isRendered = true;
+}
+
+
+/**
+ * @member dynamicRender
+ *
+ * Setup shared UI controls
+ *
+ */
+MediaPlayer.prototype.dynamicRender = function () {
+    if (typeof this._thumbnailClickAction !== "undefined") {
+		this.parent.addEventListener("click", this._thumbnailClickAction);
+	}
 }
 
 

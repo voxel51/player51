@@ -102,6 +102,17 @@ function Player51(media, overlay, fps) {
 
 
 /**
+ * @member setBoolDrawTimeStamp
+ *
+ * This function sets player.boolDrawTimestamp
+ * @arg value = true/false
+ */
+Player51.prototype.setBoolDrawTimeStamp = function(value) {
+    this.player.boolDrawTimestamp = value;
+}
+
+
+/**
  * @member determineMediaType
  *
  * This function figures out the type of media to be rendered.
@@ -133,6 +144,61 @@ Player51.prototype.render = function (parentElement) {
  */
 Player51.prototype.thumbnailMode = function(action) {
     this.player.thumbnailMode(action);
+}
+
+
+/**
+ * @member poster
+ *
+ * Calls poster on player
+ *
+ */
+Player51.prototype.poster = function(url) {
+    this.player.poster(url);
+}
+
+
+/**
+ * @member poster
+ *
+ * Calls poster on player
+ *
+ */
+Player51.prototype.poster = function(url) {
+    this.player.poster(url);
+}
+
+
+/**
+ * @member loop
+ *
+ * Calls loop on player
+ *
+ */
+Player51.prototype.loop = function() {
+    this.player.loop();
+}
+
+
+/**
+ * @member autoplay
+ *
+ * Calls autoplay on player
+ *
+ */
+Player51.prototype.autoplay = function() {
+    this.player.autoplay();
+}
+
+
+/**
+ * @member resetToFragment
+ *
+ * Calls resetToFragment on player
+ *
+ */
+Player51.prototype.resetToFragment = function() {
+    this.player.resetToFragment();
 }
 
 

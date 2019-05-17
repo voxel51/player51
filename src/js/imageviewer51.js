@@ -50,6 +50,10 @@ ImageViewer51.prototype.constructor = ImageViewer51;
  *
  */
 ImageViewer51.prototype.annotate = function (overlayPath) {
+    if (this._boolThumbnailMode) {
+        return;
+    }
+
     if (!this._isRendered || !this._isSizePrepared) {
         console.log("Player51 WARN: Tried to annotate, hasn't been rendered yet.")
         return;
@@ -70,6 +74,24 @@ ImageViewer51.prototype.annotate = function (overlayPath) {
 
 
 /**
+ * @member thumbnailMode
+ *
+ * This changes the behaviour of ImagePlayer51 in the following way
+ * 1. The caller can associated an action with clicking anywhere on the image.
+ * 2. Annotations are drawn over mouse-over.
+ *
+ * Caller probably wants to set the size of the image via forceSize()
+ *
+ * Args:
+ *  action: (optional) a callback function to associate with any click in the image.
+ */
+ImageViewer51.prototype.thumbnailMode = function (action) {
+    this._boolThumbnailMode = true;
+    this._thumbnailClickAction = action;
+}
+
+
+/**
  * @member render
  * Render a new viewer for this image within the DOM element provided
  *
@@ -80,6 +102,7 @@ ImageViewer51.prototype.annotate = function (overlayPath) {
  */
 ImageViewer51.prototype.render = function(parentElement) {
     this.staticRender(parentElement);
+    this.dynamicRender();
 
     let self = this;
     // Update size
@@ -87,6 +110,20 @@ ImageViewer51.prototype.render = function(parentElement) {
         self._isImageLoaded = true;
         self.updateSizeAndPadding();
         self.annotate(self._overlayURL);
+    });
+
+    this.parent.addEventListener("mouseenter", function() {
+        if (self._boolThumbnailMode) {
+            self._boolThumbnailMode = false;
+            self.annotate(self._overlayURL);
+            self._boolThumbnailMode = true;
+        }
+    });
+
+    this.parent.addEventListener("mouseleave", function() {
+        if (self._boolThumbnailMode) {
+            self.setupCanvasContext().clearRect(0, 0, self.canvasWidth, self.canvasHeight);
+        }
     });
 }
 
