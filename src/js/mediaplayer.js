@@ -3,7 +3,6 @@
  * @summary Defines a general class that helps with rendering players for
  * the different supported media types.
  *
- *
  * @desc MediaPlayer.js is a javascript class that helps child media players, ImageViewer51
  * and VideoPlayer51 request and render properly.
  *
@@ -26,15 +25,24 @@ export { MediaPlayer, ObjectOverlay, FrameAttributesOverlay };
  * @constructor
  *
  */
-function MediaPlayer() {
+function MediaPlayer(mediaType) {
     this.colorGenerator = new ColorGenerator();
     this.mediaElement = null;
+    this.mediaType = mediaType;
 
 	this._boolForcedMax = false;
     this._boolForcedSize = false;
 
     this._isRendered = false;
     this._isSizePrepared = false;
+
+    // Player Prerender Attributes
+    //  These attributes must be set before the `render()` function or they Will
+    //  have no effect.
+    this._forcedWidth = -1;  // set via `forceSize()`
+    this._forcedHeight = -1;  // set via `forceSize()`
+    this._boolThumbnailMode = false;
+    this._thumbnailClickAction = undefined;
 }
 
 
@@ -93,7 +101,7 @@ MediaPlayer.prototype.checkFontHeight = function (h) {
  *
  * Creates media and canvas, handles part of the positioning
  */
-MediaPlayer.prototype.staticRender = function (parentElement, playerType) {
+MediaPlayer.prototype.staticRender = function (parentElement) {
     this.parent = undefined;
 	if (typeof parentElement === "string") {
 		this.parent = document.getElementById(parentElement);
@@ -108,7 +116,7 @@ MediaPlayer.prototype.staticRender = function (parentElement, playerType) {
     }
 
     // Load media
-    if (playerType === "image") {
+    if (this.mediaType === "image") {
         this.eleDivImage = document.createElement("div");
         this.eleDivImage.className = "p51-contained-image";
         this.eleImage = document.createElement("img");
@@ -119,7 +127,7 @@ MediaPlayer.prototype.staticRender = function (parentElement, playerType) {
         this.parent.appendChild(this.eleDivImage);
         this.mediaElement = this.eleImage;
         this.mediaDiv = this.eleDivImage;
-    } else if (playerType === "video") {
+    } else if (this.mediaType === "video") {
         this.eleDivVideo = document.createElement("div");
     	this.eleDivVideo.className = "p51-contained-video";
     	this.eleVideo = document.createElement("video");
@@ -191,10 +199,10 @@ MediaPlayer.prototype.setupCanvasContext = function () {
  * This method updates the size and padding based on the configuration.
  * Requires that the viewer is rendered.
  */
-MediaPlayer.prototype.updateSizeAndPadding = function (playerType) {
-    this.handleWidthAndHeight(playerType);
+MediaPlayer.prototype.updateSizeAndPadding = function () {
+    this.handleWidthAndHeight();
     // Resize canvas
-    this.resizeCanvas(playerType);
+    this.resizeCanvas();
     this._isSizePrepared = true;
 }
 
@@ -205,16 +213,16 @@ MediaPlayer.prototype.updateSizeAndPadding = function (playerType) {
  * the media element.
  * Requires that the viewer is rendered.
  */
-MediaPlayer.prototype.handleWidthAndHeight = function (playerType) {
+MediaPlayer.prototype.handleWidthAndHeight = function () {
     if (!this._isRendered) {
         console.log("WARN: Player51 trying to update size, but it is not rendered.");
         return;
     }
 
-    if (playerType === "image") {
+    if (this.mediaType === "image") {
         this.mediaHeight = this.mediaElement.height;
         this.mediaWidth = this.mediaElement.width;
-    } else if (playerType === "video") {
+    } else if (this.mediaType === "video") {
         this.mediaHeight = this.mediaElement.videoHeight;
         this.mediaWidth = this.mediaElement.videoWidth;
     }
@@ -270,7 +278,7 @@ MediaPlayer.prototype.handleWidthAndHeight = function (playerType) {
  * This method is a helper function that aligns canvas dimensions with image dimensions.
  * Requires that the viewer is rendered.
  */
-MediaPlayer.prototype.resizeCanvas = function(playerType) {
+MediaPlayer.prototype.resizeCanvas = function() {
     // NOTE:: Legacy
     // Current functionality is to set a fixed size canvas so that we can
 	// guarantee of consistent L&F for the overlays.
@@ -329,7 +337,7 @@ MediaPlayer.prototype.resizeCanvas = function(playerType) {
         this.eleCanvas.style.paddingTop = this.paddingTop;
         this.eleCanvas.style.paddingBottom = this.paddingBottom;
 
-        if (playerType === "video") {
+        if (this.mediaType === "video") {
             // need to size the controls too.
             // The controls are tuned using margins when padding exists.
             this.eleDivVideoControls.style.width = (this.width + "px");
@@ -376,7 +384,7 @@ MediaPlayer.prototype.resizeCanvas = function(playerType) {
         this.eleCanvas.style.paddingTop = this.paddingTop;
         this.eleCanvas.style.paddingBottom = this.paddingBottom;
 
-        if (playerType === "video") {
+        if (this.mediaType === "video") {
             // need to size the controls too.
             // The controls are tuned using margins when padding exists.
             this.eleDivVideoControls.style.width = (this.width + "px");

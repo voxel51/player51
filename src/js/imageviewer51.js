@@ -31,7 +31,7 @@ export { ImageViewer51 };
  * file of eta.core.image.ImageLabels format
  */
 function ImageViewer51(media, overlay) {
-    MediaPlayer.call(this);
+    MediaPlayer.call(this, "image");
 
     this.media = media;
     this.frameOverlay = []; // will be used to store the labels
@@ -79,13 +79,13 @@ ImageViewer51.prototype.annotate = function (overlayPath) {
  * @param parentElement String id of the parentElement or actual Div object.
  */
 ImageViewer51.prototype.render = function(parentElement) {
-    this.staticRender(parentElement, "image");
+    this.staticRender(parentElement);
 
     let self = this;
     // Update size
     this.eleImage.addEventListener("load", function() {
         self._isImageLoaded = true;
-        self.updateSizeAndPadding("image");
+        self.updateSizeAndPadding();
         self.annotate(self._overlayURL);
     });
 }

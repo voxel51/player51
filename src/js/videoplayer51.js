@@ -37,7 +37,7 @@ export { VideoPlayer51 };
  * will be guessed.
  */
 function VideoPlayer51(media, overlay, fps) {
-    MediaPlayer.call(this);
+    MediaPlayer.call(this, "video");
 
 	this.media = media;
     this.frameOverlay = {}; // will be used to store the labels per frame
@@ -82,10 +82,6 @@ function VideoPlayer51(media, overlay, fps) {
 	// set via poster(); used to show an image while the video itself is loading
 	this._boolHasPoster = false;   // set via `poster()`
     this._posterURL = "";   // set via `poster()`
-    this._forcedWidth = -1;  // set via `forceSize()`
-    this._forcedHeight = -1;  // set via `forceSize()`
-    this._boolThumbnailMode = false;
-    this._thumbnailClickAction = undefined;
 
 	// Player View Attributes
 	this.width = -1;
@@ -592,7 +588,7 @@ VideoPlayer51.prototype.processFrame = function () {
  * @param parentElement String id of the parentElement or actual Div object.
  */
 VideoPlayer51.prototype.render = function (parentElement) {
-    this.staticRender(parentElement, "video");
+    this.staticRender(parentElement);
 
     if (this._boolAutoplay) {
 		this.eleVideo.toggleAttribute("autoplay", true);
@@ -616,7 +612,7 @@ VideoPlayer51.prototype.render = function (parentElement) {
 	let self = this;
 
 	this.eleVideo.addEventListener("loadedmetadata", function () {
-		self.updateSizeAndPadding("video");
+		self.updateSizeAndPadding();
         self.updateFromLoadingState();
 		self.setupCanvasContext();
 		self.updateFromLoadingState();

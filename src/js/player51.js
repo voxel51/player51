@@ -126,6 +126,17 @@ Player51.prototype.render = function (parentElement) {
 
 
 /**
+ * @member thumbnailMode
+ *
+ * Calls thumbnailMode on player
+ *
+ */
+Player51.prototype.thumbnailMode = function(action) {
+    this.player.thumbnailMode(action);
+}
+
+
+/**
  * @member forceMax
  *
  * Calls forceMax on player
