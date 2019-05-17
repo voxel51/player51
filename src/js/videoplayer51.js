@@ -114,8 +114,6 @@ function VideoPlayer51(media, overlay, fps) {
 
 	// Group 2 --> called the Loading State in the code
 	this._isReadyProcessFrames = false; // DOM rendered, sized and video loaded
-	this._isRendered = false; // DOM rendered
-	this._isSizePrepared = false; // DOM rendered and sized
 	this._isDataLoaded = false; // video loaded
 	// we cannot prepare the overlay before the player is rendered (canvas, etc.)
 	// these are two separate things (can be means data is loaded)
@@ -566,7 +564,7 @@ VideoPlayer51.prototype.processFrame = function () {
 		context.fillStyle = this.metadataOverlayBGColor;
 		context.fillRect(x, y, w, h);
 
-		context.fillStyle = colorGenerator.white;
+		context.fillStyle = this.colorGenerator.white;
 		context.fillText(hhmmss, x + pad, y + pad + fontheight - pad2, tw + 8);
 	}
 
@@ -594,26 +592,9 @@ VideoPlayer51.prototype.processFrame = function () {
  * @param parentElement String id of the parentElement or actual Div object.
  */
 VideoPlayer51.prototype.render = function (parentElement) {
-	this.parent = undefined;
-	if (typeof parentElement === "string") {
-		this.parent = document.getElementById(parentElement);
-	} else {
-		this.parent = parentElement;
-	}
+    this.staticRender(parentElement, "video");
 
-	let cBS = window.getComputedStyle(this.parent, null).getPropertyValue("box-sizing");
-	this._boolBorderBox = false;
-	if (cBS === "border-box") {
-		this._boolBorderBox = true;
-	}
-
-	this.eleDivVideo = document.createElement("div");
-	this.eleDivVideo.className = "p51-contained-video";
-	this.eleVideo = document.createElement("video");
-	this.eleVideo.className = "p51-contained-video";
-	this.eleVideo.setAttribute("preload", "metadata");
-	this.eleVideo.muted = true;  // this works whereas .setAttribute does not
-	if (this._boolAutoplay) {
+    if (this._boolAutoplay) {
 		this.eleVideo.toggleAttribute("autoplay", true);
 	}
 	if (this._boolLoop) {
@@ -629,40 +610,14 @@ VideoPlayer51.prototype.render = function (parentElement) {
 			this.parent.setAttribute("style", sizeStyleString);
 		}
 	}
-	this.eleVideoSource = document.createElement("source");
-	this.eleVideoSource.setAttribute("src", this.media.src);
-	this.eleVideoSource.setAttribute("type", this.media.type);
-	this.eleVideo.appendChild(this.eleVideoSource);
-	this.eleDivVideo.appendChild(this.eleVideo);
-	this.parent.appendChild(this.eleDivVideo);
-
-	this.eleDivCanvas = document.createElement("div");
-	this.eleDivCanvas.className = "p51-contained-canvas";
-	this.eleCanvas = document.createElement("canvas");
-	this.eleCanvas.className = "p51-contained-canvas";
-	this.eleDivCanvas.appendChild(this.eleCanvas);
-	this.parent.appendChild(this.eleDivCanvas);
-
-	this.eleDivVideoControls = document.createElement("div");
-	this.eleDivVideoControls.className = "p51-video-controls";
-	this.elePlayPauseButton = document.createElement("button");
-	this.elePlayPauseButton.setAttribute("type", "button");
-	this.elePlayPauseButton.className = "p51-play-pause";
-	this.elePlayPauseButton.innerHTML = "Play";
-	this.eleSeekBar = document.createElement("input");
-	this.eleSeekBar.setAttribute("type", "range");
-	this.eleSeekBar.setAttribute("value", "0");
-	this.eleSeekBar.className = "p51-seek-bar";
-	this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-	this.eleDivVideoControls.appendChild(this.eleSeekBar);
-	this.parent.appendChild(this.eleDivVideoControls);
 
 	// after the DOM elements are created then we initialize other variables that
 	// will be needed during playback
 	let self = this;
 
 	this.eleVideo.addEventListener("loadedmetadata", function () {
-		self.updateSizeAndPadding();
+		self.updateSizeAndPadding("video");
+        self.updateFromLoadingState();
 		self.setupCanvasContext();
 		self.updateFromLoadingState();
 	});
@@ -877,186 +832,4 @@ VideoPlayer51.prototype.timerCallback = function () {
 	} else {
 		console.log("NOT SETTING TIME CALLBACK");
 	}
-};
-
-
-
-/**
- * @member updateSizeAndPadding
- *
- * This method updates the size and padding based on the configuration and the
- * video.
- * Requires that the player is rendered.
- */
-VideoPlayer51.prototype.updateSizeAndPadding = function () {
-	if (!this._isRendered) {
-		console.log("WARN: Player51 trying to update size, but it is not rendered.");
-		return;
-	}
-
-	this.paddingLeft = window.getComputedStyle(this.parent, null).getPropertyValue("padding-left");
-	this.paddingRight = window.getComputedStyle(this.parent, null).getPropertyValue("padding-right");
-	this.paddingTop = window.getComputedStyle(this.parent, null).getPropertyValue("padding-top");
-	this.paddingBottom = window.getComputedStyle(this.parent, null).getPropertyValue("padding-bottom");
-	this.paddingLeftN = parseInt(this.paddingLeft.substr(0, this.paddingLeft.length - 2));
-	this.paddingRightN = parseInt(this.paddingRight.substr(0, this.paddingRight.length - 2));
-	this.paddingTopN = parseInt(this.paddingTop.substr(0, this.paddingTop.length - 2));
-	this.paddingBottomN = parseInt(this.paddingBottom.substr(0, this.paddingBottom.length - 2));
-
-	// We cannot just take the window dimensions because the aspect ratio of
-	// the video must be preserved.
-	// Preservation is based on maintaining the height of the parent.
-
-	// Try to maintain height of container first.  If fails, then set width.
-	// Fails means that the width of the video is too wide for the container.
-	this.height = this.parent.offsetHeight - this.paddingTopN - this.paddingBottomN;
-	this.width = this.height * this.eleVideo.videoWidth / this.eleVideo.videoHeight;
-
-	if (this.width > this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN) {
-		this.width = this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN;
-		this.height = this.width * this.eleVideo.videoHeight / this.eleVideo.videoWidth;
-	}
-
-	// if the caller wants to maximize to native pixel resolution
-	if (this._boolForcedMax) {
-		this.width = this.eleVideo.videoWidth;
-		this.height = this.eleVideo.videoHeight;
-
-		if (this.width >= 1440) {
-			this.width = 1280;
-			this.height = 720;
-		}
-	}
-
-	// height priority in sizing is a forced size.
-	if (this._boolForcedSize) {
-		this.width = this._forcedWidth;
-		this.height = this._forcedHeight;
-	}
-
-	// We currently maintain a 1-to-1 relationship between the off-screen buffer
-	// for video and canvas and the on-screen div.  This is not necessary and we
-	// can consider fixing the off-screen size (at least for canvas) so we can
-	// set context and locations in context well
-	this.eleVideo.setAttribute("width", this.width);
-	this.eleVideo.setAttribute("height", this.height);
-
-	// Current functionality is to set a fixed size canvas so that we can
-	// guarantee of consistent L&F for the overlays.
-	// But, the right way to do this is probably define an abstraction to the
-	// canvas size and then make the canvas the closest match to the actual
-	// display size so that we do not kill so much member in creating the video
-	// player.
-	//this.eleCanvas.setAttribute("width", this.width);
-	//this.eleCanvas.setAttribute("height", this.height);
-	//this.canvasWidth = this.width;
-	//this.canvasHeight = this.height;
-
-	let canvasWidth = 1280;
-	let canvasHeight = canvasWidth * this.eleVideo.videoHeight / this.eleVideo.videoWidth;
-	this.eleCanvas.setAttribute("width", canvasWidth);
-	this.eleCanvas.setAttribute("height", canvasHeight);
-	this.canvasWidth = canvasWidth;
-	this.canvasHeight = canvasHeight;
-	this.canvasMultiplier = canvasWidth / this.width;
-
-	this.parent.setAttribute("width", this.width);
-	this.parent.setAttribute("height", this.height);
-
-	if (this._boolBorderBox) {
-		let widthstr = `${this.width + this.paddingLeftN + this.paddingRightN}px`;
-		let heightstr = `${this.height + this.paddingTopN + this.paddingBottomN}px`;
-
-		this.parent.style.width = widthstr;
-		this.parent.style.height = heightstr;
-
-		this.eleDivVideo.style.width = widthstr;
-		this.eleDivVideo.style.height = heightstr;
-		this.eleDivVideo.style.paddingLeft = this.paddingLeft;
-		this.eleDivVideo.style.paddingRight = this.paddingRight;
-		this.eleDivVideo.style.paddingTop = this.paddingTop;
-		this.eleDivVideo.style.paddingBottom = this.paddingBottom;
-
-		this.eleVideo.style.width = widthstr;
-		this.eleVideo.style.height = heightstr;
-		this.eleVideo.style.paddingLeft = this.paddingLeft;
-		this.eleVideo.style.paddingRight = this.paddingRight;
-		this.eleVideo.style.paddingTop = this.paddingTop;
-		this.eleVideo.style.paddingBottom = this.paddingBottom;
-
-		this.eleDivCanvas.style.width = widthstr;
-		this.eleDivCanvas.style.height = heightstr;
-		this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
-		this.eleDivCanvas.style.paddingRight = this.paddingRight;
-		this.eleDivCanvas.style.paddingTop = this.paddingTop;
-		this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
-
-		this.eleCanvas.style.width = widthstr;
-		this.eleCanvas.style.height = heightstr;
-		this.eleCanvas.style.paddingLeft = this.paddingLeft;
-		this.eleCanvas.style.paddingRight = this.paddingRight;
-		this.eleCanvas.style.paddingTop = this.paddingTop;
-		this.eleCanvas.style.paddingBottom = this.paddingBottom;
-
-		// need to size the controls too.
-		// The controls are tuned using margins when padding exists.
-		this.eleDivVideoControls.style.width = (this.width + "px");
-		this.eleDivVideoControls.style.height = (
-			Math.min(60 + this.paddingBottomN, 0.1 * this.height + this.paddingBottomN) + "px"
-		);
-
-		// controls have 0 padding because we want them only to show
-		// on the video, this impacts their left location too.
-		this.eleDivVideoControls.style.paddingLeft = 0;
-		this.eleDivVideoControls.style.paddingRight = 0;
-		this.eleDivVideoControls.style.bottom = (this.paddingBottomN - 2) + "px";
-		this.eleDivVideoControls.style.left = this.paddingLeft;
-	} else {
-		this.parent.style.width = (this.width + "px");
-		this.parent.style.height = (this.height + "px");
-
-		this.eleDivVideo.style.width = (this.width + "px");
-		this.eleDivVideo.style.height = (this.height + "px");
-		this.eleDivVideo.style.paddingLeft = this.paddingLeft;
-		this.eleDivVideo.style.paddingRight = this.paddingRight;
-		this.eleDivVideo.style.paddingTop = this.paddingTop;
-		this.eleDivVideo.style.paddingBottom = this.paddingBottom;
-
-		this.eleVideo.style.width = (this.width + "px");
-		this.eleVideo.style.height = (this.height + "px");
-		this.eleVideo.style.paddingLeft = this.paddingLeft;
-		this.eleVideo.style.paddingRight = this.paddingRight;
-		this.eleVideo.style.paddingTop = this.paddingTop;
-		this.eleVideo.style.paddingBottom = this.paddingBottom;
-
-	    this.eleDivCanvas.style.width = (this.width + "px");
-	    this.eleDivCanvas.style.height = (this.height + "px");
-	    this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
-	    this.eleDivCanvas.style.paddingRight = this.paddingRight;
-	    this.eleDivCanvas.style.paddingTop = this.paddingTop;
-	    this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
-
-	    this.eleCanvas.style.width = (this.width + "px");
-	    this.eleCanvas.style.height = (this.height + "px");
-	    this.eleCanvas.style.paddingLeft = this.paddingLeft;
-	    this.eleCanvas.style.paddingRight = this.paddingRight;
-	    this.eleCanvas.style.paddingTop = this.paddingTop;
-	    this.eleCanvas.style.paddingBottom = this.paddingBottom;
-
-		// need to size the controls too.
-		// The controls are tuned using margins when padding exists.
-		this.eleDivVideoControls.style.width = (this.width + "px");
-		this.eleDivVideoControls.style.height = (
-			Math.min(80, 0.1 * this.height) + "px"
-		);
-		// controls have 0 padding because we want them only to show
-		// on the video, this impacts their left location too.
-		this.eleDivVideoControls.style.paddingLeft = 0;
-		this.eleDivVideoControls.style.paddingRight = 0;
-		this.eleDivVideoControls.style.bottom = this.paddingBottom;
-		this.eleDivVideoControls.style.left = this.paddingLeft;
-	}
-
-	this._isSizePrepared = true;
-	this.updateFromLoadingState();
 };

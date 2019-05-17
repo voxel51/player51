@@ -36,13 +36,8 @@ function ImageViewer51(media, overlay) {
     this.media = media;
     this.frameOverlay = []; // will be used to store the labels
 
-    this._isRendered = false;
-    this._isSizePrepared = false;
     this._isImageLoaded = false;
-
     this._overlayURL = overlay;
-
-    console.log(this);
 }
 ImageViewer51.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer51.prototype.constructor = ImageViewer51;
@@ -84,38 +79,13 @@ ImageViewer51.prototype.annotate = function (overlayPath) {
  * @param parentElement String id of the parentElement or actual Div object.
  */
 ImageViewer51.prototype.render = function(parentElement) {
-    this.parent = undefined;
-    if (typeof parentElement === "string") {
-        this.parent = document.getElementById(parentElement);
-    } else {
-        this.parent = parentElement;
-    }
-
-    // Load image
-    this.eleDivImage = document.createElement("div");
-    this.eleDivImage.className = "p51-contained-image";
-    this.eleImage = document.createElement("img");
-    this.eleImage.className = "p51-contained-image";
-    this.eleImage.setAttribute("src", this.media.src);
-    this.eleImage.setAttribute("type", this.media.type);
-    this.eleDivImage.appendChild(this.eleImage);
-    this.parent.appendChild(this.eleDivImage);
-
-    // Load canvas
-    this.eleDivCanvas = document.createElement("div");
-	this.eleDivCanvas.className = "p51-contained-canvas";
-	this.eleCanvas = document.createElement("canvas");
-	this.eleCanvas.className = "p51-contained-canvas";
-	this.eleDivCanvas.appendChild(this.eleCanvas);
-	this.parent.appendChild(this.eleDivCanvas);
-
-    this._isRendered = true;
+    this.staticRender(parentElement, "image");
 
     let self = this;
     // Update size
     this.eleImage.addEventListener("load", function() {
         self._isImageLoaded = true;
-        self.updateSizeAndPadding();
+        self.updateSizeAndPadding("image");
         self.annotate(self._overlayURL);
     });
 }
