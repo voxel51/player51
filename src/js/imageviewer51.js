@@ -115,7 +115,11 @@ ImageViewer51.prototype.render = function(parentElement) {
     this.parent.addEventListener("mouseenter", function() {
         if (self._boolThumbnailMode) {
             self._boolThumbnailMode = false;
-            self.annotate(self._overlayURL);
+            if (self._overlayURL) {
+                //Handle null overlays
+                self.annotate(self._overlayURL);
+            }
+            
             self._boolThumbnailMode = true;
         }
     });
