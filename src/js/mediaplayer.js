@@ -394,7 +394,7 @@ MediaPlayer.prototype.resizeCanvas = function() {
             // need to size the controls too.
             // The controls are tuned using margins when padding exists.
             this.eleDivVideoControls.style.width = (this.width + "px");
-            this.eleDivVideoControlss.style.height = (
+            this.eleDivVideoControls.style.height = (
                 Math.min(60 + this.paddingBottomN, 0.1 * this.height + this.paddingBottomN) + "px"
             );
 

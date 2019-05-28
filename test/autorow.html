@@ -5,10 +5,10 @@
     <style>
       body {
         background: white;
-        color:#222222; 
+        color:#222222;
         font-family: sans-serif;
       }
-      /* comment or uncomment to demonstrate ability to handle both 
+      /* comment or uncomment to demonstrate ability to handle both
          box-sizing methods in this code and Player51 */
       *,
       *::before,
@@ -28,7 +28,7 @@
         padding-right: 2em;
         padding-bottom: 2em;
         position: relative;
-        flex: 0 0 auto;  
+        flex: 0 0 auto;
         /* noting that just 'flex: 0' breaks player51 layout */
       }
     </style>
@@ -38,13 +38,13 @@
   <body>
 
     <h1> Player51: Video Player Example: Auto Fit In A Row</h1>
-    This example attempts to programmatically create and fit three players 
+    This example attempts to programmatically create and fit three players
     onto one row.
 
     <div class="container" id="container">
     </div>
 
-    <script type="module"> 
+    <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -86,8 +86,8 @@
         let pPRN = parseInt(pPR.substr(0, pPR.length-2));
 
         // compute width that we want to use
-        // one less padding 
-        // note that when we set the width of an element that does not 
+        // one less padding
+        // note that when we set the width of an element that does not
         // include the padding (when we set it in css)
         let we = (cUW - (num-1)*pPRN) / num;
 
@@ -105,7 +105,7 @@
             25
           );
 
-          player.boolDrawTimeStamp = true;
+          player.setBoolDrawTimeStamp(true);
           player.forceSize(we, he);
           player.render(divs[i]);
         }

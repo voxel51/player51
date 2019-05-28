@@ -5,7 +5,7 @@
     <style>
       body {
         background: white;
-        color:#222222; 
+        color:#222222;
         font-family: sans-serif;
       }
       .container {
@@ -34,14 +34,14 @@
   <body>
 
     <h1> Player51: Video Player Example: Fill Container</h1>
-    In thumbnail mode, the Player51 will just play a video and invoke a 
+    In thumbnail mode, the Player51 will just play a video and invoke a
     configurable action upon being clicked.
 
     <div class="container">
       <div id="test-container1"></div>
     </div>
 
-    <script type="module"> 
+    <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -58,7 +58,7 @@
 
         console.log("First Player51 created.");
 
-        player1.boolDrawFrameNumber = true;
+        player1.setBoolDrawFrameNumber(true);
         player1.render('test-container1');
 
         console.log("First Player51 rendered and ready.");

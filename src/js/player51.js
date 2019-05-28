@@ -113,6 +113,17 @@ Player51.prototype.setBoolDrawTimeStamp = function(value) {
 
 
 /**
+ * @member setBoolDrawFrameNumber
+ *
+ * This function sets player.boolDrawFrameNumber
+ * @arg value = true/false
+ */
+Player51.prototype.setBoolDrawFrameNumber = function(value) {
+    this.player.boolDrawFrameNumber = value;
+}
+
+
+/**
  * @member determineMediaType
  *
  * This function figures out the type of media to be rendered.
