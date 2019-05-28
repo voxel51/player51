@@ -101,7 +101,7 @@ ImageViewer51.prototype.render = function(parentElement) {
                 //Handle null overlays
                 self.annotate(self._overlayURL);
             }
-            
+
             self._boolThumbnailMode = true;
         }
     });
@@ -142,10 +142,29 @@ ImageViewer51.prototype.draw = function () {
  */
 ImageViewer51.prototype.prepareOverlay = function (rawjson) {
     let context = this.setupCanvasContext();
-    let objects = rawjson.objects.objects;
-    for (let len = objects.length, i = 0; i < len; i++) {
-		let o = new ObjectOverlay(objects[i], this);
+
+    if (typeof(rawjson.objects) !== "undefined") {
+        this.prepareObjects(context, rawjson.objects.objects);
+    }
+
+    if (typeof(rawjson.attrs) !== "undefined") {
+        let o = new FrameAttributesOverlay(rawjson.attrs, this);
         o.setup(context, this.canvasWidth, this.canvasHeight);
         this.frameOverlay.push(o);
-	}
+    }
+}
+
+
+/**
+ * Helper function to create each object to be overlayed on top of the image.
+ *
+ * Args:
+ *  objects is an Array of Objects
+ */
+ImageViewer51.prototype.prepareObjects = function (context, objects) {
+    for (let len = objects.length, i = 0; i < len; i++) {
+        let o = new ObjectOverlay(objects[i], this);
+        o.setup(context, this.canvasWidth, this.canvasHeight);
+        this.frameOverlay.push(o);
+    }
 }
