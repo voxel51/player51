@@ -44,8 +44,6 @@ function VideoPlayer51(media, overlay, fps) {
 
 	// Attributes are organized by role; privates have a leading underscore
 	// Content Attributes
-	this.canvasWidth = null;
-	this.canvasHeight = null;
 	this.frameRate = fps;
 	this.frameDuration = 1.0 / this.frameRate;
 	this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
@@ -73,29 +71,13 @@ function VideoPlayer51(media, overlay, fps) {
     	this._lockToMF = true;
 	}
 
-	// All state attributes are private because we need to manage the state
-	// and state changes internally.
-
-	// Player Prerender Attributes
-	//  These attributes must be set before the `render()` function is called or
-	//  they will have no impact.
-	// set via poster(); used to show an image while the video itself is loading
-	this._boolHasPoster = false;   // set via `poster()`
-    this._posterURL = "";   // set via `poster()`
-
 	// Player View Attributes
-	this.width = -1;
-	this.height = -1;
-	this.paddingLeft = 0;
-	this.paddingRight = 0;
-	this.paddingTop = 0;
-	this.paddingBottom = 0;
-	this._boolBorderBox = false;  // is the container a border-box?
-
 	this.boolDrawFrameNumber = false;
 	this.boolDrawTimestamp = false;  // draw time indicator when playing
-	this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
 	this._boolShowControls = false; // whether to show the controls, part of Dynamic State
+
+    // All state attributes are private because we need to manage the state
+    // and state changes internally.
 
 	// Player State Attributes
 	// Naming convention:
@@ -779,29 +761,6 @@ VideoPlayer51.prototype.resetToFragment = function () {
 
 	this.updateFromDynamicState();
 	return true;
-};
-
-
-/**
- * @member thumbnailMode
- *
- * This changes the behavior of VideoPlayer51 in the following way
- * 1. The controls are never available.
- * 2. The video plays on mouse-over.
- * 3. The video is set to loop.
- * 4. The caller can associated an action with clicking anywhere on the frame.
- * 5. Less information is visualized.
- *
- * Caller probably wants to set the size of the video via forceSize()
- *
- * Args:
- *  action: (optional) a callback function to associate with any click in the
- *  video player.
- */
-VideoPlayer51.prototype.thumbnailMode = function (action) {
-	this._boolThumbnailMode = true;
-	this.loop(true);
-	this._thumbnailClickAction = action;
 };
 
 

@@ -30,19 +30,33 @@ function MediaPlayer(mediaType) {
     this.mediaElement = null;
     this.mediaType = mediaType;
 
-	this._boolForcedMax = false;
-    this._boolForcedSize = false;
+    // Content Attributes
+    this.canvasWidth = null;
+    this.canvasHeight = null;
 
+    // Player State Attributes
     this._isRendered = false;
     this._isSizePrepared = false;
 
     // Player Prerender Attributes
+    this._boolForcedMax = false;
+    this._boolForcedSize = false;
     this._forcedWidth = -1;  // set via `forceSize()`
     this._forcedHeight = -1;  // set via `forceSize()`
     this._boolThumbnailMode = false;
     this._thumbnailClickAction = undefined;
     this._boolHasPoster = false;   // set via `poster()`
     this._posterURL = "";   // set via `poster()`
+
+    // Player View Attributes
+    this.width = -1;
+	this.height = -1;
+	this.paddingLeft = 0;
+	this.paddingRight = 0;
+	this.paddingTop = 0;
+	this.paddingBottom = 0;
+	this._boolBorderBox = false;  // is the container a border-box?
+    this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
 }
 
 
@@ -83,6 +97,39 @@ MediaPlayer.prototype.autoplay = function() {
  * Define abstract function resetToFragment to be implemented in subclasses
  */
 MediaPlayer.prototype.resetToFragment = function() {
+}
+
+
+/**
+ *
+ * @member thumbnailMode
+ *
+ * This changes the behaviour of the media player in the following ways.
+ *
+ * General Functionality
+ * 1. The caller can associated an action with clicking anywhere on the media.
+ *
+ * Mode: ImageViewer51
+ * 1. Annotations are drawn over mouse-over.
+ *
+ * Mode: VideoPlayer51
+ * 1. Video controls are never available.
+ * 2. The video plays over mouse-over.
+ * 3. The video is set to loop.
+ * 4. Less information is visualized.
+ *
+ * Caller probably wants to set the size of the media via forceSize()
+ *
+ * Args:
+ * action: (optional) a callback function to associate with any click to the media.
+ */
+MediaPlayer.prototype.thumbnailMode = function(action) {
+    this._boolThumbnailMode = true;
+    this._thumbnailClickAction = action;
+
+    if (this.mediaType == "video") {
+        this.loop(true);
+    }
 }
 
 

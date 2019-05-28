@@ -74,24 +74,6 @@ ImageViewer51.prototype.annotate = function (overlayPath) {
 
 
 /**
- * @member thumbnailMode
- *
- * This changes the behaviour of ImagePlayer51 in the following way
- * 1. The caller can associated an action with clicking anywhere on the image.
- * 2. Annotations are drawn over mouse-over.
- *
- * Caller probably wants to set the size of the image via forceSize()
- *
- * Args:
- *  action: (optional) a callback function to associate with any click in the image.
- */
-ImageViewer51.prototype.thumbnailMode = function (action) {
-    this._boolThumbnailMode = true;
-    this._thumbnailClickAction = action;
-}
-
-
-/**
  * @member render
  * Render a new viewer for this image within the DOM element provided
  *
