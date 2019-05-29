@@ -1,7 +1,7 @@
 /**
  * @module player51.js
- * @summary Defines a client-side media player that can play videos or images and render
- * metadata overlayed atop them.
+ * @summary Defines a client-side media player that can play
+ * videos or images and render metadata overlayed atop them.
  *
  * @desc Player51 is a javascript based image and video player that can also
  * render available annotations and markup overlayed on top of the image or
@@ -11,7 +11,8 @@
  * There are full examples in the `test/` directory.  But a simple example of
  * usage is here.
  *
- * To switch between types of media, specify the type attribute in media in the following format.
+ * To switch between types of media, specify the type attribute in media
+ * in the following format.
  * <media type>/<media format>
  * examples: image/jpg, video/mp4
 
@@ -46,18 +47,19 @@
 
  * Note that default behavior is to mirror the size of the enclosing container.
  * You can, however, alter this in two ways.
- * 1.  You can call `player.forceMax()` which will force the video or image and its
- *      enclosing container to the "native" resolution of the video or image up to 720p.
- * 2.  You can call `player.forceSize(width, height)` to force the video or image and
- *      its enclosing container to the width and height you pass in.
- * Both such calls need to be made before the render call.
+ * 1. You can call `player.forceMax()` which will force the video or
+ *    image and its enclosing container to the "native" resolution of
+ *    the video or image up to 720p.
+ * 2. You can call `player.forceSize(width, height)` to force the video
+ *    or image and its enclosing container to the width and height you pass in.
+ *    Both such calls need to be made before the render call.
  *
  * TODO: implement an abstraction to for the overlay rendering.  Currently it
  * is directly tied to a canvas.  But, one can consider implementing this via
  * div/DOM rendering and bringing the full power of CSS to bear on the
  * overlays, including animation.
  *
- * Copyright 2017-2018, Voxel51, Inc.
+ * Copyright 2019-2020, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com
@@ -65,8 +67,12 @@
 
 
 // Imports
-import { ImageViewer51 } from "./imageviewer51.js";
-import { VideoPlayer51 } from "./videoplayer51.js";
+import {
+	ImageViewer51
+} from "./imageviewer51.js";
+import {
+	VideoPlayer51
+} from "./videoplayer51.js";
 
 // ES6 module export
 export default Player51;
@@ -87,17 +93,17 @@ export default Player51;
  * @param fps is the frame-rate of the media.  If it is not provided then it
  * will be guessed. Ignore in the case of images.
  *
-*/
+ */
 function Player51(media, overlay, fps) {
 
-    this.media = media;
-    this.mediaType = this.determineMediaType();
-    // Load correct player
-    if (this.mediaType === "video") {
-        this.player = new VideoPlayer51(this.media, overlay, fps);
-    } else if (this.mediaType === "image") {
-        this.player = new ImageViewer51(this.media, overlay);
-    }
+	this.media = media;
+	this.mediaType = this.determineMediaType();
+	// Load correct player
+	if (this.mediaType === "video") {
+		this.player = new VideoPlayer51(this.media, overlay, fps);
+	} else if (this.mediaType === "image") {
+		this.player = new ImageViewer51(this.media, overlay);
+	}
 }
 
 
@@ -108,7 +114,7 @@ function Player51(media, overlay, fps) {
  * @arg value = true/false
  */
 Player51.prototype.setBoolDrawTimeStamp = function(value) {
-    this.player.boolDrawTimestamp = value;
+	this.player.boolDrawTimestamp = value;
 }
 
 
@@ -119,7 +125,7 @@ Player51.prototype.setBoolDrawTimeStamp = function(value) {
  * @arg value = true/false
  */
 Player51.prototype.setBoolDrawFrameNumber = function(value) {
-    this.player.boolDrawFrameNumber = value;
+	this.player.boolDrawFrameNumber = value;
 }
 
 
@@ -129,9 +135,9 @@ Player51.prototype.setBoolDrawFrameNumber = function(value) {
  * This function figures out the type of media to be rendered.
  *
  */
-Player51.prototype.determineMediaType = function () {
-    var split_results = this.media.type.split("/");
-    return split_results[0];
+Player51.prototype.determineMediaType = function() {
+	var split_results = this.media.type.split("/");
+	return split_results[0];
 }
 
 
@@ -142,8 +148,8 @@ Player51.prototype.determineMediaType = function () {
  *
  * Renders a new player in the DOM element provided.
  */
-Player51.prototype.render = function (parentElement) {
-    this.player.render(parentElement);
+Player51.prototype.render = function(parentElement) {
+	this.player.render(parentElement);
 }
 
 
@@ -154,7 +160,7 @@ Player51.prototype.render = function (parentElement) {
  *
  */
 Player51.prototype.thumbnailMode = function(action) {
-    this.player.thumbnailMode(action);
+	this.player.thumbnailMode(action);
 }
 
 
@@ -165,7 +171,7 @@ Player51.prototype.thumbnailMode = function(action) {
  *
  */
 Player51.prototype.poster = function(url) {
-    this.player.poster(url);
+	this.player.poster(url);
 }
 
 
@@ -176,7 +182,7 @@ Player51.prototype.poster = function(url) {
  *
  */
 Player51.prototype.poster = function(url) {
-    this.player.poster(url);
+	this.player.poster(url);
 }
 
 
@@ -187,7 +193,7 @@ Player51.prototype.poster = function(url) {
  *
  */
 Player51.prototype.loop = function() {
-    this.player.loop();
+	this.player.loop();
 }
 
 
@@ -198,7 +204,7 @@ Player51.prototype.loop = function() {
  *
  */
 Player51.prototype.autoplay = function() {
-    this.player.autoplay();
+	this.player.autoplay();
 }
 
 
@@ -209,7 +215,7 @@ Player51.prototype.autoplay = function() {
  *
  */
 Player51.prototype.resetToFragment = function() {
-    this.player.resetToFragment();
+	this.player.resetToFragment();
 }
 
 
@@ -219,8 +225,8 @@ Player51.prototype.resetToFragment = function() {
  * Calls forceMax on player
  *
  */
-Player51.prototype.forceMax = function () {
-    this.player.forceMax();
+Player51.prototype.forceMax = function() {
+	this.player.forceMax();
 }
 
 
@@ -230,6 +236,6 @@ Player51.prototype.forceMax = function () {
  * Calls forceSize on player
  *
  */
-Player51.prototype.forceSize = function (width, height) {
-    this.player.forceSize(width, height);
+Player51.prototype.forceSize = function(width, height) {
+	this.player.forceSize(width, height);
 }
