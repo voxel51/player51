@@ -3,7 +3,7 @@
  * @summary Defines a series of helper classes that render the overlays on top
  * of either the video or image player.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com

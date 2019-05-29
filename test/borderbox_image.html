@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Image Player Example: Auto Fit in a Row</title>
+    <style>
+      body {
+        background: white;
+        color:#222222;
+        font-family: sans-serif;
+      }
+      /* comment or uncomment to demonstrate ability to handle both
+         box-sizing methods in this code and Player51 */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      .container {
+        width=80%;
+        background: firebrick;
+        padding: 2rem;
+
+        display: flex;
+        flex-direction: row;
+      }
+      .player-container{
+        padding-top: 4em;
+        padding-right: 2em;
+        padding-bottom: 2em;
+        position: relative;
+        flex: 0 0 auto;
+        /* noting that just 'flex: 0' breaks player51 layout */
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Image Player Example: Auto Fit In A Row</h1>
+    This example attempts to programmatically create and fit three players
+    onto one row.
+
+    <div class="container" id="container">
+    </div>
+
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+
+        let c = document.getElementById("container");
+        let cTW = c.offsetWidth;
+        let cPL = window.getComputedStyle(c, null).getPropertyValue('padding-left');
+        let cPLN = parseInt(cPL.substr(0, cPL.length-2));
+        let cPR = window.getComputedStyle(c, null).getPropertyValue('padding-left');
+        let cPRN = parseInt(cPR.substr(0, cPR.length-2));
+
+        //let cBS = c.style.boxSizing;
+        //console.log(`box-sizing is ${cBS}`);
+        console.log(c.style);
+        let cBS = window.getComputedStyle(c, null).getPropertyValue('box-sizing');
+        console.log(`box-sizing is ${cBS}`);
+        let BS = false;
+        if (cBS === "border-box") {
+          BS = true;
+        }
+
+        // usable width
+        let cUW = cTW - cPLN - cPRN;
+
+        console.log(`cTW ${cTW}, cUW ${cUW}, cPLN ${cPLN}, cPRN ${cPRN}`);
+
+        let num = 3;
+
+        // create the three elements
+        let divs = new Array(num);
+        for (let i=0;i<num;i++) {
+          divs[i] = document.createElement("div");
+          divs[i].className = "player-container";
+          c.appendChild(divs[i]);
+        }
+
+        // ASSUME left padding is 0
+        let pPR = window.getComputedStyle(divs[0], null).getPropertyValue('padding-right');
+        let pPRN = parseInt(pPR.substr(0, pPR.length-2));
+
+        // compute width that we want to use
+        // one less padding
+        // note that when we set the width of an element that does not
+        // include the padding (when we set it in css)
+        let we = (cUW - (num-1)*pPRN) / num;
+
+        // hard-coding the aspect ratio of the example video
+        // @todo make the forceSize function able to do this automatically
+        let he = we * 0.5625;
+
+        for (let i=0;i<num;i++) {
+          let player = new Player51(
+            {
+              src: "/test/player51-test-data/test.png",
+              type: "image/png"
+            },
+            "/test/player51-test-data/test.json",
+            25
+          );
+
+          player.setBoolDrawTimeStamp(true);
+          player.forceSize(we, he);
+          player.render(divs[i]);
+        }
+
+      });
+
+
+    </script>
+  </body>
+</html>

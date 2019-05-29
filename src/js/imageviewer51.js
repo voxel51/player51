@@ -7,7 +7,7 @@
  * render available annotations and markup overlayed on top of the
  * image.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
@@ -25,7 +25,7 @@ export {
 
 
 /**
- * ImagePlayer51 Class Definition
+ * ImageViewer51 Class Definition
  *
  * INHERITS:  None
  * F-MIXINS:  None
@@ -47,6 +47,48 @@ function ImageViewer51(media, overlay) {
 }
 ImageViewer51.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer51.prototype.constructor = ImageViewer51;
+
+
+/**
+ * @member poster
+ *
+ * Poster is not for images.
+ */
+ImageViewer51.prototype.poster = function(url) {
+  console.log("WARN: Poster not supposed to be called by imageviewer51.");
+}
+
+
+/**
+ * @member loop
+ *
+ * Loop is not for images.
+ */
+ImageViewer51.prototype.loop = function() {
+  console.log("WARN: Loop not supposed to be called by imageviewer51.");
+}
+
+
+/**
+ * @member autoplay
+ *
+ * Autoplay is not for images.
+ */
+ImageViewer51.prototype.autoplay = function() {
+  console.log("WARN: Autoplay not supposed to be called by imageviewer51.");
+}
+
+
+/**
+ *
+ * @member resetToFragment
+ *
+ * ResetToFragment is not for images.
+ */
+ImageViewer51.prototype.resetToFragment = function() {
+  console.log(
+    "WARN: ResetToFragment not supposed to be called by imageviewer51.");
+}
 
 
 /**

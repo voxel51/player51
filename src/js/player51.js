@@ -59,7 +59,7 @@
  * div/DOM rendering and bringing the full power of CSS to bear on the
  * overlays, including animation.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Image Player Example: Thumbnails</title>
+    <style>
+      body {
+        background: white;
+        color:#222222;
+        font-family: sans-serif;
+      }
+      .container {
+        width=80%;
+        background: firebrick;
+        padding: 2rem;
+
+        display: flex;
+        flex-direction: row;
+      }
+      #test-container1 {
+        padding-right: 2em;
+        padding-bottom: 2em;
+        position: relative;
+        flex: 0 0 auto;
+        /* noting that just 'flex: 0' breaks player51 layout */
+      }
+      #test-container2 {
+        padding-right: 2em;
+        padding-bottom: 2em;
+        position: relative;
+        flex: 0 0 auto;
+        /* noting that just 'flex: 0' breaks player51 layout */
+      }
+      #test-container3 {
+          padding-right: 2em;
+          padding-bottom: 2em;
+          position: relative;
+          flex: 0 0 auto;
+          /* noting that just 'flex: 0' breaks player51 layout */
+      }
+
+
+      #test-container:hover {
+        opacity: .9;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Thumbnail Mode</h1>
+    In thumbnail mode, the Player51 will just show annotations on hover and
+		invoke an action when image is clicked.
+
+    <div class="container">
+      <div id="test-container1"></div>
+      <div id="test-container2"></div>
+      <div id="test-container3"></div>
+    </div>
+
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Player51 Simple: Example code running.");
+
+        let player1 = new Player51(
+          {
+            src: "/test/player51-test-data/test.png",
+            type: "image/png"
+          },
+          "/test/player51-test-data/image.json",
+        );
+
+        console.log("First Player51 created.");
+
+        player1.boolDrawFrameNumber = true;
+        player1.thumbnailMode(function(){console.log("CLICKED 1!");});
+        //player1.forceSize(160, 90);
+        player1.forceSize(320, 180);
+        player1.render('test-container1');
+
+        console.log("First Player51 rendered and ready.");
+
+        let player2 = new Player51(
+					{
+						src: "/test/player51-test-data/test.png",
+						type: "image/png"
+					},
+					"/test/player51-test-data/image.json",
+				);
+
+        console.log("Second Player51 created.");
+
+        player2.thumbnailMode(function(){console.log("CLICKED 2!");});
+        player2.boolDrawTimestamp = true;
+        //player2.forceSize(160, 90);
+        player2.forceSize(320, 180);
+        player2.render('test-container2');
+
+        console.log("Second Player51 rendered and ready.");
+
+
+        let player3 = new Player51(
+          {
+            src: "/test/player51-test-data/test.png",
+            type: "image/png"
+          },
+          "/test/player51-test-data/image.json",
+        );
+
+        console.log("Third Player51 created.");
+
+        player3.thumbnailMode(function(){console.log("CLICKED 3!");});
+        //player3.forceSize(160, 90);
+        player3.forceSize(320, 180);
+        player3.render('test-container3');
+
+        console.log("Third Player51 rendered and ready.");
+
+      });
+    </script>
+  </body>
+</html>
