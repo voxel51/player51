@@ -68,10 +68,10 @@
 
 // Imports
 import {
-	ImageViewer51
+  ImageViewer51
 } from "./imageviewer51.js";
 import {
-	VideoPlayer51
+  VideoPlayer51
 } from "./videoplayer51.js";
 
 // ES6 module export
@@ -96,14 +96,14 @@ export default Player51;
  */
 function Player51(media, overlay, fps) {
 
-	this.media = media;
-	this.mediaType = this.determineMediaType();
-	// Load correct player
-	if (this.mediaType === "video") {
-		this.player = new VideoPlayer51(this.media, overlay, fps);
-	} else if (this.mediaType === "image") {
-		this.player = new ImageViewer51(this.media, overlay);
-	}
+  this.media = media;
+  this.mediaType = this.determineMediaType();
+  // Load correct player
+  if (this.mediaType === "video") {
+    this.player = new VideoPlayer51(this.media, overlay, fps);
+  } else if (this.mediaType === "image") {
+    this.player = new ImageViewer51(this.media, overlay);
+  }
 }
 
 
@@ -114,7 +114,7 @@ function Player51(media, overlay, fps) {
  * @arg value = true/false
  */
 Player51.prototype.setBoolDrawTimeStamp = function(value) {
-	this.player.boolDrawTimestamp = value;
+  this.player.boolDrawTimestamp = value;
 }
 
 
@@ -125,7 +125,7 @@ Player51.prototype.setBoolDrawTimeStamp = function(value) {
  * @arg value = true/false
  */
 Player51.prototype.setBoolDrawFrameNumber = function(value) {
-	this.player.boolDrawFrameNumber = value;
+  this.player.boolDrawFrameNumber = value;
 }
 
 
@@ -136,8 +136,8 @@ Player51.prototype.setBoolDrawFrameNumber = function(value) {
  *
  */
 Player51.prototype.determineMediaType = function() {
-	var split_results = this.media.type.split("/");
-	return split_results[0];
+  var split_results = this.media.type.split("/");
+  return split_results[0];
 }
 
 
@@ -149,7 +149,7 @@ Player51.prototype.determineMediaType = function() {
  * Renders a new player in the DOM element provided.
  */
 Player51.prototype.render = function(parentElement) {
-	this.player.render(parentElement);
+  this.player.render(parentElement);
 }
 
 
@@ -160,7 +160,7 @@ Player51.prototype.render = function(parentElement) {
  *
  */
 Player51.prototype.thumbnailMode = function(action) {
-	this.player.thumbnailMode(action);
+  this.player.thumbnailMode(action);
 }
 
 
@@ -171,7 +171,7 @@ Player51.prototype.thumbnailMode = function(action) {
  *
  */
 Player51.prototype.poster = function(url) {
-	this.player.poster(url);
+  this.player.poster(url);
 }
 
 
@@ -182,7 +182,7 @@ Player51.prototype.poster = function(url) {
  *
  */
 Player51.prototype.poster = function(url) {
-	this.player.poster(url);
+  this.player.poster(url);
 }
 
 
@@ -193,7 +193,7 @@ Player51.prototype.poster = function(url) {
  *
  */
 Player51.prototype.loop = function() {
-	this.player.loop();
+  this.player.loop();
 }
 
 
@@ -204,7 +204,7 @@ Player51.prototype.loop = function() {
  *
  */
 Player51.prototype.autoplay = function() {
-	this.player.autoplay();
+  this.player.autoplay();
 }
 
 
@@ -215,7 +215,7 @@ Player51.prototype.autoplay = function() {
  *
  */
 Player51.prototype.resetToFragment = function() {
-	this.player.resetToFragment();
+  this.player.resetToFragment();
 }
 
 
@@ -226,7 +226,7 @@ Player51.prototype.resetToFragment = function() {
  *
  */
 Player51.prototype.forceMax = function() {
-	this.player.forceMax();
+  this.player.forceMax();
 }
 
 
@@ -237,5 +237,5 @@ Player51.prototype.forceMax = function() {
  *
  */
 Player51.prototype.forceSize = function(width, height) {
-	this.player.forceSize(width, height);
+  this.player.forceSize(width, height);
 }

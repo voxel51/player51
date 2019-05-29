@@ -12,10 +12,10 @@
 
 // ES6 module export
 export {
-	ColorGenerator,
-	Overlay,
-	FrameAttributesOverlay,
-	ObjectOverlay,
+  ColorGenerator,
+  Overlay,
+  FrameAttributesOverlay,
+  ObjectOverlay,
 };
 
 
@@ -24,17 +24,17 @@ export {
  * overlays and maintaining their identity over the entire video.
  */
 function ColorGenerator() {
-	// member will store all colors created
-	this.colors = {};
-  
-	// standard colors
-	this.white = "#ffffff";
-	this.black = "#000000";
+  // member will store all colors created
+  this.colors = {};
 
-	this._colorSet = undefined;
-	this._colorS = "70%";
-	this._colorL = "40%";
-	this._colorA = "0.875";
+  // standard colors
+  this.white = "#ffffff";
+  this.black = "#000000";
+
+  this._colorSet = undefined;
+  this._colorS = "70%";
+  this._colorL = "40%";
+  this._colorA = "0.875";
 }
 
 
@@ -44,10 +44,10 @@ function ColorGenerator() {
  * Provide a color based on an index.
  */
 ColorGenerator.prototype.color = function(index) {
-	if (!(index in this.colors)) {
-		this.colors[index] = this.generateNewColor();
-	}
-	return this.colors[index];
+  if (!(index in this.colors)) {
+    this.colors[index] = this.generateNewColor();
+  }
+  return this.colors[index];
 };
 
 
@@ -57,13 +57,13 @@ ColorGenerator.prototype.color = function(index) {
  * Generates the entire dictionary of colors.
  */
 ColorGenerator.prototype._generateColorSet = function(n = 36) {
-	let delta = 360 / n;
-	this._colorSet = new Array(n);
-	for (let i = 0; i < n; i++) {
-		this._colorSet[i] = (
-			`hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`
-			);
-	}
+  let delta = 360 / n;
+  this._colorSet = new Array(n);
+  for (let i = 0; i < n; i++) {
+    this._colorSet[i] = (
+      `hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`
+    );
+  }
 };
 
 
@@ -73,11 +73,11 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
  * Called to generate a random bounding box color to use in rendering.
  */
 ColorGenerator.prototype.generateNewColor = function() {
-	if (typeof(this._colorSet) === "undefined") {
-		this._generateColorSet();
-	}
-	return this._colorSet[Math.floor(Math.random() * this._colorSet
-	.length)];
+  if (typeof(this._colorSet) === "undefined") {
+    this._generateColorSet();
+  }
+  return this._colorSet[Math.floor(Math.random() * this._colorSet
+    .length)];
 };
 
 
@@ -93,10 +93,10 @@ let colorGenerator = new ColorGenerator();
  */
 function Overlay() {}
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
-	console.log("ERROR: draw called on abstract type");
+  console.log("ERROR: draw called on abstract type");
 };
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-	console.log("ERROR: setup called on abstract type");
+  console.log("ERROR: setup called on abstract type");
 };
 
 
@@ -112,22 +112,22 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
  *
  */
 function FrameAttributesOverlay(d, player) {
-	Overlay.call(this);
-	this.player = player;
+  Overlay.call(this);
+  this.player = player;
 
-	this.attrs = d.attrs;
-	this.attrText =
-	null; // will store a list of strings (one for each object in d.attrs)
+  this.attrs = d.attrs;
+  this.attrText =
+    null; // will store a list of strings (one for each object in d.attrs)
 
-	this.attrFontHeight = null;
-	this.maxAttrTextWidth = -1;
+  this.attrFontHeight = null;
+  this.maxAttrTextWidth = -1;
 
-	// Location and Size to draw these
-	this.x = null;
-	this.y = null;
-	this.w = null;
-	this.h = null;
-	this.textPadder = null;
+  // Location and Size to draw these
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+  this.textPadder = null;
 }
 FrameAttributesOverlay.prototype = Object.create(Overlay.prototype);
 FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
@@ -140,27 +140,27 @@ FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
  * @constructor
  */
 FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
-	canvasHeight) {
-	if (typeof(this.attrs) !== undefined) {
-		this._parseAttrs();
-	}
+  canvasHeight) {
+  if (typeof(this.attrs) !== undefined) {
+    this._parseAttrs();
+  }
 
-	this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
-	this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
-	// this is *0.4 instead of / 2 because it looks better
-	this.textPadder = 10;
+  this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
+  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
+  // this is *0.4 instead of / 2 because it looks better
+  this.textPadder = 10;
 
-	this.x = this.textPadder;
-	this.y = this.textPadder;
+  this.x = this.textPadder;
+  this.y = this.textPadder;
 
-	// this.w is set up by the _setupWidths function
-	this.h = this.attrText.length * (this.attrFontHeight + this
-		.textPadder) + this.textPadder;
+  // this.w is set up by the _setupWidths function
+  this.h = this.attrText.length * (this.attrFontHeight + this
+    .textPadder) + this.textPadder;
 
-	if (typeof(context) === "undefined") {
-		return;
-	}
-	this._setupWidths(context, canvasWidth, canvasHeight);
+  if (typeof(context) === "undefined") {
+    return;
+  }
+  this._setupWidths(context, canvasWidth, canvasHeight);
 };
 
 
@@ -172,33 +172,33 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameAttributesOverlay.prototype._parseAttrs = function() {
 
-	if (this.attrText === null) {
-		this.attrText = new Array(this.attrs.length);
-	}
+  if (this.attrText === null) {
+    this.attrText = new Array(this.attrs.length);
+  }
 
-	for (let len = this.attrs.length, a = 0; a < len; a++) {
-		let at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
-		this.attrText[a] = at.replace(new RegExp("_", "g"), " ");
-	}
+  for (let len = this.attrs.length, a = 0; a < len; a++) {
+    let at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
+    this.attrText[a] = at.replace(new RegExp("_", "g"), " ");
+  }
 };
 
 
 FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
-	canvasHeight) {
-	context.font = `${this.attrFontHeight}px sans-serif`;
-	let mw = 0;
-	for (let a = 0; a < this.attrText.length; a++) {
-		let aw = context.measureText(this.attrText[a]).width;
-		if (aw == 0) {
-			console.log("PLAYER51 WARN: rendering context broken");
-			return;
-		}
-		if (aw > mw) {
-			mw = aw;
-		}
-	}
-	this.maxAttrTextWidth = mw;
-	this.w = this.maxAttrTextWidth + 2 * this.textPadder;
+  canvasHeight) {
+  context.font = `${this.attrFontHeight}px sans-serif`;
+  let mw = 0;
+  for (let a = 0; a < this.attrText.length; a++) {
+    let aw = context.measureText(this.attrText[a]).width;
+    if (aw == 0) {
+      console.log("PLAYER51 WARN: rendering context broken");
+      return;
+    }
+    if (aw > mw) {
+      mw = aw;
+    }
+  }
+  this.maxAttrTextWidth = mw;
+  this.w = this.maxAttrTextWidth + 2 * this.textPadder;
 };
 
 
@@ -207,38 +207,38 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
  * Basic rendering function for drawing the overlay instance.
  */
 FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
-	canvasHeight) {
-	if (typeof(context) === "undefined") {
-		return;
-	}
+  canvasHeight) {
+  if (typeof(context) === "undefined") {
+    return;
+  }
 
-	if (this.w === null) {
-		this._setupWidths(context, canvasWidth, canvasHeight);
-		// If something went wrong in trying to estimate the sizes of things, then
-		// we still cannot draw.
-		if (this.w <= 0) {
-			console.log(
-				"PLAYER51 WARN: FAO draw before setup; invalid canvas");
-			return;
-		}
-	}
+  if (this.w === null) {
+    this._setupWidths(context, canvasWidth, canvasHeight);
+    // If something went wrong in trying to estimate the sizes of things, then
+    // we still cannot draw.
+    if (this.w <= 0) {
+      console.log(
+        "PLAYER51 WARN: FAO draw before setup; invalid canvas");
+      return;
+    }
+  }
 
-	if (!this.player._boolThumbnailMode) {
-		context.fillStyle = this.player.metadataOverlayBGColor;
-		context.fillRect(this.x, this.y, this.w, this.h);
+  if (!this.player._boolThumbnailMode) {
+    context.fillStyle = this.player.metadataOverlayBGColor;
+    context.fillRect(this.x, this.y, this.w, this.h);
 
-		context.font = `${this.attrFontHeight}px sans-serif`;
-		context.fillStyle = colorGenerator.white;
+    context.font = `${this.attrFontHeight}px sans-serif`;
+    context.fillStyle = colorGenerator.white;
 
-		// Rendering y is at the baseline of the text.  Handle this by padding
-		// one row (attrFontHeight and textPadder)
-		for (let a = 0; a < this.attrText.length; a++) {
-			context.fillText(this.attrText[a],
-				this.x + this.textPadder,
-				this.y + (a + 1) * (this.attrFontHeight + this
-					.textPadder));
-		}
-	}
+    // Rendering y is at the baseline of the text.  Handle this by padding
+    // one row (attrFontHeight and textPadder)
+    for (let a = 0; a < this.attrText.length; a++) {
+      context.fillText(this.attrText[a],
+        this.x + this.textPadder,
+        this.y + (a + 1) * (this.attrFontHeight + this
+          .textPadder));
+    }
+  }
 };
 
 
@@ -261,40 +261,40 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  *       }
  */
 function ObjectOverlay(d, player) {
-	Overlay.call(this);
+  Overlay.call(this);
 
-	this.player = player;
+  this.player = player;
 
-	this.label = d.label;
-	this.labelUpper = this.label.toUpperCase();
-	this.index = d.index;
-	this.indexStr = `${this.index}`;
+  this.label = d.label;
+  this.labelUpper = this.label.toUpperCase();
+  this.index = d.index;
+  this.indexStr = `${this.index}`;
 
-	this.frame_number = d.frame_number;
-	this.bounding_box = d.bounding_box;
+  this.frame_number = d.frame_number;
+  this.bounding_box = d.bounding_box;
 
-	if (typeof(d.attrs) !== "undefined") {
-		this._attrs = d.attrs.attrs;
-	}
-	this.attrText = null;
-	this.attrTextWidth = -1;
-	this.attrFontHeight = null;
+  if (typeof(d.attrs) !== "undefined") {
+    this._attrs = d.attrs.attrs;
+  }
+  this.attrText = null;
+  this.attrTextWidth = -1;
+  this.attrFontHeight = null;
 
-	this.x = null;
-	this.y = null;
-	this.w = null;
-	this.h = null;
-	this.color = null;
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+  this.color = null;
 
-	// this is the height of the header box into which we draw the label
-	this.headerHeight = null;
-	this.headerWidth = null;
-	this.headerFontHeight = null;
-	this.textPadder = null;
-	this.labelTextWidth = null;
-	this.indexTextWidth = null;
-	this.labelIndexPadding =
-	51; // extra space forced between label and index in header
+  // this is the height of the header box into which we draw the label
+  this.headerHeight = null;
+  this.headerWidth = null;
+  this.headerFontHeight = null;
+  this.textPadder = null;
+  this.labelTextWidth = null;
+  this.indexTextWidth = null;
+  this.labelIndexPadding =
+    51; // extra space forced between label and index in header
 }
 ObjectOverlay.prototype = Object.create(Overlay.prototype);
 ObjectOverlay.prototype.constructor = ObjectOverlay;
@@ -307,50 +307,50 @@ ObjectOverlay.prototype.constructor = ObjectOverlay;
  * @constructor
  */
 ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-	if (typeof(this._attrs) !== undefined) {
-		this._parseAttrs();
-	}
-	this.x = this.bounding_box.top_left.x * canvasWidth;
-	this.y = this.bounding_box.top_left.y * canvasHeight;
-	this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left
-		.x) * canvasWidth;
-	this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
-		.y) * canvasHeight;
-	this.color = colorGenerator.color(this.index);
+  if (typeof(this._attrs) !== undefined) {
+    this._parseAttrs();
+  }
+  this.x = this.bounding_box.top_left.x * canvasWidth;
+  this.y = this.bounding_box.top_left.y * canvasHeight;
+  this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left
+    .x) * canvasWidth;
+  this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
+    .y) * canvasHeight;
+  this.color = colorGenerator.color(this.index);
 
-	this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
-	this.headerFontHeight = this.player.checkFontHeight(this
-		.headerFontHeight);
-	this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
-	this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
-	this.headerHeight = Math.min(26, 0.13 * canvasHeight);
-	// this is *0.4 instead of / 2 because it looks better
-	this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
+  this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
+  this.headerFontHeight = this.player.checkFontHeight(this
+    .headerFontHeight);
+  this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
+  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
+  this.headerHeight = Math.min(26, 0.13 * canvasHeight);
+  // this is *0.4 instead of / 2 because it looks better
+  this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
 
-	if (typeof(context) === "undefined") {
-		return;
-	}
+  if (typeof(context) === "undefined") {
+    return;
+  }
 
-	this._setupFontWidths(context, canvasWidth, canvasHeight);
+  this._setupFontWidths(context, canvasWidth, canvasHeight);
 };
 
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
-	canvasHeight) {
-	context.font = `${this.headerFontHeight}px sans-serif`;
-	this.labelTextWidth = context.measureText(this.labelUpper).width;
-	this.indexTextWidth = context.measureText(this.indexStr).width;
+  canvasHeight) {
+  context.font = `${this.headerFontHeight}px sans-serif`;
+  this.labelTextWidth = context.measureText(this.labelUpper).width;
+  this.indexTextWidth = context.measureText(this.indexStr).width;
 
-	context.font = `${this.attrFontHeight}px sans-serif`;
-	this.attrFontWidth = context.measureText(this.attrText).width;
+  context.font = `${this.attrFontHeight}px sans-serif`;
+  this.attrFontWidth = context.measureText(this.attrText).width;
 
-	if ((this.labelTextWidth + this.indexTextWidth + this
-			.labelIndexPadding + 2 * this.textPadder) <= this.w) {
-		this.headerWidth = this.w;
-	} else {
-		this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2 *
-			this.textPadder + this.labelIndexPadding;
-	}
+  if ((this.labelTextWidth + this.indexTextWidth + this
+      .labelIndexPadding + 2 * this.textPadder) <= this.w) {
+    this.headerWidth = this.w;
+  } else {
+    this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2 *
+      this.textPadder + this.labelIndexPadding;
+  }
 };
 
 
@@ -361,23 +361,23 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
  * them up as a renderable string for the overlay.
  */
 ObjectOverlay.prototype._parseAttrs = function(attrs) {
-	if (this.attrText === null) {
-		this.attrText = "";
-	}
+  if (this.attrText === null) {
+    this.attrText = "";
+  }
 
-	if (typeof(attrs) === "undefined") {
-		if (typeof(this._attrs) === "undefined")
-			return;
-		attrs = this._attrs;
-	}
+  if (typeof(attrs) === "undefined") {
+    if (typeof(this._attrs) === "undefined")
+      return;
+    attrs = this._attrs;
+  }
 
-	for (let a = 0; a < attrs.length; a++) {
-		this.attrText = this.attrText + `${attrs[a].value}`;
-		if (a < attrs.length - 1) {
-			this.attrText = this.attrText + ", ";
-		}
-	}
-	this.attrText = this.attrText.replace(new RegExp("_", "g"), " ");
+  for (let a = 0; a < attrs.length; a++) {
+    this.attrText = this.attrText + `${attrs[a].value}`;
+    if (a < attrs.length - 1) {
+      this.attrText = this.attrText + ", ";
+    }
+  }
+  this.attrText = this.attrText.replace(new RegExp("_", "g"), " ");
 };
 
 
@@ -386,43 +386,43 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
  * Basic rendering function for drawing the overlay instance.
  */
 ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
-	if (typeof(context) === "undefined") {
-		return;
-	}
+  if (typeof(context) === "undefined") {
+    return;
+  }
 
-	if (this.labelTextWidth === null) {
-		this._setupFontWidths(context, canvasWidth, canvasHeight);
-	}
+  if (this.labelTextWidth === null) {
+    this._setupFontWidths(context, canvasWidth, canvasHeight);
+  }
 
-	context.strokeStyle = this.color;
-	context.fillStyle = this.color;
-	context.strokeRect(this.x, this.y, this.w, this.h);
+  context.strokeStyle = this.color;
+  context.fillStyle = this.color;
+  context.strokeRect(this.x, this.y, this.w, this.h);
 
-	if (!this.player._boolThumbnailMode) {
-		// fill and stroke to account for line thickness variation
-		context.strokeRect(this.x, this.y - this.headerHeight,
-			this.headerWidth, this.headerHeight);
-		context.fillRect(this.x, this.y - this.headerHeight,
-			this.headerWidth, this.headerHeight);
+  if (!this.player._boolThumbnailMode) {
+    // fill and stroke to account for line thickness variation
+    context.strokeRect(this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight);
+    context.fillRect(this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight);
 
-		context.font = `${this.headerFontHeight}px sans-serif`;
-		context.fillStyle = colorGenerator.white;
-		context.fillText(this.labelUpper,
-			this.x + this.textPadder, this.y - this.textPadder);
+    context.font = `${this.headerFontHeight}px sans-serif`;
+    context.fillStyle = colorGenerator.white;
+    context.fillText(this.labelUpper,
+      this.x + this.textPadder, this.y - this.textPadder);
 
-		context.fillText(this.indexStr,
-			this.x + this.headerWidth - 4 * this.textPadder - this
-			.indexTextWidth,
-			this.y - this.textPadder);
+    context.fillText(this.indexStr,
+      this.x + this.headerWidth - 4 * this.textPadder - this
+      .indexTextWidth,
+      this.y - this.textPadder);
 
-		context.font = `${this.attrFontHeight}px sans-serif`;
-		if ((typeof(this.attrFontWidth) === "undefined") ||
-			(this.attrFontWidth === null)) {
-			this.attrFontWidth = context.measureText(this.attrText).width;
-		}
+    context.font = `${this.attrFontHeight}px sans-serif`;
+    if ((typeof(this.attrFontWidth) === "undefined") ||
+      (this.attrFontWidth === null)) {
+      this.attrFontWidth = context.measureText(this.attrText).width;
+    }
 
-		context.fillText(this.attrText,
-			this.x + this.textPadder,
-			this.y + this.attrFontHeight + 3 * this.textPadder);
-	}
+    context.fillText(this.attrText,
+      this.x + this.textPadder,
+      this.y + this.attrFontHeight + 3 * this.textPadder);
+  }
 };

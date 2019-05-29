@@ -13,14 +13,14 @@
 
 
 import {
-	MediaPlayer,
-	ObjectOverlay,
-	FrameAttributesOverlay
+  MediaPlayer,
+  ObjectOverlay,
+  FrameAttributesOverlay
 } from "./mediaplayer.js";
 
 // ES6 module export
 export {
-	ImageViewer51
+  ImageViewer51
 };
 
 
@@ -37,13 +37,13 @@ export {
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
 function ImageViewer51(media, overlay) {
-	MediaPlayer.call(this, "image");
+  MediaPlayer.call(this, "image");
 
-	this.media = media;
-	this.frameOverlay = []; // will be used to store the labels
+  this.media = media;
+  this.frameOverlay = []; // will be used to store the labels
 
-	this._isImageLoaded = false;
-	this._overlayURL = overlay;
+  this._isImageLoaded = false;
+  this._overlayURL = overlay;
 }
 ImageViewer51.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer51.prototype.constructor = ImageViewer51;
@@ -56,28 +56,28 @@ ImageViewer51.prototype.constructor = ImageViewer51;
  *
  */
 ImageViewer51.prototype.annotate = function(overlayPath) {
-	if (this._boolThumbnailMode) {
-		return;
-	}
+  if (this._boolThumbnailMode) {
+    return;
+  }
 
-	if (!this._isRendered || !this._isSizePrepared) {
-		console.log(
-			"Player51 WARN: Tried to annotate, hasn't been rendered yet."
-			)
-		return;
-	}
+  if (!this._isRendered || !this._isSizePrepared) {
+    console.log(
+      "Player51 WARN: Tried to annotate, hasn't been rendered yet."
+    )
+    return;
+  }
 
-	let self = this;
-	var xmlhttp = new XMLHttpRequest();
-	xmlhttp.onreadystatechange = function() {
-		if (this.readyState === 4 && this.status === 200) {
-			var overlayData = JSON.parse(this.responseText);
-			self.prepareOverlay(overlayData);
-			self.draw();
-		}
-	};
-	xmlhttp.open("GET", overlayPath, true);
-	xmlhttp.send();
+  let self = this;
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState === 4 && this.status === 200) {
+      var overlayData = JSON.parse(this.responseText);
+      self.prepareOverlay(overlayData);
+      self.draw();
+    }
+  };
+  xmlhttp.open("GET", overlayPath, true);
+  xmlhttp.send();
 }
 
 
@@ -91,35 +91,35 @@ ImageViewer51.prototype.annotate = function(overlayPath) {
  * @param parentElement String id of the parentElement or actual Div object.
  */
 ImageViewer51.prototype.render = function(parentElement) {
-	this.staticRender(parentElement);
-	this.dynamicRender();
+  this.staticRender(parentElement);
+  this.dynamicRender();
 
-	let self = this;
-	// Update size
-	this.eleImage.addEventListener("load", function() {
-		self._isImageLoaded = true;
-		self.updateSizeAndPadding();
-		self.annotate(self._overlayURL);
-	});
+  let self = this;
+  // Update size
+  this.eleImage.addEventListener("load", function() {
+    self._isImageLoaded = true;
+    self.updateSizeAndPadding();
+    self.annotate(self._overlayURL);
+  });
 
-	this.parent.addEventListener("mouseenter", function() {
-		if (self._boolThumbnailMode) {
-			self._boolThumbnailMode = false;
-			if (self._overlayURL) {
-				//Handle null overlays
-				self.annotate(self._overlayURL);
-			}
+  this.parent.addEventListener("mouseenter", function() {
+    if (self._boolThumbnailMode) {
+      self._boolThumbnailMode = false;
+      if (self._overlayURL) {
+        //Handle null overlays
+        self.annotate(self._overlayURL);
+      }
 
-			self._boolThumbnailMode = true;
-		}
-	});
+      self._boolThumbnailMode = true;
+    }
+  });
 
-	this.parent.addEventListener("mouseleave", function() {
-		if (self._boolThumbnailMode) {
-			self.setupCanvasContext().clearRect(0, 0, self
-				.canvasWidth, self.canvasHeight);
-		}
-	});
+  this.parent.addEventListener("mouseleave", function() {
+    if (self._boolThumbnailMode) {
+      self.setupCanvasContext().clearRect(0, 0, self
+        .canvasWidth, self.canvasHeight);
+    }
+  });
 }
 
 
@@ -131,13 +131,13 @@ ImageViewer51.prototype.render = function(parentElement) {
  * Requires overlay to be prepared.
  */
 ImageViewer51.prototype.draw = function() {
-	let context = this.setupCanvasContext();
-	context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  let context = this.setupCanvasContext();
+  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
-	for (let len = this.frameOverlay.length, i = 0; i < len; i++) {
-		let obj = this.frameOverlay[i];
-		obj.draw(context, this.canvasWidth, this.canvasHeight);
-	}
+  for (let len = this.frameOverlay.length, i = 0; i < len; i++) {
+    let obj = this.frameOverlay[i];
+    obj.draw(context, this.canvasWidth, this.canvasHeight);
+  }
 }
 
 
@@ -151,17 +151,17 @@ ImageViewer51.prototype.draw = function() {
  *
  */
 ImageViewer51.prototype.prepareOverlay = function(rawjson) {
-	let context = this.setupCanvasContext();
+  let context = this.setupCanvasContext();
 
-	if (typeof(rawjson.objects) !== "undefined") {
-		this.prepareObjects(context, rawjson.objects.objects);
-	}
+  if (typeof(rawjson.objects) !== "undefined") {
+    this.prepareObjects(context, rawjson.objects.objects);
+  }
 
-	if (typeof(rawjson.attrs) !== "undefined") {
-		let o = new FrameAttributesOverlay(rawjson.attrs, this);
-		o.setup(context, this.canvasWidth, this.canvasHeight);
-		this.frameOverlay.push(o);
-	}
+  if (typeof(rawjson.attrs) !== "undefined") {
+    let o = new FrameAttributesOverlay(rawjson.attrs, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this.frameOverlay.push(o);
+  }
 }
 
 
@@ -172,9 +172,9 @@ ImageViewer51.prototype.prepareOverlay = function(rawjson) {
  *  objects is an Array of Objects
  */
 ImageViewer51.prototype.prepareObjects = function(context, objects) {
-	for (let len = objects.length, i = 0; i < len; i++) {
-		let o = new ObjectOverlay(objects[i], this);
-		o.setup(context, this.canvasWidth, this.canvasHeight);
-		this.frameOverlay.push(o);
-	}
+  for (let len = objects.length, i = 0; i < len; i++) {
+    let o = new ObjectOverlay(objects[i], this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this.frameOverlay.push(o);
+  }
 }
