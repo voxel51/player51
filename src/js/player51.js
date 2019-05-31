@@ -68,11 +68,11 @@
 
 // Imports
 import {
-  ImageViewer51
-} from "./imageviewer51.js";
+  ImageViewer51,
+} from './imageviewer51.js';
 import {
-  VideoPlayer51
-} from "./videoplayer51.js";
+  VideoPlayer51,
+} from './videoplayer51.js';
 
 // ES6 module export
 export default Player51;
@@ -84,158 +84,152 @@ export default Player51;
  * INHERITS:  None
  * F-MIXINS:  None
  * @constructor
- * @param media is an object that has "src" and "type" attributes.
+ * @param {object} media is an object that has "src" and "type" attributes.
  * type must be specified as either image or video
- * @param overlay is data that should be overlayed on the video or image.
+ * @param {string} overlay is data that should be overlayed on
+ * the video or image.
  * In the case of videos: Overlay can be empty (`null`),
  * a string pointing to a single URL or an object that is preloaded data.
  * In the case of images: Overlay can be a string pointing to a single URL.
- * @param fps is the frame-rate of the media.  If it is not provided then it
- * will be guessed. Ignore in the case of images.
+ * @param {int} fps is the frame-rate of the media.  If it is not provided
+ * then it will be guessed. Ignore in the case of images.
  *
  */
 function Player51(media, overlay, fps) {
-
-  this.media = media;
-  this.mediaType = this.determineMediaType();
+  this.mediaType = this.determineMediaType(media);
   // Load correct player
-  if (this.mediaType === "video") {
-    this.player = new VideoPlayer51(this.media, overlay, fps);
-  } else if (this.mediaType === "image") {
-    this.player = new ImageViewer51(this.media, overlay);
+  if (this.mediaType === 'video') {
+    this.player = new VideoPlayer51(media, overlay, fps);
+  } else if (this.mediaType === 'image') {
+    this.player = new ImageViewer51(media, overlay);
+  } else {
+    console.log('WARN: Player51 doesn\'t support this media type yet.');
   }
 }
 
 
 /**
- * @member setBoolDrawTimeStamp
- *
  * This function sets player.boolDrawTimestamp
- * @arg value = true/false
+ *
+ * @member setBoolDrawTimeStamp
+ * @param {bool} value true/false
  */
 Player51.prototype.setBoolDrawTimeStamp = function(value) {
   this.player.boolDrawTimestamp = value;
-}
+};
 
 
 /**
- * @member setBoolDrawFrameNumber
- *
  * This function sets player.boolDrawFrameNumber
- * @arg value = true/false
+ *
+ * @member setBoolDrawFrameNumber
+ * @param {bool} value  true/false
  */
 Player51.prototype.setBoolDrawFrameNumber = function(value) {
   this.player.boolDrawFrameNumber = value;
-}
+};
 
 
 /**
- * @member determineMediaType
- *
  * This function figures out the type of media to be rendered.
  *
+ * @member determineMediaType
+ * @param {object} media
+ * @return {string} image/video/etc..
  */
-Player51.prototype.determineMediaType = function() {
-  var split_results = this.media.type.split("/");
-  return split_results[0];
-}
+Player51.prototype.determineMediaType = function(media) {
+  const splitResults = media.type.split('/');
+  if (splitResults.length !== 2) {
+    throw new Error('Media type is incorrect.');
+  }
+  return splitResults[0];
+};
 
 
 /**
- * @member render
- *
- * Render
- *
- * Renders a new player in the DOM element provided.
- */
-Player51.prototype.render = function(parentElement) {
-  this.player.render(parentElement);
-}
-
-
-/**
- * @member thumbnailMode
- *
- * Calls thumbnailMode on player
- *
- */
-Player51.prototype.thumbnailMode = function(action) {
-  this.player.thumbnailMode(action);
-}
-
-
-/**
- * @member poster
- *
  * Calls poster on player
  *
+ * @member poster
+ * @param {string} url Image to be shown while loading
  */
 Player51.prototype.poster = function(url) {
   this.player.poster(url);
-}
+};
 
 
 /**
- * @member poster
- *
- * Calls poster on player
- *
- */
-Player51.prototype.poster = function(url) {
-  this.player.poster(url);
-}
-
-
-/**
- * @member loop
- *
  * Calls loop on player
  *
+ * @member loop
  */
 Player51.prototype.loop = function() {
   this.player.loop();
-}
+};
 
 
 /**
- * @member autoplay
- *
  * Calls autoplay on player
  *
+ *
+ * @member autoplay
  */
 Player51.prototype.autoplay = function() {
   this.player.autoplay();
-}
+};
 
 
 /**
- * @member resetToFragment
- *
  * Calls resetToFragment on player
  *
+ * @member resetToFragment
  */
 Player51.prototype.resetToFragment = function() {
   this.player.resetToFragment();
-}
+};
 
 
 /**
- * @member forceMax
+ * Calls thumbnailMode on player
  *
- * Calls forceMax on player
- *
+ * @member thumbnailMode
+ * @param {function} action (optional) a callback function to associate with
+ * a click event.
  */
-Player51.prototype.forceMax = function() {
-  this.player.forceMax();
-}
+Player51.prototype.thumbnailMode = function(action) {
+  this.player.thumbnailMode(action);
+};
 
 
 /**
- * @member forceSize
+ * Render
  *
+ * Renders a new player in the DOM element provided.
+ *
+ * @member render
+ * @param {domElement} parentElement
+ */
+Player51.prototype.render = function(parentElement) {
+  this.player.render(parentElement);
+};
+
+
+/**
  * Calls forceSize on player
  *
+ * @member forceSize
+ * @param {int} width
+ * @param {int} height
  */
 Player51.prototype.forceSize = function(width, height) {
   this.player.forceSize(width, height);
-}
+};
+
+
+/**
+ * Calls forceMax on player
+ *
+ * @member forceMax
+ */
+Player51.prototype.forceMax = function() {
+  this.player.forceMax();
+};

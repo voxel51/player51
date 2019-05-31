@@ -13,31 +13,33 @@
 
 
 import {
-  MediaPlayer,
+  FrameAttributesOverlay,
   ObjectOverlay,
-  FrameAttributesOverlay
-} from "./mediaplayer.js";
+} from './overlay.js';
+import {
+  MediaPlayer,
+} from './mediaplayer.js';
 
 // ES6 module export
 export {
-  ImageViewer51
+  ImageViewer51,
 };
 
 
 /**
  * ImageViewer51 Class Definition
  *
- * INHERITS:  None
+ * INHERITS:  MediaPlayer
  * F-MIXINS:  None
  * @constructor
- * @param media is an object that has "src" and "type" attributes.
+ * @param {object} media is an object that has "src" and "type" attributes.
  * type must be in the format image/<format>
  * ex. type: "image/jpg"
- * @param overlay is data that should be overlayed on the image.
+ * @param {string} overlay is data that should be overlayed on the image.
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
 function ImageViewer51(media, overlay) {
-  MediaPlayer.call(this, "image");
+  MediaPlayer.call(this);
 
   this.media = media;
   this.frameOverlay = []; // will be used to store the labels
@@ -50,52 +52,111 @@ ImageViewer51.prototype.constructor = ImageViewer51;
 
 
 /**
- * @member poster
- *
  * Poster is not for images.
+ *
+ * @member poster
+ * @param {string} url Image to be shown while loading.
  */
 ImageViewer51.prototype.poster = function(url) {
-  console.log("WARN: Poster not supposed to be called by imageviewer51.");
-}
+  console.log('WARN: Poster not supposed to be called by imageviewer51.');
+};
 
 
 /**
- * @member loop
- *
  * Loop is not for images.
+ *
+ * @member loop
  */
 ImageViewer51.prototype.loop = function() {
-  console.log("WARN: Loop not supposed to be called by imageviewer51.");
-}
+  console.log('WARN: Loop not supposed to be called by imageviewer51.');
+};
 
 
 /**
- * @member autoplay
- *
  * Autoplay is not for images.
+ *
+ * @member autoplay
  */
 ImageViewer51.prototype.autoplay = function() {
-  console.log("WARN: Autoplay not supposed to be called by imageviewer51.");
-}
+  console.log('WARN: Autoplay not supposed to be called by imageviewer51.');
+};
 
 
 /**
+ * ResetToFragment is not for images
  *
  * @member resetToFragment
- *
- * ResetToFragment is not for images.
  */
 ImageViewer51.prototype.resetToFragment = function() {
   console.log(
-    "WARN: ResetToFragment not supposed to be called by imageviewer51.");
-}
+      'WARN: ResetToFragment not supposed to be called by imageviewer51.');
+};
 
 
 /**
- * @member annotate
+ * This changes the behaviour of the image viewer in the following ways.
+ * 1. The caller can associate an action with clicking on the image.
+ * 2. Annotations are drawn on mouse-over.
+ * Caller probably wants to set the size of the image via forceSize()
  *
+ * @member thumbnailMode
+ * @param {function} action (optional) a callback function to associate with
+ * any click on the image.
+ */
+ImageViewer51.prototype.thumbnailMode = function(action) {
+  this._boolThumbnailMode = true;
+  this._thumbnailClickAction = action;
+};
+
+
+/**
+ * Render a new viewer for this image within the DOM element provided
+ *
+ * Note that the viewer parts inherit certain properties from the parent div,
+ * such as padding.
+ *
+ * @member render
+ * @param {domElement} parentElement String id of the parentElement or
+ * actual Div object.
+ */
+ImageViewer51.prototype.render = function(parentElement) {
+  this.staticRender(parentElement);
+  this.dynamicRender();
+};
+
+
+/**
+ * Render the image and context to draw overlay on without any functionality
+ *
+ * @member staticRender
+ * @param {domElement} parentElement String id of parentElement or actual
+ * Div object.
+ */
+ImageViewer51.prototype.staticRender = function(parentElement) {
+  this.renderer.setParentandMedia(parentElement, this.media);
+  this.renderer.initImageViewer();
+  this._isRendered = true;
+};
+
+
+/**
+ * Render the UI controls and dynamic functions
+ *
+ * @member dynamicRender
+ * @required staticRender() has to be called beforehand
+ */
+ImageViewer51.prototype.dynamicRender = function() {
+  this.renderer.setPlayer(this);
+  this.renderer.initSharedControls();
+  this.renderer.initImageViewerControls();
+};
+
+
+/**
  * Request resources from the server and then draw objects onto image
  *
+ * @member annotate
+ * @param {string} overlayPath is the path to the overlay JSON file.
  */
 ImageViewer51.prototype.annotate = function(overlayPath) {
   if (this._boolThumbnailMode) {
@@ -104,119 +165,77 @@ ImageViewer51.prototype.annotate = function(overlayPath) {
 
   if (!this._isRendered || !this._isSizePrepared) {
     console.log(
-      "Player51 WARN: Tried to annotate, hasn't been rendered yet."
-    )
+        'Player51 WARN: Tried to annotate, hasn\'t been rendered yet.'
+    );
     return;
   }
 
-  let self = this;
-  var xmlhttp = new XMLHttpRequest();
+  const self = this;
+  const xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 200) {
-      var overlayData = JSON.parse(this.responseText);
+      const overlayData = JSON.parse(this.responseText);
       self.prepareOverlay(overlayData);
       self.draw();
     }
   };
-  xmlhttp.open("GET", overlayPath, true);
+  xmlhttp.open('GET', overlayPath, true);
   xmlhttp.send();
-}
+};
 
 
 /**
- * @member render
- * Render a new viewer for this image within the DOM element provided
- *
- * Note that the viewer parts inherit certain properties from the parent div,
- * such as padding.
- *
- * @param parentElement String id of the parentElement or actual Div object.
- */
-ImageViewer51.prototype.render = function(parentElement) {
-  this.staticRender(parentElement);
-  this.dynamicRender();
-
-  let self = this;
-  // Update size
-  this.eleImage.addEventListener("load", function() {
-    self._isImageLoaded = true;
-    self.updateSizeAndPadding();
-    self.annotate(self._overlayURL);
-  });
-
-  this.parent.addEventListener("mouseenter", function() {
-    if (self._boolThumbnailMode) {
-      self._boolThumbnailMode = false;
-      if (self._overlayURL) {
-        //Handle null overlays
-        self.annotate(self._overlayURL);
-      }
-
-      self._boolThumbnailMode = true;
-    }
-  });
-
-  this.parent.addEventListener("mouseleave", function() {
-    if (self._boolThumbnailMode) {
-      self.setupCanvasContext().clearRect(0, 0, self
-        .canvasWidth, self.canvasHeight);
-    }
-  });
-}
-
-
-/**
- * @member draw
- *
  * Draws objects onto the canvas
  *
- * Requires overlay to be prepared.
+ * @member draw
+ * @required overlay to be prepared.
  */
 ImageViewer51.prototype.draw = function() {
-  let context = this.setupCanvasContext();
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  const context = this.renderer.setupCanvasContext();
+
+  context.clearRect(
+      0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
 
   for (let len = this.frameOverlay.length, i = 0; i < len; i++) {
-    let obj = this.frameOverlay[i];
-    obj.draw(context, this.canvasWidth, this.canvasHeight);
+    const obj = this.frameOverlay[i];
+    obj.draw(context, this.renderer.canvasWidth, this.renderer.canvasHeight);
   }
-}
+};
 
 
 /**
- * @member prepareOverlay
- *
  * Callback for asynchronous retrieval of a json file.
  *
  * The overlay is represented as a dictonary of objects in
  * eta.core.image.ImageLabels format
- *
+ * @member prepareOverlay
+ * @param {json} rawjson is a dictonary of objects in correct format
  */
 ImageViewer51.prototype.prepareOverlay = function(rawjson) {
-  let context = this.setupCanvasContext();
+  const context = this.renderer.setupCanvasContext();
 
-  if (typeof(rawjson.objects) !== "undefined") {
+  if (typeof(rawjson.objects) !== 'undefined') {
     this.prepareObjects(context, rawjson.objects.objects);
   }
 
-  if (typeof(rawjson.attrs) !== "undefined") {
-    let o = new FrameAttributesOverlay(rawjson.attrs, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
+  if (typeof(rawjson.attrs) !== 'undefined') {
+    const o = new FrameAttributesOverlay(rawjson.attrs, this);
+    o.setup(context, this.renderer.canvasWidth, this.renderer.canvasHeight);
     this.frameOverlay.push(o);
   }
-}
+};
 
 
 /**
  * Helper function to create each object to be overlayed on top of the image.
  *
- * Args:
- *  objects is an Array of Objects
+ * @param {canvasObject} context is the canvas to be drawn to.
+ * @param {json} objects us a dictionary of objects to be drawn.
  */
 ImageViewer51.prototype.prepareObjects = function(context, objects) {
   for (let len = objects.length, i = 0; i < len; i++) {
-    let o = new ObjectOverlay(objects[i], this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
+    const o = new ObjectOverlay(objects[i], this);
+    o.setup(context, this.renderer.canvasWidth, this.renderer.canvasHeight);
     this.frameOverlay.push(o);
   }
-}
+};

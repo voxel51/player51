@@ -13,39 +13,40 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
-
 import {
-  parseMediaFragmentsUri
-} from "./mediafragments.js";
+  ObjectOverlay,
+  FrameAttributesOverlay,
+} from './overlay.js';
+import {
+  parseMediaFragmentsUri,
+} from './mediafragments.js';
 import {
   MediaPlayer,
-  ObjectOverlay,
-  FrameAttributesOverlay
-} from "./mediaplayer.js";
+} from './mediaplayer.js';
 
 // ES6 module export
 export {
-  VideoPlayer51
+  VideoPlayer51,
 };
 
 
 /**
  * VideoPlayer51 Class Definition
  *
- * INHERITS:  None
+ * INHERITS:  MediaPlayer
  * F-MIXINS:  None
  * @constructor
- * @param media is an object that has "src" and "type" attributes.
+ * @param {object} media is an object that has "src" and "type" attributes.
  * type must be in the format video/<format>
  * ex. type: "video/mp4"
- * @param overlay is data that should be overlayed on the video.  Overlay can
- * be empty (`null`), a string point to a single URL or an object that is
- * preloaded data.
- * @param fps is the frame-rate of the media.  If it is not provided then it
- * will be guessed.
+ * @param {string} overlay is data that should be overlayed on the video.
+ * Overlay can be empty (`null`), a string point to a single URL or
+ * an object that is preloaded data.
+ * @param {int} fps is the frame-rate of the media.  If it is not provided
+ * then it will be guessed.
  */
 function VideoPlayer51(media, overlay, fps) {
-  MediaPlayer.call(this, "video");
+  MediaPlayer.call(this);
 
   this.media = media;
   this.frameOverlay = {}; // will be used to store the labels per frame
@@ -68,9 +69,9 @@ function VideoPlayer51(media, overlay, fps) {
   // importance of the fragment so that the user can watch the whole video.
   // @todo an interface component needs to be added to show that we are in a
   // fragment and allow locking / unlocking of the fragment.
-  let mfParse = parseMediaFragmentsUri(this.media.src);
+  const mfParse = parseMediaFragmentsUri(this.media.src);
 
-  if (typeof mfParse.hash.t !== "undefined") {
+  if (typeof mfParse.hash.t !== 'undefined') {
     this._mfBeginT = mfParse.hash.t[0].startNormalized;
     this._mfEndT = mfParse.hash.t[0].endNormalized;
     this._mfBeginF = this.computeFrameNumber(this._mfBeginT);
@@ -108,15 +109,15 @@ function VideoPlayer51(media, overlay, fps) {
   this._isOverlayPrepared = false;
   this._isPreparingOverlay = false;
   this._overlayData = null;
-  if ((overlay === null) || (typeof(overlay) === "undefined")) {
+  if ((overlay === null) || (typeof(overlay) === 'undefined')) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
-  } else if (typeof(overlay) === "string") {
+  } else if (typeof(overlay) === 'string') {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === "object") && (overlay != null) && Object
-    .keys(overlay).length >
+  } else if ((typeof(overlay) === 'object') && (overlay != null) && Object
+      .keys(overlay).length >
     0) {
     this._overlayURL = null;
     this._overlayData = overlay;
@@ -127,49 +128,173 @@ VideoPlayer51.prototype.constructor = VideoPlayer51;
 
 
 /**
- * @member updateFromDynamicState
+ * Set a poster frame URL to display while the video itself is loading
  *
+ * @member poster
+ * @param {string} url Image to be shown while loading.
+ */
+VideoPlayer51.prototype.poster = function(url) {
+  this._boolHasPoster = true;
+  this._posterURL = url;
+};
+
+
+/**
+ * Force the video to loop.
+ *
+ * @member loop
+ * @param {bool} boolLoop
+ */
+VideoPlayer51.prototype.loop = function(boolLoop = true) {
+  this._boolLoop = boolLoop;
+  this.updateFromDynamicState();
+};
+
+
+/**
+ * Force the video to autoplay when rendered.
+ *
+ * @member autoplay
+ * @param {bool} boolAutoplay
+ */
+VideoPlayer51.prototype.autoplay = function(boolAutoplay = true) {
+  this._boolAutoplay = boolAutoplay;
+  this.updateFromDynamicState();
+};
+
+
+/**
+ * If the player has a media fragment, reset to the initial state:
+ * - locks to the fragment
+ * - sets the scrub head to the beginning of the fragment
+ *
+ * Maintains the playing state.
+ *
+ * @member resetToFragment
+ * @return {bool} true if reset happens
+ */
+VideoPlayer51.prototype.resetToFragment = function() {
+  if (!this._hasMediaFragment) {
+    return false;
+  }
+
+  this.renderer.eleVideo.currentTime = this._mfBeginT;
+  this._lockToMF = true;
+
+  this.updateFromDynamicState();
+  return true;
+};
+
+
+/**
+ * This changes the behaviour of the video player in the following ways.
+ * 1. The caller can associate an action with clicking on the image.
+ * 2. Video controls are never available.
+ * 3. The video plays over mouse-over.
+ * 4. The video is set to loop.
+ * 5. Less information is visualized.
+ * Caller probably wants to set the size of the video via forceSize()
+ *
+ * @member thumbnailMode
+ * @param {function} action (optional) a callback function to associate with
+ * any click on the video.
+ */
+VideoPlayer51.prototype.thumbnailMode = function(action) {
+  this._boolThumbnailMode = true;
+  this._thumbnailClickAction = action;
+  this.loop(true);
+};
+
+
+/**
+ * Render a new player for this media within the DOM element provided
+ *
+ * Note that the player parts inherit certain properties from the parent div,
+ * such as padding.
+ *
+ * @member render
+ * @param {domElement} parentElement String id of the parentElement or
+ * actual Div object.
+ */
+VideoPlayer51.prototype.render = function(parentElement) {
+  this.staticRender(parentElement);
+  this.dynamicRender();
+};
+
+
+/**
+ * Render the video and context to draw overlay on without any functionality
+ *
+ * @member staticRender
+ * @param {domElement} parentElement String id of parentElement or actual
+ * Div object.
+ */
+VideoPlayer51.prototype.staticRender = function(parentElement) {
+  this.renderer.setParentandMedia(parentElement, this.media);
+  this.renderer.initVideoPlayer();
+  this._isRendered = true;
+};
+
+
+/**
+ * Render the UI controls and dynamic functions
+ *
+ * @member dynamicRender
+ * @required staticRender() has to be called beforehand
+ */
+VideoPlayer51.prototype.dynamicRender = function() {
+  this.renderer.setPlayer(this);
+  this.renderer.initSharedControls();
+  this.renderer.initVideoPlayerControls();
+};
+
+
+/**
  * This function is the controller: the dynamic state of the player has changed
  * and we need to set various settings based on it.
  *
  * _frameNumber is part of the dynamic state but does not call this function to
  * be invoke.
+ *
+ * @member updateFromDynamicState
  */
 VideoPlayer51.prototype.updateFromDynamicState = function() {
   if ((!this._isRendered) || (!this._isSizePrepared)) {
     return;
   }
-  this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
-  this.eleVideo.toggleAttribute("loop", this._boolLoop);
+  this.renderer.eleVideo.toggleAttribute('autoplay', this._boolAutoplay);
+  this.renderer.eleVideo.toggleAttribute('loop', this._boolLoop);
 
   if (this._boolPlaying) {
-    this.eleVideo.play();
-    this.elePlayPauseButton.innerHTML = "Pause";
+    this.renderer.eleVideo.play();
+    this.renderer.elePlayPauseButton.innerHTML = 'Pause';
   } else {
-    this.eleVideo.pause();
-    this.elePlayPauseButton.innerHTML = "Play";
+    this.renderer.eleVideo.pause();
+    this.renderer.elePlayPauseButton.innerHTML = 'Play';
   }
   if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = "0.9";
+    this.renderer.eleDivVideoControls.style.opacity = '0.9';
   } else {
-    this.eleDivVideoControls.style.opacity = "0.0";
+    this.renderer.eleDivVideoControls.style.opacity = '0.0';
   }
 };
 
 
 /**
- * @member updateFromLoadingState
- *
  * This function is a controller: the loading state of the player has changed
  * Make various actions based on that.
+ *
+ * @member updateFromLoadingState
  */
 VideoPlayer51.prototype.updateFromLoadingState = function() {
   if ((this._isSizePrepared) && (this._isRendered)) {
-    if (this._isDataLoaded)
+    if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
+    }
     // if we had to download overlay data and it is ready
-    if ((this._overlayData !== null) && (this.overlayURL !== null))
+    if ((this._overlayData !== null) && (this.overlayURL !== null)) {
       this._overlayCanBePrepared = true;
+    }
   }
 
   if (this._overlayCanBePrepared) {
@@ -179,11 +304,11 @@ VideoPlayer51.prototype.updateFromLoadingState = function() {
 
 
 /**
- * @member updateStateFromTimeChange
- *
  * This function updates the player state when the video current time/frame has
  * been changed, which happens when the video is playing or when the user
  * manually scrubs.
+ *
+ * @member updateStateFromTimeChange
  */
 VideoPlayer51.prototype.updateStateFromTimeChange = function() {
   let cfn = this.computeFrameNumber();
@@ -194,13 +319,14 @@ VideoPlayer51.prototype.updateStateFromTimeChange = function() {
     this._frameNumber = cfn;
     this.processFrame();
   }
-}
+};
 
 
 /**
- * @member state()
- *
  * Generate a string that represents the state.
+ *
+ * @member state
+ * @return {dictionary} state
  */
 VideoPlayer51.prototype.state = function() {
   return `
@@ -221,27 +347,15 @@ isPreparingOverlay: ${this._isPreparingOverlay}
 
 
 /**
- * @member autoplay
- *
- * Force the video to autoplay when rendered.
- */
-VideoPlayer51.prototype.autoplay = function(boolAutoplay = true) {
-  this._boolAutoplay = boolAutoplay;
-  this.updateFromDynamicState();
-};
-
-
-/**
- * @member checkForFragmentReset
- *
  * If the player has a media fragment and has exceeded the fragment, then reset
  * it back to the beginning if we are looping, else pause the video.
  *
  * The default html5 video player functionality only pauses once and then does
  * not respond to the fragment.
  *
- * Args: frame number current
- * Returns: frame number after possible reset.
+ * @member checkForFragmentReset
+ * @param {int} fn current frame number
+ * @return {int} frame number after possible reset
  */
 VideoPlayer51.prototype.checkForFragmentReset = function(fn) {
   if ((!this._hasMediaFragment) ||
@@ -252,7 +366,7 @@ VideoPlayer51.prototype.checkForFragmentReset = function(fn) {
 
   if (fn >= this._mfEndF) {
     if (this._boolLoop) {
-      this.eleVideo.currentTime = this._mfBeginT;
+      this.renderer.eleVideo.currentTime = this._mfBeginT;
       fn = this._mfBeginF;
     } else {
       this._boolPlaying = false;
@@ -267,43 +381,47 @@ VideoPlayer51.prototype.checkForFragmentReset = function(fn) {
 
 
 /**
- * @member computeFrameNumber
- *
  * Uses information about the currentTime from the HTML5 video player and the
  * frameRate of the video to compute the current frame number.
+ *
+ * @member computeFrameNumber
+ * @param {time} time
+ * @return {time}
  */
 VideoPlayer51.prototype.computeFrameNumber = function(time) {
-  if (typeof time === "undefined") {
-    time = this.eleVideo.currentTime;
+  if (typeof time === 'undefined') {
+    time = this.renderer.eleVideo.currentTime;
   }
-  let currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
+  const currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
   return Math.floor(currentFrameNumber);
 };
 
 
 /**
- * @member currentTimestamp
- *
- * Retrieves the current time  of the video being played in a human-readable
+ * Retrieves the current time of the video being played in a human-readable
  * format.
+ *
+ * @member currentTimestamp
+ * @param {int} decimals
+ * @return {time}
  */
 VideoPlayer51.prototype.currentTimestamp = function(decimals = 1) {
-  let numSeconds = this.eleVideo.currentTime;
-  let hours = Math.floor(numSeconds / 3600);
+  let numSeconds = this.renderer.eleVideo.currentTime;
+  const hours = Math.floor(numSeconds / 3600);
   numSeconds = numSeconds % 3600;
-  let minutes = Math.floor(numSeconds / 60);
-  let seconds = numSeconds % 60;
+  const minutes = Math.floor(numSeconds / 60);
+  const seconds = numSeconds % 60;
 
-  return this._seconds_to_hhmmss_aux(hours) + ":" +
-    this._seconds_to_hhmmss_aux(minutes) + ":" +
+  return this._seconds_to_hhmmss_aux(hours) + ':' +
+    this._seconds_to_hhmmss_aux(minutes) + ':' +
     this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
 };
 VideoPlayer51.prototype._seconds_to_hhmmss_aux = function(number) {
-  let str = "";
+  let str = '';
   if (number == 0) {
-    str = "00";
+    str = '00';
   } else if (number < 10) {
-    str += "0" + number;
+    str += '0' + number;
   } else {
     str = `${number}`;
   }
@@ -312,30 +430,32 @@ VideoPlayer51.prototype._seconds_to_hhmmss_aux = function(number) {
 
 
 /**
- * @member loadOverlay
- *
  * When an overlay is a string to a json file, then we assume that it needs to
  * be loaded and this function performs that load asynchronously.
+ *
+ * @member loadOverlay
+ * @param {string} overlayPath
  */
 VideoPlayer51.prototype.loadOverlay = function(overlayPath) {
-  let self = this;
+  const self = this;
   this._isOverlayPrepared = false;
-  var xmlhttp = new XMLHttpRequest();
+  const xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 200) {
       self._overlayData = JSON.parse(this.responseText);
       self.updateFromLoadingState();
     }
   };
-  xmlhttp.open("GET", overlayPath, true);
+  xmlhttp.open('GET', overlayPath, true);
   xmlhttp.send();
 };
 
 
 /**
- * @member loop
- *
  * Force the video to loop.
+ *
+ * @member loop
+ * @param {bool} boolLoop
  */
 VideoPlayer51.prototype.loop = function(boolLoop = true) {
   this._boolLoop = boolLoop;
@@ -344,19 +464,6 @@ VideoPlayer51.prototype.loop = function(boolLoop = true) {
 
 
 /**
- * @member poster
- *
- * Set a poster frame URL to display while the video itself is loading
- */
-VideoPlayer51.prototype.poster = function(url) {
-  this._boolHasPoster = true;
-  this._posterURL = url;
-};
-
-
-/**
- * @member prepareOverlay
- *
  * Callback for the asynchronous retrieval of a json file.
  *
  * The overlay is represented as a dictionary of lists indexed by frame
@@ -411,6 +518,9 @@ VideoPlayer51.prototype.poster = function(url) {
  * formats is present in the rawjson file.
  *
  * Noting potential race condition without using semaphors here
+ *
+ * @member {prepareOverlay}
+ * @param {json} rawjson
  */
 VideoPlayer51.prototype.prepareOverlay = function(rawjson) {
   if ((this._isOverlayPrepared) || (this._isPreparingOverlay)) {
@@ -421,26 +531,29 @@ VideoPlayer51.prototype.prepareOverlay = function(rawjson) {
   this._isPreparingOverlay = true;
 
   // Format 1
-  if (typeof(rawjson.objects) !== "undefined") {
-    let context = this.setupCanvasContext();
+  if (typeof(rawjson.objects) !== 'undefined') {
+    const context = this.renderer.setupCanvasContext();
     this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
   }
 
   // Format 2
-  if (typeof(rawjson.frames) !== "undefined") {
-    let context = this.setupCanvasContext();
-    let frame_keys = Object.keys(rawjson.frames);
-    for (let frame_key_i in frame_keys) {
-      let frame_key = frame_keys[frame_key_i];
-      let f = rawjson.frames[frame_key];
-      if (typeof(f.objects) !== "undefined") {
-        this._prepareOverlay_auxFormat1Objects(context, f.objects
-          .objects);
-      }
-      if (typeof(f.attrs) !== "undefined") {
-        let o = new FrameAttributesOverlay(f.attrs, this);
-        o.setup(context, this.canvasWidth, this.canvasHeight);
-        this._prepareOverlay_auxCheckAdd(o, parseInt(frame_key));
+  if (typeof(rawjson.frames) !== 'undefined') {
+    const context = this.renderer.setupCanvasContext();
+    const frameKeys = Object.keys(rawjson.frames);
+    for (const frameKeyI in frameKeys) {
+      if (frameKeyI) {
+        const frameKey = frameKeys[frameKeyI];
+        const f = rawjson.frames[frameKey];
+        if (typeof(f.objects) !== 'undefined') {
+          this._prepareOverlay_auxFormat1Objects(context, f.objects
+              .objects);
+        }
+        if (typeof(f.attrs) !== 'undefined') {
+          const o = new FrameAttributesOverlay(f.attrs, this);
+          o.setup(
+              context, this.renderer.canvasWidth, this.renderer.canvasHeight);
+          this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+        }
       }
     }
   }
@@ -455,24 +568,26 @@ VideoPlayer51.prototype.prepareOverlay = function(rawjson) {
  * Helper function to parse one of the objects in the Format 1 of the overlay
  * and add it the overlay representation.
  *
- * Args:
- *   objects is an Array of Objects with each entry an object in Format 1 above.
+ * @param {context} context
+ * @param {array} objects is an Array of Objects with each entry an
+ * object in Format 1 above.
  */
 VideoPlayer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
-  objects) {
+    objects) {
   for (let len = objects.length, i = 0; i < len; i++) {
-    let o = new ObjectOverlay(objects[i], this);
-    if (!this.canvasWidth && typeof(this.canvasWidth) !== "undefined") {
-      let checkCanvasWidth = setInterval(() => {
-        if (this.canvasWidth) {
+    const o = new ObjectOverlay(objects[i], this);
+    if (!this.renderer.canvasWidth &&
+       typeof(this.renderer.canvasWidth) !== 'undefined') {
+      const checkCanvasWidth = setInterval(() => {
+        if (this.renderer.canvasWidth) {
           clearInterval(checkCanvasWidth);
-          o.setup(context, this.canvasWidth, this
-            .canvasHeight);
+          o.setup(context, this.renderer.canvasWidth, this
+              .renderer.canvasHeight);
           this._prepareOverlay_auxCheckAdd(o);
         }
       }, 1000);
     } else {
-      o.setup(context, this.canvasWidth, this.canvasHeight);
+      o.setup(context, this.renderer.canvasWidth, this.renderer.canvasHeight);
       this._prepareOverlay_auxCheckAdd(o);
     }
   }
@@ -483,29 +598,27 @@ VideoPlayer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
  * Add the overlay to the set.
  *
  * @arguments
- *  o the Overlay instance
- *  fn optional is the frame numnber (if not provided, then the overlay o needs
- *  a .frame_number propery.
+ * @param {overlay} o the Overlay instance
+ * @param {int} fn optional is the frame numnber
+ * (if not provided, then the overlay o needs a frameNumber propery.
  */
 VideoPlayer51.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
   if (fn == -1) {
     fn = o.frame_number;
   }
   if (fn in this.frameOverlay) {
-    let thelist = this.frameOverlay[fn];
+    const thelist = this.frameOverlay[fn];
     thelist.push(o);
     this.frameOverlay[fn] = thelist;
   } else {
     // this the first time we are seeing the frame
-    let newlist = [o];
+    const newlist = [o];
     this.frameOverlay[fn] = newlist;
   }
 };
 
 
 /**
- * @member processFrame
- *
  * Handles the rendering of a specific frame, noting that rendering has two
  * different meanings in Player51.  The Player51.render function is used to
  * actually create the Player51 and inject it into the DOM.  This
@@ -514,18 +627,20 @@ VideoPlayer51.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
  *
  * @todo need to use double-buffering instead of rendering direct to the
  * canvas to avoid flickering.
+ * @member processFrame
  */
 VideoPlayer51.prototype.processFrame = function() {
   if (!this._isReadyProcessFrames) {
     return;
   }
 
-  let context = this.setupCanvasContext();
+  const context = this.renderer.setupCanvasContext();
 
   // Since we are rendering on a transparent canvas, we need to clean it
   // every time.
   // @todo double-buffering
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  context.clearRect(
+      0, 0, this.renderer.canvasWidth, this.renderer.canvasHeight);
 
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
@@ -537,23 +652,23 @@ VideoPlayer51.prototype.processFrame = function() {
     // @todo better handling of the context paintbrush styles
     // working on a new way of forcing certain font sizes
     let fontheight = 24;
-    let fh_in_window = fontheight / this.canvasMultiplier;
-    if (fh_in_window < 12) {
+    const fhInWindow = fontheight / this.canvasMultiplier;
+    if (fhInWindow < 12) {
       fontheight = 8 * this.canvasMultiplier;
     }
     fontheight = this.checkFontHeight(fontheight);
     context.font = `${fontheight}px sans-serif`;
 
-    let hhmmss = this.currentTimestamp();
-    let tw = context.measureText(hhmmss).width;
-    let pad = 4;
-    let pad2 = 2; // pad divided by 2
-    let w = tw + pad + pad;
-    let h = fontheight + pad + pad;
-    let x = 10;
-    let y = this.canvasHeight - 10 - pad - pad - fontheight;
+    const hhmmss = this.currentTimestamp();
+    const tw = context.measureText(hhmmss).width;
+    const pad = 4;
+    const pad2 = 2; // pad divided by 2
+    const w = tw + pad + pad;
+    const h = fontheight + pad + pad;
+    const x = 10;
+    const y = this.renderer.canvasHeight - 10 - pad - pad - fontheight;
 
-    context.fillStyle = this.metadataOverlayBGColor;
+    context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(x, y, w, h);
 
     context.fillStyle = this.colorGenerator.white;
@@ -563,9 +678,10 @@ VideoPlayer51.prototype.processFrame = function() {
 
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
-      let fm = this.frameOverlay[this._frameNumber];
+      const fm = this.frameOverlay[this._frameNumber];
       for (let len = fm.length, i = 0; i < len; i++) {
-        fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        fm[i].draw(
+            context, this.renderer.canvasWidth, this.renderer.canvasHeight);
       }
     }
   }
@@ -576,232 +692,24 @@ VideoPlayer51.prototype.processFrame = function() {
 
 
 /**
- * @member render
- * Render a new player for this media within the DOM element provided
- *
- * Note that the player parts inherit certain properties from the parent div,
- * such as padding.
- *
- * @param parentElement String id of the parentElement or actual Div object.
- */
-VideoPlayer51.prototype.render = function(parentElement) {
-  this.staticRender(parentElement);
-  this.dynamicRender();
-
-
-  if (this._boolAutoplay) {
-    this.eleVideo.toggleAttribute("autoplay", true);
-  }
-  if (this._boolLoop) {
-    this.eleVideo.toggleAttribute("loop", true);
-  }
-  if (this._boolHasPoster) {
-    this.eleVideo.setAttribute("poster", this._posterURL);
-    if (this._boolForcedSize) {
-      const sizeStyleString = "width:" + this._forcedWidth +
-        "px; height:" + this._forcedHeight + "px;";
-      this.eleVideo.setAttribute("style", sizeStyleString);
-      this.eleDivVideo.setAttribute("style", sizeStyleString);
-      this.parent.setAttribute("style", sizeStyleString);
-    }
-  }
-
-  // after the DOM elements are created then we initialize other variables that
-  // will be needed during playback
-  let self = this;
-
-  this.eleVideo.addEventListener("loadedmetadata", function() {
-    self.updateSizeAndPadding();
-    self.updateFromLoadingState();
-    self.setupCanvasContext();
-    self.updateFromLoadingState();
-  });
-
-  this.eleVideo.addEventListener("loadeddata", function() {
-    self._isDataLoaded = true;
-
-    // Handles the case that we have a poster frame to indicate the video is
-    // loading and now we can show the video.  But when we are not autoplay.
-    // We need to set the state to playing if we are set to autoplay
-    //  (the player itself will handle the autoplaying)
-    if (self._boolAutoplay) {
-      self._boolPlaying = true;
-    } else if (self._boolHasPoster) {
-      if (self._hasMediaFragment) {
-        self.eleVideo.currentTime = self._mfBeginT;
-        self._frameNumber = self._mfBeginF;
-      } else {
-        self.eleVideo.currentTime = 0;
-        self._frameNumber = 1;
-      }
-    }
-
-    self.updateFromLoadingState();
-    // so that we see overlay and time stamp now that we are ready
-    if ((!self._boolThumbnailMode) && (!self._boolAutoplay)) {
-      self.processFrame();
-    }
-  });
-
-  // Event listener for the play/pause button
-  this.elePlayPauseButton.addEventListener("click", function() {
-    if (self._boolPlaying !== true) {
-      self._boolPlaying = true;
-    } else {
-      self._boolPlaying = false;
-    }
-    self.updateFromDynamicState();
-  });
-
-  // Event listener for the seek bar
-  this.eleSeekBar.addEventListener("change", function() {
-    // Calculate the new time
-    let time = self.eleVideo.duration * (self.eleSeekBar
-      .valueAsNumber / 100.0);
-    // Update the video time
-    self.eleVideo.currentTime = time;
-    // Unlock the fragment so the user can browse the whole video
-    self._lockToMF = false;
-    self.updateStateFromTimeChange();
-  });
-
-  /*  THIS DOES NOT FUNCTION YET
-	// Pause the video when the seek handle is being dragged
-	this.eleSeekBar.addEventListener("mousemove", function() {
-		if (self._boolManualSeek) {
-			let time = self.eleVideo.duration * (self.eleSeekBar.valueAsNumber / 100.0);
-			self.eleVideo.currentTime = time;
-			self.processFrame();
-		}
-  	});
-  	*/
-
-  // Pause the video when the seek handle is being dragged
-  this.eleSeekBar.addEventListener("mousedown", function() {
-    if (!self._boolThumbnailMode) {
-      self._boolManualSeek = true;
-      // Unlock the fragment so the user can browse the whole video
-      self._lockToMF = false;
-      // We need to manually control the video-play state
-      // And turn it back on as needed.
-      self.eleVideo.pause();
-    }
-  });
-
-  // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener("mouseup", function() {
-    self._boolManualSeek = false;
-    if (self._boolPlaying) {
-      self.eleVideo.play();
-    }
-  });
-
-  this.eleVideo.addEventListener("ended", function() {
-    self._boolPlaying = false;
-    self.updateFromDynamicState();
-  });
-
-  this.eleVideo.addEventListener("pause", function() {
-    // this is a pause that is fired from the video player itself and not from
-    // the user clicking the play/pause button.
-    // Noting the checkForFragmentReset function calls updateFromDynamicState
-    self.checkForFragmentReset(self.computeFrameNumber());
-  });
-
-  // Update the seek bar as the video plays
-  this.eleVideo.addEventListener("timeupdate", function() {
-    // Calculate the slider value
-    let value = (100 / self.eleVideo.duration) * self.eleVideo
-      .currentTime;
-    // Update the slider value
-    self.eleSeekBar.value = value;
-  });
-
-  this.eleVideo.addEventListener("play", function() {
-    self.timerCallback();
-  }, false);
-
-  this.parent.addEventListener("mouseenter", function() {
-    // Two different behaviors.
-    // 1.  Regular Mode: show controls.
-    // 2.  Thumbnail Mode: play video
-    if (!self._isDataLoaded) {
-      return;
-    }
-
-    if (self._boolThumbnailMode) {
-      self._boolPlaying = true;
-    } else {
-      self._boolShowControls = true;
-    }
-    self.updateFromDynamicState();
-  });
-
-  this.parent.addEventListener("mouseleave", function() {
-    if (!self._isDataLoaded) {
-      return;
-    }
-    if (self._boolThumbnailMode) {
-      self._boolPlaying = false;
-      // clear things we do not want to render any more
-      self.setupCanvasContext().clearRect(0, 0, self
-        .canvasWidth, self
-        .canvasHeight);
-    } else {
-      self._boolShowControls = false;
-    }
-    self.updateFromDynamicState();
-  });
-
-  this._isRendered = true;
-  this.updateFromLoadingState();
-};
-
-
-/**
- * @member resetToFragment
- *
- * If the player has a media fragment, reset to the initial state:
- * - locks to the fragment
- * - sets the scrub head to the beginning of the fragment
- *
- * Maintains the playing state.
- *
- * Args:
- * Returns: true if reset happened
- */
-VideoPlayer51.prototype.resetToFragment = function() {
-  if (!this._hasMediaFragment) {
-    return false;
-  }
-
-  this.eleVideo.currentTime = this._mfBeginT;
-  this._lockToMF = true;
-
-  this.updateFromDynamicState();
-  return true;
-};
-
-
-/**
- * @member timerCallback
- *
  * This is called periodically when the video is playing.  It checks if the
  * video playing has encountered a new frame and, if so, draws the overlays for
  * that frame.
+ *
+ * @member timerCallback
  */
 VideoPlayer51.prototype.timerCallback = function() {
-  if (this.eleVideo.paused || this.eleVideo.ended) {
+  if (this.renderer.eleVideo.paused || this.renderer.eleVideo.ended) {
     return;
   }
   this.updateStateFromTimeChange();
   // if we are manually seeking right now, then do not set the manual callback
   if (!this._boolManualSeek) {
-    let self = this;
+    const self = this;
     setTimeout(function() {
       self.timerCallback();
     }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
   } else {
-    console.log("NOT SETTING TIME CALLBACK");
+    console.log('NOT SETTING TIME CALLBACK');
   }
 };
