@@ -12,11 +12,11 @@
 
 
 import {
-  ColorGenerator,
-} from './overlay.js';
+  VideoRenderer,
+} from './renderers/videorenderer.js';
 import {
-  Renderer51,
-} from './renderer51.js';
+  ImageRenderer,
+} from './renderers/imagerenderer.js';
 
 // ES6 module export
 export {
@@ -31,12 +31,17 @@ export {
  * F-MIXINS:  None
  * @constructor
  * @abstract
+ * @param {string} type is the media content type
  *
  */
-function MediaPlayer() {
-  // Base variables
-  this.colorGenerator = new ColorGenerator();
-  this.renderer = new Renderer51();
+function MediaPlayer(type) {
+  if (type === 'video') {
+    this.renderer = new VideoRenderer();
+  } else if (type === 'image') {
+    this.renderer = new ImageRenderer();
+  } else {
+    throw new Error('Renderer not initialized.');
+  }
   // Player state attributes
   this._isRendered = false;
   this._isSizePrepared = false;
@@ -120,42 +125,48 @@ MediaPlayer.prototype.thumbnailMode = function(action) {
 
 
 /**
- * Define abstract function render to be implemented in subclasses
- *
- * @member render
- * @abstract
- */
-MediaPlayer.prototype.render = function() {
-  throw new Error('Method render() must be implemented.');
-};
-
-
-/**
- * Define abstract function staticRender to be implemented in subclasses
- *
- * @member staticRender
- * @abstract
- */
-MediaPlayer.prototype.staticRender = function() {
-  throw new Error('Method staticRender() must be implemented.');
-};
-
-
-/**
- * Define abstract function dynamicRender to be implemented in subclasses
- *
- * @member dynamicRender
- * @required staticRender() has to be called beforehand
- * @abstract
- */
-MediaPlayer.prototype.dynamicRender = function() {
-  throw new Error('Method dynamicRender() must be implemented.');
-};
-
-
-/**
  * Implementation optional
  */
+
+
+/**
+* Render a new viewer for this media within the DOM element provided
+*
+* @member render
+* @param {domElement} parentElement String id of the parentElement or
+* actual Div object.
+*/
+MediaPlayer.prototype.render = function(parentElement) {
+  this.staticRender(parentElement);
+  this.dynamicRender();
+};
+
+
+/**
+* Render the media and context without any functionality
+*
+* @member staticRender
+* @param {domElement} parentElement String id of parentElement or actual
+* Div object
+*/
+MediaPlayer.prototype.staticRender = function(parentElement) {
+  this.renderer.setParentandMedia(parentElement, this.media);
+  this.renderer.initPlayer();
+  this._isRendered = true;
+};
+
+
+/**
+* Render the UI controls and dynamic functionality
+*
+* @member dynamicRender
+* @required staticRender() has to be called beforehand
+*/
+MediaPlayer.prototype.dynamicRender = function() {
+  this.renderer.setPlayer(this);
+  this.renderer.initSharedControls();
+  this.renderer.initPlayerControls();
+};
 
 
 /**

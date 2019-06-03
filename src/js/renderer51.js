@@ -1,17 +1,18 @@
 /**
  * @module renderer51.js
- * @summary Defines a client-side library that renders and sizes different
- * media players.
+ * @summary Defines an abstract base class that enforces what child renderers
+ * need to implement.
  *
- * @desc Renderer51 is a javascript based rendering library that loads different
- * media types into a parentElement and also initializes UI controls.
+ * @desc Renderer51 is an abstract class that defines the features child
+ * renderers should be able to support.
  *
  * Copyright 2017-2019, Voxel51, Inc.
- * Jason Corso, jason@voxel51.com
- * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com
  */
 
+import {
+  ColorGenerator,
+} from './overlay.js';
 
 // ES6 module export
 export {
@@ -25,6 +26,7 @@ export {
  * INHERITS:  None
  * F-MIXINS:  None
  * @constructor
+ * @abstract
  */
 function Renderer51() {
   this.player = undefined;
@@ -39,12 +41,73 @@ function Renderer51() {
   this.paddingBottom = 0;
   this._boolBorderBox = false; // is the container a border-box?
   this.metadataOverlayBGColor = 'hsla(210, 20%, 10%, 0.8)';
+  this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+
+  if (this.constructor === Renderer51) {
+    throw new TypeError('Cannot instantiate abstract class.');
+  }
 }
 
 
 /**
+ * Implementation required
+ */
+
+
+/**
+ * Define abstract function initPlayer to be implemented in subclasses
+ *
+ * @member initPlayer
+ * @abstract
+ */
+Renderer51.prototype.initPlayer = function() {
+  throw new Error('Method initPlayer() must be implemented.');
+};
+
+
+/**
+ * Define abstract function initPlayerControls to be implemented in subclasses
+ *
+ * @member initPlayerControls
+ * @abstract
+ */
+Renderer51.prototype.initPlayerControls = function() {
+  throw new Error('Method initPlayerControls() must be implemented.');
+};
+
+
+/**
+ * Define abstract function determineMediaDimensions to be implemented in
+ * subclasses
+ *
+ * @member determineMediaDimensions
+ * @abstract
+ */
+Renderer51.prototype.determineMediaDimensions = function() {
+  throw new Error('Method determineMediaDimensions() must be implemented.');
+};
+
+
+/**
+ * Define abstract function resizeControls to be implemented in subclasses
+ *
+ * @member resizeControls
+ * @abstract
+ */
+Renderer51.prototype.resizeControls = function() {
+  throw new Error('Method resizeControls() must be implemented.');
+};
+
+
+/**
+* Implementation optional
+*/
+
+
+/**
+
  * This function checks if player is set
  *
  * @member checkPlayer
@@ -160,30 +223,6 @@ Renderer51.prototype.setupCanvasContext = function() {
 
 
 /**
- * This function creates an image and canvas in parent
- *
- * @member initImageViewer
- * @required setParentandMedia called beforehand
- */
-Renderer51.prototype.initImageViewer = function() {
-  this.checkParentandMedia();
-  this.checkBorderBox();
-  this.eleDivImage = document.createElement('div');
-  this.eleDivImage.className = 'p51-contained-image';
-  this.eleImage = document.createElement('img');
-  this.eleImage.className = 'p51-contained-image';
-  this.eleImage.setAttribute('src', this.media.src);
-  this.eleImage.setAttribute('type', this.media.type);
-  this.eleDivImage.appendChild(this.eleImage);
-  this.parent.appendChild(this.eleDivImage);
-  this.mediaElement = this.eleImage;
-  this.mediaDiv = this.eleDivImage;
-  this.mediaType = 'image';
-  this.initCanvas();
-};
-
-
-/**
  * This function loads shared UI controls
  *
  * @member initSharedControls
@@ -194,254 +233,6 @@ Renderer51.prototype.initSharedControls = function() {
   if (typeof this.player._thumbnailClickAction !== 'undefined') {
     this.parent.addEventListener('click', this.player._thumbnailClickAction);
   }
-};
-
-
-/**
- * This function loads controls for imageviewer51
- *
- * @member initImageViewerControls
- * @required player to be set
- */
-Renderer51.prototype.initImageViewerControls = function() {
-  this.checkPlayer();
-  const self = this;
-
-  // Update size
-  this.eleImage.addEventListener('load', function() {
-    self.player._isImageLoaded = true;
-    self.updateSizeAndPadding();
-    self.player.annotate(self.player._overlayURL);
-  });
-
-  this.parent.addEventListener('mouseenter', function() {
-    if (self.player._boolThumbnailMode) {
-      self.player._boolThumbnailMode = false;
-      if (self.player._overlayURL) {
-        // Handle null overlays
-        self.player.annotate(self.player._overlayURL);
-      }
-      self.player._boolThumbnailMode = true;
-    }
-  });
-
-  this.parent.addEventListener('mouseleave', function() {
-    if (self.player._boolThumbnailMode) {
-      self.setupCanvasContext().clearRect(0, 0, self
-          .canvasWidth, self.canvasHeight);
-    }
-  });
-};
-
-
-/**
- * This function creates a video and canvas in parent
- *
- * @member initVideoPlayer
- * @required setParentandMedia called beforehand
- */
-Renderer51.prototype.initVideoPlayer = function() {
-  this.checkParentandMedia();
-  this.checkBorderBox();
-  this.eleDivVideo = document.createElement('div');
-  this.eleDivVideo.className = 'p51-contained-video';
-  this.eleVideo = document.createElement('video');
-  this.eleVideo.className = 'p51-contained-video';
-  this.eleVideo.setAttribute('preload', 'metadata');
-  this.eleVideo.muted =
-    true; // this works whereas .setAttribute does not
-
-  this.eleVideoSource = document.createElement('source');
-  this.eleVideoSource.setAttribute('src', this.media.src);
-  this.eleVideoSource.setAttribute('type', this.media.type);
-  this.eleVideo.appendChild(this.eleVideoSource);
-  this.eleDivVideo.appendChild(this.eleVideo);
-  this.parent.appendChild(this.eleDivVideo);
-
-  // Video controls
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls';
-  this.elePlayPauseButton = document.createElement('button');
-  this.elePlayPauseButton.setAttribute('type', 'button');
-  this.elePlayPauseButton.className = 'p51-play-pause';
-  this.elePlayPauseButton.innerHTML = 'Play';
-  this.eleSeekBar = document.createElement('input');
-  this.eleSeekBar.setAttribute('type', 'range');
-  this.eleSeekBar.setAttribute('value', '0');
-  this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-  this.eleDivVideoControls.appendChild(this.eleSeekBar);
-  this.parent.appendChild(this.eleDivVideoControls);
-  this.mediaElement = this.eleVideo;
-  this.mediaDiv = this.eleDivVideo;
-  this.mediaType = 'video';
-  this.initCanvas();
-};
-
-
-/**
- * This function loads controls for videoplayer51
- *
- * @member initVideoPlayerControls
- * @required player to be set
- */
-Renderer51.prototype.initVideoPlayerControls = function() {
-  this.checkPlayer();
-
-  if (this.player._boolAutoplay) {
-    this.eleVideo.toggleAttribute('autoplay', true);
-  }
-  if (this.player._boolLoop) {
-    this.eleVideo.toggleAttribute('loop', true);
-  }
-  if (this.player._boolHasPoster) {
-    this.eleVideo.setAttribute('poster', this.player._posterURL);
-    if (this.player._boolForcedSize) {
-      const sizeStyleString = 'width:' + this.player._forcedWidth +
-        'px; height:' + this.player._forcedHeight + 'px;';
-      this.eleVideo.setAttribute('style', sizeStyleString);
-      this.eleDivVideo.setAttribute('style', sizeStyleString);
-      this.parent.setAttribute('style', sizeStyleString);
-    }
-  }
-
-  // after the DOM elements are created then we initialize other variables that
-  // will be needed during playback
-  const self = this;
-
-  this.eleVideo.addEventListener('loadedmetadata', function() {
-    self.updateSizeAndPadding();
-    self.player.updateFromLoadingState();
-    self.setupCanvasContext();
-    self.player.updateFromLoadingState();
-  });
-
-  this.eleVideo.addEventListener('loadeddata', function() {
-    self.player._isDataLoaded = true;
-
-    // Handles the case that we have a poster frame to indicate the video is
-    // loading and now we can show the video.  But when we are not autoplay.
-    // We need to set the state to playing if we are set to autoplay
-    //  (the player itself will handle the autoplaying)
-    if (self.player._boolAutoplay) {
-      self.player._boolPlaying = true;
-    } else if (self.player._boolHasPoster) {
-      if (self.player._hasMediaFragment) {
-        self.eleVideo.currentTime = self._mfBeginT;
-        self.player._frameNumber = self.player._mfBeginF;
-      } else {
-        self.eleVideo.currentTime = 0;
-        self.player._frameNumber = 1;
-      }
-    }
-
-    self.player.updateFromLoadingState();
-    // so that we see overlay and time stamp now that we are ready
-    if ((!self.player._boolThumbnailMode) && (!self.player._boolAutoplay)) {
-      self.player.processFrame();
-    }
-  });
-
-  // Event listener for the play/pause button
-  this.elePlayPauseButton.addEventListener('click', function() {
-    if (self.player._boolPlaying !== true) {
-      self.player._boolPlaying = true;
-    } else {
-      self.player._boolPlaying = false;
-    }
-    self.player.updateFromDynamicState();
-  });
-
-  // Event listener for the seek bar
-  this.eleSeekBar.addEventListener('change', function() {
-    // Calculate the new time
-    const time = self.eleVideo.duration * (self.eleSeekBar
-        .valueAsNumber / 100.0);
-    // Update the video time
-    self.eleVideo.currentTime = time;
-    // Unlock the fragment so the user can browse the whole video
-    self.player._lockToMF = false;
-    self.player.updateStateFromTimeChange();
-  });
-
-  // Pause the video when the seek handle is being dragged
-  this.eleSeekBar.addEventListener('mousedown', function() {
-    if (!self.player._boolThumbnailMode) {
-      self.player._boolManualSeek = true;
-      // Unlock the fragment so the user can browse the whole video
-      self.player._lockToMF = false;
-      // We need to manually control the video-play state
-      // And turn it back on as needed.
-      self.eleVideo.pause();
-    }
-  });
-
-  // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener('mouseup', function() {
-    self.player._boolManualSeek = false;
-    if (self.player._boolPlaying) {
-      self.eleVideo.play();
-    }
-  });
-
-  this.eleVideo.addEventListener('ended', function() {
-    self.player._boolPlaying = false;
-    self.player.updateFromDynamicState();
-  });
-
-  this.eleVideo.addEventListener('pause', function() {
-    // this is a pause that is fired from the video player itself and not from
-    // the user clicking the play/pause button.
-    // Noting the checkForFragmentReset function calls updateFromDynamicState
-    self.player.checkForFragmentReset(self.player.computeFrameNumber());
-  });
-
-  // Update the seek bar as the video plays
-  this.eleVideo.addEventListener('timeupdate', function() {
-    // Calculate the slider value
-    const value = (100 / self.eleVideo.duration) * self.eleVideo
-        .currentTime;
-    // Update the slider value
-    self.eleSeekBar.value = value;
-  });
-
-  this.eleVideo.addEventListener('play', function() {
-    self.player.timerCallback();
-  }, false);
-
-  this.parent.addEventListener('mouseenter', function() {
-    // Two different behaviors.
-    // 1.  Regular Mode: show controls.
-    // 2.  Thumbnail Mode: play video
-    if (!self.player._isDataLoaded) {
-      return;
-    }
-
-    if (self.player._boolThumbnailMode) {
-      self.player._boolPlaying = true;
-    } else {
-      self.player._boolShowControls = true;
-    }
-    self.player.updateFromDynamicState();
-  });
-
-  this.parent.addEventListener('mouseleave', function() {
-    if (!self.player._isDataLoaded) {
-      return;
-    }
-    if (self.player._boolThumbnailMode) {
-      self.player._boolPlaying = false;
-      // clear things we do not want to render any more
-      self.setupCanvasContext().clearRect(0, 0, self
-          .canvasWidth, self
-          .canvasHeight);
-    } else {
-      self.player._boolShowControls = false;
-    }
-    self.player.updateFromDynamicState();
-  });
-
-  this.player.updateFromLoadingState();
 };
 
 
@@ -475,13 +266,7 @@ Renderer51.prototype.handleWidthAndHeight = function() {
     return;
   }
 
-  if (this.mediaType === 'image') {
-    this.mediaHeight = this.mediaElement.height;
-    this.mediaWidth = this.mediaElement.width;
-  } else if (this.mediaType === 'video') {
-    this.mediaHeight = this.mediaElement.videoHeight;
-    this.mediaWidth = this.mediaElement.videoWidth;
-  }
+  this.determineMediaDimensions();
 
   this.paddingLeft = window.getComputedStyle(this.parent, null)
       .getPropertyValue('padding-left');
@@ -605,24 +390,6 @@ Renderer51.prototype.resizeCanvas = function() {
     this.eleCanvas.style.paddingRight = this.paddingRight;
     this.eleCanvas.style.paddingTop = this.paddingTop;
     this.eleCanvas.style.paddingBottom = this.paddingBottom;
-
-    if (this.mediaType === 'video') {
-      // need to size the controls too.
-      // The controls are tuned using margins when padding exists.
-      this.eleDivVideoControls.style.width = (this.width + 'px');
-      this.eleDivVideoControls.style.height = (
-        Math.min(60 + this.paddingBottomN, 0.1 * this.height +
-          this.paddingBottomN) + 'px'
-      );
-
-      // controls have 0 padding because we want them only to show
-      // on the video, this impacts their left location too.
-      this.eleDivVideoControls.style.paddingLeft = 0;
-      this.eleDivVideoControls.style.paddingRight = 0;
-      this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
-        2) + 'px';
-      this.eleDivVideoControls.style.left = this.paddingLeft;
-    }
   } else {
     this.parent.style.width = (this.width + 'px');
     this.parent.style.height = (this.height + 'px');
@@ -654,20 +421,7 @@ Renderer51.prototype.resizeCanvas = function() {
     this.eleCanvas.style.paddingRight = this.paddingRight;
     this.eleCanvas.style.paddingTop = this.paddingTop;
     this.eleCanvas.style.paddingBottom = this.paddingBottom;
-
-    if (this.mediaType === 'video') {
-      // need to size the controls too.
-      // The controls are tuned using margins when padding exists.
-      this.eleDivVideoControls.style.width = (this.width + 'px');
-      this.eleDivVideoControls.style.height = (
-        Math.min(80, 0.1 * this.height) + 'px'
-      );
-      // controls have 0 padding because we want them only to show
-      // on the video, this impacts their left location too.
-      this.eleDivVideoControls.style.paddingLeft = 0;
-      this.eleDivVideoControls.style.paddingRight = 0;
-      this.eleDivVideoControls.style.bottom = this.paddingBottom;
-      this.eleDivVideoControls.style.left = this.paddingLeft;
-    }
   }
+
+  this.resizeControls();
 };

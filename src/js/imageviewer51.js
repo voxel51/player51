@@ -39,7 +39,7 @@ export {
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
 function ImageViewer51(media, overlay) {
-  MediaPlayer.call(this);
+  MediaPlayer.call(this, 'image');
 
   this.media = media;
   this.frameOverlay = []; // will be used to store the labels
@@ -106,49 +106,6 @@ ImageViewer51.prototype.resetToFragment = function() {
 ImageViewer51.prototype.thumbnailMode = function(action) {
   this._boolThumbnailMode = true;
   this._thumbnailClickAction = action;
-};
-
-
-/**
- * Render a new viewer for this image within the DOM element provided
- *
- * Note that the viewer parts inherit certain properties from the parent div,
- * such as padding.
- *
- * @member render
- * @param {domElement} parentElement String id of the parentElement or
- * actual Div object.
- */
-ImageViewer51.prototype.render = function(parentElement) {
-  this.staticRender(parentElement);
-  this.dynamicRender();
-};
-
-
-/**
- * Render the image and context to draw overlay on without any functionality
- *
- * @member staticRender
- * @param {domElement} parentElement String id of parentElement or actual
- * Div object.
- */
-ImageViewer51.prototype.staticRender = function(parentElement) {
-  this.renderer.setParentandMedia(parentElement, this.media);
-  this.renderer.initImageViewer();
-  this._isRendered = true;
-};
-
-
-/**
- * Render the UI controls and dynamic functions
- *
- * @member dynamicRender
- * @required staticRender() has to be called beforehand
- */
-ImageViewer51.prototype.dynamicRender = function() {
-  this.renderer.setPlayer(this);
-  this.renderer.initSharedControls();
-  this.renderer.initImageViewerControls();
 };
 
 

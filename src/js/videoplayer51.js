@@ -46,7 +46,7 @@ export {
  * then it will be guessed.
  */
 function VideoPlayer51(media, overlay, fps) {
-  MediaPlayer.call(this);
+  MediaPlayer.call(this, 'video');
 
   this.media = media;
   this.frameOverlay = {}; // will be used to store the labels per frame
@@ -203,49 +203,6 @@ VideoPlayer51.prototype.thumbnailMode = function(action) {
   this._boolThumbnailMode = true;
   this._thumbnailClickAction = action;
   this.loop(true);
-};
-
-
-/**
- * Render a new player for this media within the DOM element provided
- *
- * Note that the player parts inherit certain properties from the parent div,
- * such as padding.
- *
- * @member render
- * @param {domElement} parentElement String id of the parentElement or
- * actual Div object.
- */
-VideoPlayer51.prototype.render = function(parentElement) {
-  this.staticRender(parentElement);
-  this.dynamicRender();
-};
-
-
-/**
- * Render the video and context to draw overlay on without any functionality
- *
- * @member staticRender
- * @param {domElement} parentElement String id of parentElement or actual
- * Div object.
- */
-VideoPlayer51.prototype.staticRender = function(parentElement) {
-  this.renderer.setParentandMedia(parentElement, this.media);
-  this.renderer.initVideoPlayer();
-  this._isRendered = true;
-};
-
-
-/**
- * Render the UI controls and dynamic functions
- *
- * @member dynamicRender
- * @required staticRender() has to be called beforehand
- */
-VideoPlayer51.prototype.dynamicRender = function() {
-  this.renderer.setPlayer(this);
-  this.renderer.initSharedControls();
-  this.renderer.initVideoPlayerControls();
 };
 
 
@@ -671,7 +628,7 @@ VideoPlayer51.prototype.processFrame = function() {
     context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(x, y, w, h);
 
-    context.fillStyle = this.colorGenerator.white;
+    context.fillStyle = this.renderer.colorGenerator.white;
     context.fillText(hhmmss, x + pad, y + pad + fontheight - pad2, tw +
       8);
   }
