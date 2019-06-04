@@ -12,6 +12,8 @@
 
 import {
   ColorGenerator,
+  FrameAttributesOverlay,
+  ObjectOverlay,
 } from './overlay.js';
 
 // ES6 module export
@@ -27,11 +29,17 @@ export {
  * F-MIXINS:  None
  * @constructor
  * @abstract
+ * @param {object} media
+ * @param {string} overlay is the URL to overlay JSON
  */
-function Renderer51() {
+function Renderer51(media, overlay) {
   this.player = undefined;
   this.parent = undefined;
-  this.media = undefined;
+  this.media = media;
+  this.frameOverlay = {};
+  // Player state attributes
+  this._isRendered = false;
+  this._isSizePrepared = false;
   // View attributes
   this.width = -1;
   this.height = -1;
@@ -44,6 +52,17 @@ function Renderer51() {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+
+  // Loading state attributes
+  this._frameNumber = undefined; // does not cause an updateDynamicState call
+  this._isReadyProcessFrames = false; // DOM rendered, sized and loaded
+  this._isDataLoaded = false; // media loaded
+  this._overlayCanBePrepared = true;
+  this._isOverlayPrepared = false;
+  this._isPreparingOverlay = false;
+  this._overlayData = null;
+  this._overlayURL = null;
+  this.handleOverlay(overlay);
 
   if (this.constructor === Renderer51) {
     throw new TypeError('Cannot instantiate abstract class.');
@@ -102,12 +121,275 @@ Renderer51.prototype.resizeControls = function() {
 
 
 /**
+ * Define abstract function updateFromDynamicState to be implemented in
+ * subclasses
+ *
+ * @member updateFromDynamicState
+ * @abstract
+ */
+Renderer51.prototype.updateFromDynamicState = function() {
+  throw new Error('Method updateFromDynamicState() must be implemented.');
+};
+
+
+/**
+ * Define abstract function updateFromLoadingState to be implemented in
+ * subclasses
+ *
+ * @member updateFromLoadingState
+ * @abstract
+ */
+Renderer51.prototype.updateFromLoadingState = function() {
+  throw new Error('Method updateFromLoadingState() must be implemented.');
+};
+
+
+/**
+ * Define abstract function updateStateFromTimeChange to be implemented in
+ * subclasses
+ *
+ * @member updateStateFromTimeChange
+ * @abstract
+ */
+Renderer51.prototype.updateStateFromTimeChange = function() {
+  throw new Error('Method updateStateFromTimeChange() must be implemented.');
+};
+
+
+/**
+ * Define abstract function state to be implemented in subclasses
+ *
+ * @member state
+ * @abstract
+ */
+Renderer51.prototype.state = function() {
+  throw new Error('Method state() must be implemented.');
+};
+
+
+/**
+ * Define abstract function customDraw to be implemented in subclasses
+ *
+ * @member customDraw
+ * @abstract
+ */
+Renderer51.prototype.customDraw = function() {
+  throw new Error('Method customDraw() must be implemented.');
+};
+
+
+/**
 * Implementation optional
 */
 
 
 /**
+ * This function processes the overlayData
+ *
+ * @member handleOverlay
+ * @param {string} overlay of overlay JSON
+ */
+Renderer51.prototype.handleOverlay = function(overlay) {
+  if ((overlay === null) || (typeof(overlay) === 'undefined')) {
+    this._overlayURL = null;
+    this._overlayCanBePrepared = false;
+  } else if (typeof(overlay) === 'string') {
+    this._overlayURL = overlay;
+    this._overlayCanBePrepared = false;
+    this.loadOverlay(overlay);
+  } else if ((typeof(overlay) === 'object') && (overlay != null) && Object
+      .keys(overlay).length >
+    0) {
+    this._overlayURL = null;
+    this._overlayData = overlay;
+  }
+};
 
+
+/**
+ * This function loads in the JSON file asynchronously.
+ *
+ * @member loadOverlay
+ * @param {string} overlayPath
+ */
+Renderer51.prototype.loadOverlay = function(overlayPath) {
+  const self = this;
+  this._isOverlayPrepared = false;
+  const xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState === 4 && this.status === 200) {
+      self._overlayData = JSON.parse(this.responseText);
+      self.updateFromLoadingState();
+    }
+  };
+  xmlhttp.open('GET', overlayPath, true);
+  xmlhttp.send();
+};
+
+
+/**
+ * This function processes the overlay code and creates frame objects to be
+ * drawn onto the screen.
+ * Supports 2 formats, object and frame based.
+ *
+ * @member prepareOverlay
+ * @param {json} rawjson
+ */
+Renderer51.prototype.prepareOverlay = function(rawjson) {
+  if ((this._isOverlayPrepared) || (this._isPreparingOverlay)) {
+    return;
+  }
+  this._isPreparingOverlay = true;
+
+  // Format 1
+  if (typeof(rawjson.objects !== 'undefined')) {
+    const context = this.setupCanvasContext();
+    this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
+  }
+
+  // Format 2
+  if (typeof(rawjson.frames) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    const frameKeys = Object.keys(rawjson.frames);
+    for (const frameKeyI in frameKeys) {
+      if (frameKeyI) {
+        const frameKey = frameKeys[frameKeyI];
+        const f = rawjson.frames[frameKey];
+        if (typeof(f.objects) !== 'undefined') {
+          this._prepareOverlay_auxFormat1Objects(context, f.objects
+              .objects);
+        }
+        if (typeof(f.attrs) !== 'undefined') {
+          const o = new FrameAttributesOverlay(f.attrs, this);
+          o.setup(
+              context, this.canvasWidth, this.canvasHeight);
+          this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+        }
+      }
+    }
+  }
+
+  // Attributes for images
+  if (typeof(rawjson.attrs) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    const o = new FrameAttributesOverlay(rawjson.attrs, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this.frameOverlay[this._frameNumber].push(o);
+  }
+
+  this._isOverlayPrepared = true;
+  this._isPreparingOverlay = false;
+  this.updateFromLoadingState();
+};
+
+
+/**
+ * Helper function to parse one of the objects in the Format 1 of the overlay
+ * and add it the overlay representation.
+ *
+ * @param {context} context
+ * @param {array} objects is an Array of Objects with each entry an
+ * object in Format 1 above.
+ */
+Renderer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
+    objects) {
+  if (typeof objects === 'undefined') {
+    return;
+  }
+  if (typeof(objects.length) === 'undefined') {
+    objects = objects.objects;
+  }
+  for (let len = objects.length, i = 0; i < len; i++) {
+    const o = new ObjectOverlay(objects[i], this);
+    if (typeof this.canvasWidth === 'undefined') {
+      const checkCanvasWidth = setInterval(() => {
+        if (this.canvasWidth) {
+          clearInterval(checkCanvasWidth);
+          o.setup(context, this.canvasWidth, this
+              .canvasHeight);
+          this._prepareOverlay_auxCheckAdd(o);
+        }
+      }, 1000);
+    } else {
+      o.setup(context, this.canvasWidth, this.canvasHeight);
+      this._prepareOverlay_auxCheckAdd(o);
+    }
+  }
+};
+
+
+/**
+ * Add the overlay to the set.
+ *
+ * @arguments
+ * @param {overlay} o the Overlay instance
+ * @param {int} fn optional is the frame numnber
+ * (if not provided, then the overlay o needs a frameNumber propery.
+ */
+Renderer51.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
+  if (fn == -1) {
+    fn = o.frame_number;
+  }
+  if (fn in this.frameOverlay) {
+    const thelist = this.frameOverlay[fn];
+    thelist.push(o);
+    this.frameOverlay[fn] = thelist;
+  } else {
+    // this the first time we are seeing the frame
+    const newlist = [o];
+    this.frameOverlay[fn] = newlist;
+  }
+};
+
+
+/**
+ * Handles the rendering of a specific frame, noting that rendering has two
+ * different meanings in Player51.  The Player51.render function is used to
+ * actually create the Player51 and inject it into the DOM.  This
+ * Player51.processFrame function is responsible for drawing when a new video
+ * frame has been drawn by the underlying player.
+ *
+ * @todo need to use double-buffering instead of rendering direct to the
+ * canvas to avoid flickering.
+ * @member processFrame
+ */
+Renderer51.prototype.processFrame = function() {
+  if (!this._isReadyProcessFrames) {
+    return;
+  }
+
+  const context = this.setupCanvasContext();
+  this.customDraw(context);
+  if (this._isOverlayPrepared) {
+    if (this._frameNumber in this.frameOverlay) {
+      const fm = this.frameOverlay[this._frameNumber];
+      for (let len = fm.length, i = 0; i < len; i++) {
+        fm[i].draw(
+            context, this.canvasWidth, this.canvasHeight);
+      }
+    }
+  }
+  return;
+};
+
+
+/**
+ * Used by overlay rendering code.
+ *
+ * @member checkFontHeight
+ * @param {int} h is font height
+ * @return {int} h is the current height
+ */
+Renderer51.prototype.checkFontHeight = function(h) {
+  if (h == 0) {
+    console.log('PLAYER51 WARN: fontheight 0');
+    return 10;
+  }
+  return h;
+};
+
+
+/**
  * This function checks if player is set
  *
  * @member checkPlayer
@@ -149,19 +431,16 @@ Renderer51.prototype.checkParentandMedia = function() {
 /**
  * This function sets the parent of the media to be loaded.
  *
- * @member setParentandMedia
+ * @member setParentofMedia
  * @param {domElement} parentElement String Id of the parentElement or actual
  * Div object.
- * @param {media} media is the media to be rendered
  */
-Renderer51.prototype.setParentandMedia = function(parentElement, media) {
+Renderer51.prototype.setParentofMedia = function(parentElement) {
   if (typeof parentElement === 'string') {
     this.parent = document.getElementById(parentElement);
   } else {
     this.parent = parentElement;
   }
-
-  this.media = media;
 };
 
 
@@ -205,7 +484,7 @@ Renderer51.prototype.initCanvas = function() {
  */
 Renderer51.prototype.setupCanvasContext = function() {
   this.checkPlayer();
-  if (!this.player._isRendered) {
+  if (!this._isRendered) {
     console.log(
         'WARN: trying to set up canvas context but player not rendered'
     );
@@ -247,7 +526,7 @@ Renderer51.prototype.updateSizeAndPadding = function() {
   this.checkParentandMedia();
   this.handleWidthAndHeight();
   this.resizeCanvas();
-  this.player._isSizePrepared = true;
+  this._isSizePrepared = true;
 };
 
 
@@ -259,7 +538,7 @@ Renderer51.prototype.updateSizeAndPadding = function() {
  * @required the viewer must be rendered.
  */
 Renderer51.prototype.handleWidthAndHeight = function() {
-  if (!this.player._isRendered) {
+  if (!this._isRendered) {
     console.log(
         'WARN: Player51 trying to update size, but it is not rendered.'
     );

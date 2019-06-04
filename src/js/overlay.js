@@ -114,12 +114,12 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
  *      "value": "value for the attribute",
  *      "confidence": confidence of the attribute
  *    ]
- * @param {player} player
+ * @param {renderer} renderer
  *
  */
-function FrameAttributesOverlay(d, player) {
+function FrameAttributesOverlay(d, renderer) {
   Overlay.call(this);
-  this.player = player;
+  this.renderer = renderer;
 
   this.attrs = d.attrs;
   this.attrText =
@@ -155,7 +155,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
   }
 
   this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
-  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
+  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = 10;
 
@@ -235,8 +235,8 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
     }
   }
 
-  if (!this.player._boolThumbnailMode) {
-    context.fillStyle = this.player.renderer.metadataOverlayBGColor;
+  if (!this.renderer.player._boolThumbnailMode) {
+    context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(this.x, this.y, this.w, this.h);
 
     context.font = `${this.attrFontHeight}px sans-serif`;
@@ -271,12 +271,12 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  *           "y": 0.2, // floating number in relative 0:1 coordinates
  *         }
  *       }
- * @param {player} player
+ * @param {renderer} renderer
  */
-function ObjectOverlay(d, player) {
+function ObjectOverlay(d, renderer) {
   Overlay.call(this);
 
-  this.player = player;
+  this.renderer = renderer;
 
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
@@ -335,10 +335,10 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.color = colorGenerator.color(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
-  this.headerFontHeight = this.player.checkFontHeight(this
+  this.headerFontHeight = this.renderer.checkFontHeight(this
       .headerFontHeight);
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
-  this.attrFontHeight = this.player.checkFontHeight(this.attrFontHeight);
+  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   this.headerHeight = Math.min(26, 0.13 * canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
@@ -420,7 +420,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.fillStyle = this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
-  if (!this.player._boolThumbnailMode) {
+  if (!this.renderer.player._boolThumbnailMode) {
     // fill and stroke to account for line thickness variation
     context.strokeRect(this.x, this.y - this.headerHeight,
         this.headerWidth, this.headerHeight);

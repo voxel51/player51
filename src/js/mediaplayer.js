@@ -32,19 +32,19 @@ export {
  * @constructor
  * @abstract
  * @param {string} type is the media content type
+ * @param {object} media
+ * @param {string} overlay is a URL to the overlay JSON
+ * @param {int} fps is frames per second
  *
  */
-function MediaPlayer(type) {
+function MediaPlayer(type, media, overlay, fps) {
   if (type === 'video') {
-    this.renderer = new VideoRenderer();
+    this.renderer = new VideoRenderer(media, overlay, fps);
   } else if (type === 'image') {
-    this.renderer = new ImageRenderer();
+    this.renderer = new ImageRenderer(media, overlay);
   } else {
     throw new Error('Renderer not initialized.');
   }
-  // Player state attributes
-  this._isRendered = false;
-  this._isSizePrepared = false;
   // Player prerender attributes
   this._boolForcedMax = false;
   this._boolForcedSize = false;
@@ -150,9 +150,9 @@ MediaPlayer.prototype.render = function(parentElement) {
 * Div object
 */
 MediaPlayer.prototype.staticRender = function(parentElement) {
-  this.renderer.setParentandMedia(parentElement, this.media);
+  this.renderer.setParentofMedia(parentElement);
   this.renderer.initPlayer();
-  this._isRendered = true;
+  this.renderer._isRendered = true;
 };
 
 
@@ -204,20 +204,4 @@ MediaPlayer.prototype.forceMax = function() {
     console.log('Warning!  forceSize wins.');
   }
   this._boolForcedMax = true;
-};
-
-
-/**
- * Used by overlay rendering code.
- *
- * @member checkFontHeight
- * @param {int} h is font height
- * @return {int} h is the current height
- */
-MediaPlayer.prototype.checkFontHeight = function(h) {
-  if (h == 0) {
-    console.log('PLAYER51 WARN: fontheight 0');
-    return 10;
-  }
-  return h;
 };

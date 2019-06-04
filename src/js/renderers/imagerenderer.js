@@ -25,10 +25,16 @@ export {
  *
  * INHERITS: Renderer51
  * F-MIXINS: None
- @constructor
+ * @constructor
+ * @param {object} media is an object that has "src" and "type" attributes.
+ * type must be in the format image/<format>
+ * ex. type: "image/jpg"
+ * @param {string} overlay is data that should be overlayed on the image.
+ * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
-function ImageRenderer() {
-  Renderer51.call(this);
+function ImageRenderer(media, overlay) {
+  Renderer51.call(this, media, overlay);
+  this._frameNumber = 1;
 }
 ImageRenderer.prototype = Object.create(Renderer51.prototype);
 ImageRenderer.prototype.constructor = ImageRenderer;
@@ -69,19 +75,22 @@ ImageRenderer.prototype.initPlayerControls = function() {
 
   // Update size
   this.eleImage.addEventListener('load', function() {
-    self.player._isImageLoaded = true;
     self.updateSizeAndPadding();
-    self.player.annotate(self.player._overlayURL);
+    self.updateFromLoadingState();
+    self.setupCanvasContext();
+    self._isDataLoaded = true;
+    self.updateFromLoadingState();
+    if (!self.player._boolThumbnailMode) {
+      self.processFrame();
+    }
   });
 
   this.parent.addEventListener('mouseenter', function() {
+    if (!self._isDataLoaded) {
+      return;
+    }
     if (self.player._boolThumbnailMode) {
-      self.player._boolThumbnailMode = false;
-      if (self.player._overlayURL) {
-        // Handle null overlays
-        self.player.annotate(self.player._overlayURL);
-      }
-      self.player._boolThumbnailMode = true;
+      self.updateFromDynamicState();
     }
   });
 
@@ -91,6 +100,8 @@ ImageRenderer.prototype.initPlayerControls = function() {
           .canvasWidth, self.canvasHeight);
     }
   });
+
+  this.updateFromLoadingState();
 };
 
 
@@ -113,4 +124,86 @@ ImageRenderer.prototype.determineMediaDimensions = function() {
  * @required initPlayer() to be called
  */
 ImageRenderer.prototype.resizeControls = function() {
+};
+
+
+/**
+ * This function is a controller
+ * The dynamic state of the player has changed and various settings have to be
+ * toggled.
+ *
+ * @member updateFromDynamicState
+ */
+ImageRenderer.prototype.updateFromDynamicState = function() {
+  if ((!this._isRendered) || (!this._isSizePrepared)) {
+    return;
+  }
+  if (this.player._boolThumbnailMode) {
+    this.processFrame();
+  }
+};
+
+
+/**
+ * This function is a controller
+ * The loading state of the player has changed and various settings have to be
+ * toggled.
+ *
+ * @member updateFromLoadingState
+ */
+ImageRenderer.prototype.updateFromLoadingState = function() {
+  if ((this._isRendered) && (this._isSizePrepared)) {
+    if (this._isDataLoaded) {
+      this._isReadyProcessFrames = true;
+    }
+    // If we had to download the overlay data and it is ready
+    if ((this._overlayData !== null) && (this.overlayURL !== null)) {
+      this._overlayCanBePrepared = true;
+    }
+  }
+
+  if (this._overlayCanBePrepared) {
+    this.prepareOverlay(this._overlayData);
+  }
+};
+
+
+/**
+ * This function is a controller
+ * Not for ImageViewer51
+ *
+ * @member updateStateFromTimeChange
+ */
+ImageRenderer.prototype.updateStateFromTimeChange = function() {
+  console.log('WARN: updateStateFromTimeChange() not for imageviewer51');
+};
+
+
+/**
+ * Generate a string that represents the state.
+ *
+ * @member state
+ * @return {dictionary} state
+ */
+ImageRenderer.prototype.state = function() {
+  return `
+ImageViewer51 State Information:
+frame number: ${this._frameNumber}
+isReadyProcessFrames: ${this._isReadyProcessFrames}
+isRendered:   ${this._isRendered}
+isSizePrepared:  ${this._isSizePrepared}
+isDataLoaded:  ${this._isDataLoaded}
+overlayCanBePrepared: ${this._overlayCanBePrepared}
+isOverlayPrepared: ${this._isOverlayPrepared}
+isPreparingOverlay: ${this._isPreparingOverlay}
+`;
+};
+
+
+/**
+ * Draws custom case objects onto a frame.
+ * @member customDraw
+ * @param {context} context
+ */
+ImageRenderer.prototype.customDraw = function(context) {
 };
