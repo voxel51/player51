@@ -33,6 +33,10 @@ export {
  * @param {string} overlay is the URL to overlay JSON
  */
 function Renderer51(media, overlay) {
+  if (this.constructor === Renderer51) {
+    throw new TypeError('Cannot instantiate abstract class.');
+  }
+  // Data structures
   this.player = undefined;
   this.parent = undefined;
   this.media = media;
@@ -47,26 +51,20 @@ function Renderer51(media, overlay) {
   this.paddingRight = 0;
   this.paddingTop = 0;
   this.paddingBottom = 0;
-  this._boolBorderBox = false; // is the container a border-box?
   this.metadataOverlayBGColor = 'hsla(210, 20%, 10%, 0.8)';
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
-
   // Loading state attributes
-  this._frameNumber = undefined; // does not cause an updateDynamicState call
-  this._isReadyProcessFrames = false; // DOM rendered, sized and loaded
-  this._isDataLoaded = false; // media loaded
+  this._frameNumber = undefined;
+  this._isReadyProcessFrames = false;
+  this._isDataLoaded = false;
   this._overlayCanBePrepared = true;
   this._isOverlayPrepared = false;
   this._isPreparingOverlay = false;
   this._overlayData = null;
   this._overlayURL = null;
   this.handleOverlay(overlay);
-
-  if (this.constructor === Renderer51) {
-    throw new TypeError('Cannot instantiate abstract class.');
-  }
 }
 
 
@@ -293,7 +291,7 @@ Renderer51.prototype.prepareOverlay = function(rawjson) {
  */
 Renderer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
     objects) {
-  if (typeof objects === 'undefined') {
+  if (typeof(objects) === 'undefined') {
     return;
   }
   if (typeof(objects.length) === 'undefined') {
@@ -301,7 +299,7 @@ Renderer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
   }
   for (let len = objects.length, i = 0; i < len; i++) {
     const o = new ObjectOverlay(objects[i], this);
-    if (typeof this.canvasWidth === 'undefined') {
+    if (typeof(this.canvasWidth) === 'undefined') {
       const checkCanvasWidth = setInterval(() => {
         if (this.canvasWidth) {
           clearInterval(checkCanvasWidth);
@@ -395,7 +393,7 @@ Renderer51.prototype.checkFontHeight = function(h) {
  * @member checkPlayer
  */
 Renderer51.prototype.checkPlayer = function() {
-  if (typeof this.player === 'undefined') {
+  if (typeof(this.player) === 'undefined') {
     throw new TypeError('Player not set.');
   }
 };
@@ -418,11 +416,11 @@ Renderer51.prototype.setPlayer = function(player) {
  * @member checkParentandMedia
  */
 Renderer51.prototype.checkParentandMedia = function() {
-  if (typeof this.parent === 'undefined') {
+  if (typeof(this.parent) === 'undefined') {
     throw new TypeError('Parent not set.');
   }
 
-  if (typeof this.media === 'undefined') {
+  if (typeof(this.media) === 'undefined') {
     throw new TypeError('Media not set.');
   }
 };
@@ -436,7 +434,7 @@ Renderer51.prototype.checkParentandMedia = function() {
  * Div object.
  */
 Renderer51.prototype.setParentofMedia = function(parentElement) {
-  if (typeof parentElement === 'string') {
+  if (typeof(parentElement) === 'string') {
     this.parent = document.getElementById(parentElement);
   } else {
     this.parent = parentElement;
@@ -509,7 +507,7 @@ Renderer51.prototype.setupCanvasContext = function() {
  */
 Renderer51.prototype.initSharedControls = function() {
   this.checkPlayer();
-  if (typeof this.player._thumbnailClickAction !== 'undefined') {
+  if (typeof(this.player._thumbnailClickAction) !== 'undefined') {
     this.parent.addEventListener('click', this.player._thumbnailClickAction);
   }
 };

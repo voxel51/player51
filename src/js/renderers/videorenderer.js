@@ -521,7 +521,7 @@ VideoRenderer.prototype.setMediaFragment = function() {
   // fragment and allow locking / unlocking of the fragment.
   const mfParse = parseMediaFragmentsUri(this.media.src);
 
-  if (typeof mfParse.hash.t !== 'undefined') {
+  if (typeof(mfParse.hash.t) !== 'undefined') {
     this._mfBeginT = mfParse.hash.t[0].startNormalized;
     this._mfEndT = mfParse.hash.t[0].endNormalized;
     this._mfBeginF = this.computeFrameNumber(this._mfBeginT);
@@ -575,7 +575,7 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
  * @return {time}
  */
 VideoRenderer.prototype.computeFrameNumber = function(time) {
-  if (typeof time === 'undefined') {
+  if (typeof(time) === 'undefined') {
     time = this.eleVideo.currentTime;
   }
   const currentFrameNumber = time * this.frameRate + this.frameZeroOffset;

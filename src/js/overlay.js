@@ -261,6 +261,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  *       "label": "the class/label/name of thing to show",
  *       "index": "a unique index for the object",
  *       "frame_number": 100, // the integer frame number for this object
+ *       "Optional, may only be present for certain players."
  *       "bounding_box": {
  *         "top_left": {
  *           "x": 0.1, // floating number in relative 0:1 coordinates

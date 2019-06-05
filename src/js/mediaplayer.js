@@ -38,6 +38,10 @@ export {
  *
  */
 function MediaPlayer(type, media, overlay, fps) {
+  if (this.constructor === MediaPlayer) {
+    throw new TypeError('Cannot instantiate abstract class.');
+  }
+
   if (type === 'video') {
     this.renderer = new VideoRenderer(media, overlay, fps);
   } else if (type === 'image') {
@@ -48,17 +52,12 @@ function MediaPlayer(type, media, overlay, fps) {
   // Player prerender attributes
   this._boolForcedMax = false;
   this._boolForcedSize = false;
-  this._forcedWidth = -1; // set via `forceSize()`
-  this._forcedHeight = -1; // set via `forceSize()`
+  this._forcedWidth = -1;
+  this._forcedHeight = -1;
   this._boolThumbnailMode = false;
   this._thumbnailClickAction = undefined;
-  this._boolHasPoster = false; // set via `poster()`
-  this._posterURL = ''; // set via `poster()`
-
-
-  if (this.constructor === MediaPlayer) {
-    throw new TypeError('Cannot instantiate abstract class.');
-  }
+  this._boolHasPoster = false;
+  this._posterURL = '';
 }
 
 /**
