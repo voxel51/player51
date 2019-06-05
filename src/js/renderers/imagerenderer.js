@@ -11,8 +11,8 @@
  */
 
 import {
-  Renderer51,
-} from '../renderer51.js';
+  Renderer,
+} from '../renderer.js';
 
 // ES6 module export
 export {
@@ -23,7 +23,7 @@ export {
 /**
  * ImageRenderer Class Definition
  *
- * INHERITS: Renderer51
+ * INHERITS: Renderer
  * F-MIXINS: None
  * @constructor
  * @param {object} media is an object that has "src" and "type" attributes.
@@ -33,10 +33,10 @@ export {
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
 function ImageRenderer(media, overlay) {
-  Renderer51.call(this, media, overlay);
+  Renderer.call(this, media, overlay);
   this._frameNumber = 1;
 }
-ImageRenderer.prototype = Object.create(Renderer51.prototype);
+ImageRenderer.prototype = Object.create(Renderer.prototype);
 ImageRenderer.prototype.constructor = ImageRenderer;
 
 
@@ -187,7 +187,7 @@ ImageRenderer.prototype.updateStateFromTimeChange = function() {
  */
 ImageRenderer.prototype.state = function() {
   return `
-ImageViewer51 State Information:
+ImageViewer State Information:
 frame number: ${this._frameNumber}
 isReadyProcessFrames: ${this._isReadyProcessFrames}
 isRendered:   ${this._isRendered}

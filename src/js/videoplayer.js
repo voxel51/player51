@@ -1,9 +1,9 @@
 /**
- * @module videoplayer51.js
+ * @module videoplayer.js
  * @summary Defines a client-side media player that can play videos and render
  * metadata overlayed atop them.
  *
- * @desc VideoPlayer51 is a javascript based video player that can also
+ * @desc VideoPlayer is a javascript based video player that can also
  * render available annotations and markup overlayed on top of the
  * video.
  *
@@ -19,12 +19,12 @@ import {
 
 // ES6 module export
 export {
-  VideoPlayer51,
+  VideoPlayer,
 };
 
 
 /**
- * VideoPlayer51 Class Definition
+ * VideoPlayer Class Definition
  *
  * INHERITS:  MediaPlayer
  * F-MIXINS:  None
@@ -38,14 +38,14 @@ export {
  * @param {int} fps is the frame-rate of the media.  If it is not provided
  * then it will be guessed.
  */
-function VideoPlayer51(media, overlay, fps) {
+function VideoPlayer(media, overlay, fps) {
   MediaPlayer.call(this, 'video', media, overlay, fps);
   // Player View Attributes
   this.boolDrawFrameNumber = false;
-  this.boolDrawTimestamp = false; // draw time indicator when playing
+  this.boolDrawTimestamp = false;
 }
-VideoPlayer51.prototype = Object.create(MediaPlayer.prototype);
-VideoPlayer51.prototype.constructor = VideoPlayer51;
+VideoPlayer.prototype = Object.create(MediaPlayer.prototype);
+VideoPlayer.prototype.constructor = VideoPlayer;
 
 
 /**
@@ -54,7 +54,7 @@ VideoPlayer51.prototype.constructor = VideoPlayer51;
  * @member poster
  * @param {string} url Image to be shown while loading.
  */
-VideoPlayer51.prototype.poster = function(url) {
+VideoPlayer.prototype.poster = function(url) {
   this._boolHasPoster = true;
   this._posterURL = url;
 };
@@ -66,7 +66,7 @@ VideoPlayer51.prototype.poster = function(url) {
  * @member loop
  * @param {bool} boolLoop
  */
-VideoPlayer51.prototype.loop = function(boolLoop = true) {
+VideoPlayer.prototype.loop = function(boolLoop = true) {
   this.renderer._boolLoop = boolLoop;
   this.renderer.updateFromDynamicState();
 };
@@ -78,7 +78,7 @@ VideoPlayer51.prototype.loop = function(boolLoop = true) {
  * @member autoplay
  * @param {bool} boolAutoplay
  */
-VideoPlayer51.prototype.autoplay = function(boolAutoplay = true) {
+VideoPlayer.prototype.autoplay = function(boolAutoplay = true) {
   this.renderer._boolAutoplay = boolAutoplay;
   this.renderer.updateFromDynamicState();
 };
@@ -94,7 +94,7 @@ VideoPlayer51.prototype.autoplay = function(boolAutoplay = true) {
  * @member resetToFragment
  * @return {bool} true if reset happens
  */
-VideoPlayer51.prototype.resetToFragment = function() {
+VideoPlayer.prototype.resetToFragment = function() {
   if (!this.renderer._hasMediaFragment) {
     return false;
   }
@@ -120,7 +120,7 @@ VideoPlayer51.prototype.resetToFragment = function() {
  * @param {function} action (optional) a callback function to associate with
  * any click on the video.
  */
-VideoPlayer51.prototype.thumbnailMode = function(action) {
+VideoPlayer.prototype.thumbnailMode = function(action) {
   this._boolThumbnailMode = true;
   this._thumbnailClickAction = action;
   this.loop(true);

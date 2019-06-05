@@ -1,9 +1,9 @@
 /**
- * @module renderer51.js
+ * @module renderer.js
  * @summary Defines an abstract base class that enforces what child renderers
  * need to implement.
  *
- * @desc Renderer51 is an abstract class that defines the features child
+ * @desc Renderer is an abstract class that defines the features child
  * renderers should be able to support.
  *
  * Copyright 2017-2019, Voxel51, Inc.
@@ -18,12 +18,12 @@ import {
 
 // ES6 module export
 export {
-  Renderer51,
+  Renderer,
 };
 
 
 /**
- * Renderer51 Class Definition
+ * Renderer Class Definition
  *
  * INHERITS:  None
  * F-MIXINS:  None
@@ -32,8 +32,8 @@ export {
  * @param {object} media
  * @param {string} overlay is the URL to overlay JSON
  */
-function Renderer51(media, overlay) {
-  if (this.constructor === Renderer51) {
+function Renderer(media, overlay) {
+  if (this.constructor === Renderer) {
     throw new TypeError('Cannot instantiate abstract class.');
   }
   // Data structures
@@ -79,7 +79,7 @@ function Renderer51(media, overlay) {
  * @member initPlayer
  * @abstract
  */
-Renderer51.prototype.initPlayer = function() {
+Renderer.prototype.initPlayer = function() {
   throw new Error('Method initPlayer() must be implemented.');
 };
 
@@ -90,7 +90,7 @@ Renderer51.prototype.initPlayer = function() {
  * @member initPlayerControls
  * @abstract
  */
-Renderer51.prototype.initPlayerControls = function() {
+Renderer.prototype.initPlayerControls = function() {
   throw new Error('Method initPlayerControls() must be implemented.');
 };
 
@@ -102,7 +102,7 @@ Renderer51.prototype.initPlayerControls = function() {
  * @member determineMediaDimensions
  * @abstract
  */
-Renderer51.prototype.determineMediaDimensions = function() {
+Renderer.prototype.determineMediaDimensions = function() {
   throw new Error('Method determineMediaDimensions() must be implemented.');
 };
 
@@ -113,7 +113,7 @@ Renderer51.prototype.determineMediaDimensions = function() {
  * @member resizeControls
  * @abstract
  */
-Renderer51.prototype.resizeControls = function() {
+Renderer.prototype.resizeControls = function() {
   throw new Error('Method resizeControls() must be implemented.');
 };
 
@@ -125,7 +125,7 @@ Renderer51.prototype.resizeControls = function() {
  * @member updateFromDynamicState
  * @abstract
  */
-Renderer51.prototype.updateFromDynamicState = function() {
+Renderer.prototype.updateFromDynamicState = function() {
   throw new Error('Method updateFromDynamicState() must be implemented.');
 };
 
@@ -137,7 +137,7 @@ Renderer51.prototype.updateFromDynamicState = function() {
  * @member updateFromLoadingState
  * @abstract
  */
-Renderer51.prototype.updateFromLoadingState = function() {
+Renderer.prototype.updateFromLoadingState = function() {
   throw new Error('Method updateFromLoadingState() must be implemented.');
 };
 
@@ -149,7 +149,7 @@ Renderer51.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  * @abstract
  */
-Renderer51.prototype.updateStateFromTimeChange = function() {
+Renderer.prototype.updateStateFromTimeChange = function() {
   throw new Error('Method updateStateFromTimeChange() must be implemented.');
 };
 
@@ -160,7 +160,7 @@ Renderer51.prototype.updateStateFromTimeChange = function() {
  * @member state
  * @abstract
  */
-Renderer51.prototype.state = function() {
+Renderer.prototype.state = function() {
   throw new Error('Method state() must be implemented.');
 };
 
@@ -171,7 +171,7 @@ Renderer51.prototype.state = function() {
  * @member customDraw
  * @abstract
  */
-Renderer51.prototype.customDraw = function() {
+Renderer.prototype.customDraw = function() {
   throw new Error('Method customDraw() must be implemented.');
 };
 
@@ -187,7 +187,7 @@ Renderer51.prototype.customDraw = function() {
  * @member handleOverlay
  * @param {string} overlay of overlay JSON
  */
-Renderer51.prototype.handleOverlay = function(overlay) {
+Renderer.prototype.handleOverlay = function(overlay) {
   if ((overlay === null) || (typeof(overlay) === 'undefined')) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
@@ -210,7 +210,7 @@ Renderer51.prototype.handleOverlay = function(overlay) {
  * @member loadOverlay
  * @param {string} overlayPath
  */
-Renderer51.prototype.loadOverlay = function(overlayPath) {
+Renderer.prototype.loadOverlay = function(overlayPath) {
   const self = this;
   this._isOverlayPrepared = false;
   const xmlhttp = new XMLHttpRequest();
@@ -233,7 +233,7 @@ Renderer51.prototype.loadOverlay = function(overlayPath) {
  * @member prepareOverlay
  * @param {json} rawjson
  */
-Renderer51.prototype.prepareOverlay = function(rawjson) {
+Renderer.prototype.prepareOverlay = function(rawjson) {
   if ((this._isOverlayPrepared) || (this._isPreparingOverlay)) {
     return;
   }
@@ -289,7 +289,7 @@ Renderer51.prototype.prepareOverlay = function(rawjson) {
  * @param {array} objects is an Array of Objects with each entry an
  * object in Format 1 above.
  */
-Renderer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
+Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
     objects) {
   if (typeof(objects) === 'undefined') {
     return;
@@ -324,7 +324,7 @@ Renderer51.prototype._prepareOverlay_auxFormat1Objects = function(context,
  * @param {int} fn optional is the frame numnber
  * (if not provided, then the overlay o needs a frameNumber propery.
  */
-Renderer51.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
+Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
   if (fn == -1) {
     fn = o.frame_number;
   }
@@ -351,7 +351,7 @@ Renderer51.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
  * canvas to avoid flickering.
  * @member processFrame
  */
-Renderer51.prototype.processFrame = function() {
+Renderer.prototype.processFrame = function() {
   if (!this._isReadyProcessFrames) {
     return;
   }
@@ -378,7 +378,7 @@ Renderer51.prototype.processFrame = function() {
  * @param {int} h is font height
  * @return {int} h is the current height
  */
-Renderer51.prototype.checkFontHeight = function(h) {
+Renderer.prototype.checkFontHeight = function(h) {
   if (h == 0) {
     console.log('PLAYER51 WARN: fontheight 0');
     return 10;
@@ -392,7 +392,7 @@ Renderer51.prototype.checkFontHeight = function(h) {
  *
  * @member checkPlayer
  */
-Renderer51.prototype.checkPlayer = function() {
+Renderer.prototype.checkPlayer = function() {
   if (typeof(this.player) === 'undefined') {
     throw new TypeError('Player not set.');
   }
@@ -405,7 +405,7 @@ Renderer51.prototype.checkPlayer = function() {
  * @member setPlayer
  * @param {player} player
  */
-Renderer51.prototype.setPlayer = function(player) {
+Renderer.prototype.setPlayer = function(player) {
   this.player = player;
 };
 
@@ -415,7 +415,7 @@ Renderer51.prototype.setPlayer = function(player) {
  *
  * @member checkParentandMedia
  */
-Renderer51.prototype.checkParentandMedia = function() {
+Renderer.prototype.checkParentandMedia = function() {
   if (typeof(this.parent) === 'undefined') {
     throw new TypeError('Parent not set.');
   }
@@ -433,7 +433,7 @@ Renderer51.prototype.checkParentandMedia = function() {
  * @param {domElement} parentElement String Id of the parentElement or actual
  * Div object.
  */
-Renderer51.prototype.setParentofMedia = function(parentElement) {
+Renderer.prototype.setParentofMedia = function(parentElement) {
   if (typeof(parentElement) === 'string') {
     this.parent = document.getElementById(parentElement);
   } else {
@@ -447,7 +447,7 @@ Renderer51.prototype.setParentofMedia = function(parentElement) {
  *
  * @member checkBorderBox
  */
-Renderer51.prototype.checkBorderBox = function() {
+Renderer.prototype.checkBorderBox = function() {
   const cBS = window.getComputedStyle(this.parent, null).getPropertyValue(
       'box-sizing');
   if (cBS === 'border-box') {
@@ -462,7 +462,7 @@ Renderer51.prototype.checkBorderBox = function() {
  * @member initCanvas
  * @required setParentandMedia called beforehand
  */
-Renderer51.prototype.initCanvas = function() {
+Renderer.prototype.initCanvas = function() {
   this.checkParentandMedia();
   this.eleDivCanvas = document.createElement('div');
   this.eleDivCanvas.className = 'p51-contained-canvas';
@@ -480,7 +480,7 @@ Renderer51.prototype.initCanvas = function() {
  * @required the viewer needs to be rendered
  * @return {canvas} context
  */
-Renderer51.prototype.setupCanvasContext = function() {
+Renderer.prototype.setupCanvasContext = function() {
   this.checkPlayer();
   if (!this._isRendered) {
     console.log(
@@ -505,7 +505,7 @@ Renderer51.prototype.setupCanvasContext = function() {
  * @member initSharedControls
  * @required player to be set
  */
-Renderer51.prototype.initSharedControls = function() {
+Renderer.prototype.initSharedControls = function() {
   this.checkPlayer();
   if (typeof(this.player._thumbnailClickAction) !== 'undefined') {
     this.parent.addEventListener('click', this.player._thumbnailClickAction);
@@ -519,7 +519,7 @@ Renderer51.prototype.initSharedControls = function() {
  * @member updateSizeAndPadding
  * @required the viewer must be rendered.
  */
-Renderer51.prototype.updateSizeAndPadding = function() {
+Renderer.prototype.updateSizeAndPadding = function() {
   this.checkPlayer();
   this.checkParentandMedia();
   this.handleWidthAndHeight();
@@ -535,7 +535,7 @@ Renderer51.prototype.updateSizeAndPadding = function() {
  * @member handleWidthAndHeight
  * @required the viewer must be rendered.
  */
-Renderer51.prototype.handleWidthAndHeight = function() {
+Renderer.prototype.handleWidthAndHeight = function() {
   if (!this._isRendered) {
     console.log(
         'WARN: Player51 trying to update size, but it is not rendered.'
@@ -607,7 +607,7 @@ Renderer51.prototype.handleWidthAndHeight = function() {
  * @member resizeCanvas
  * @required the viewer must be rendered
  */
-Renderer51.prototype.resizeCanvas = function() {
+Renderer.prototype.resizeCanvas = function() {
   // NOTE:: Legacy
   // Current functionality is to set a fixed size canvas so that we can
   // guarantee of consistent L&F for the overlays.

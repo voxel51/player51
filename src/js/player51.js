@@ -68,11 +68,11 @@
 
 // Imports
 import {
-  ImageViewer51,
-} from './imageviewer51.js';
+  ImageViewer,
+} from './imageviewer.js';
 import {
-  VideoPlayer51,
-} from './videoplayer51.js';
+  VideoPlayer,
+} from './videoplayer.js';
 
 // ES6 module export
 export default Player51;
@@ -99,9 +99,9 @@ function Player51(media, overlay, fps) {
   this.mediaType = this.determineMediaType(media);
   // Load correct player
   if (this.mediaType === 'video') {
-    this.player = new VideoPlayer51(media, overlay, fps);
+    this.player = new VideoPlayer(media, overlay, fps);
   } else if (this.mediaType === 'image') {
-    this.player = new ImageViewer51(media, overlay);
+    this.player = new ImageViewer(media, overlay);
   } else {
     console.log('WARN: Player51 doesn\'t support this media type yet.');
   }

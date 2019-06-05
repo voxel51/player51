@@ -11,8 +11,8 @@
  */
 
 import {
-  Renderer51,
-} from '../renderer51.js';
+  Renderer,
+} from '../renderer.js';
 import {
   parseMediaFragmentsUri,
 } from '../mediafragments.js';
@@ -26,7 +26,7 @@ export {
 /**
  * VideoRenderer Class Definition
  *
- * INHERITS: Renderer51
+ * INHERITS: Renderer
  * F-MIXINS: None
  @constructor
  * @param {object} media is an object that has "src" and "type" attributes.
@@ -39,15 +39,15 @@ export {
  * then it will be guessed.
  */
 function VideoRenderer(media, overlay, fps) {
-  Renderer51.call(this, media, overlay);
+  Renderer.call(this, media, overlay);
 
-  // Attributes are organized by role; privates have a leading underscore
+  // Attributes are organized by role
+  // privates have a leading underscore
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1.0 / this.frameRate;
-  this.frameZeroOffset = 1; // 1 if frame counting starts at 1; 0 otherwise
-  // check if a fragment was passed in via the media and work accordingly
-  this._hasMediaFragment = false; // will be true if the src has a fragment
+  this.frameZeroOffset = 1;
+  this._hasMediaFragment = false;
   this._mfBeginT = null; // Time
   this._mfEndT = null;
   this._mfBeginF = null; // Frame
@@ -55,16 +55,13 @@ function VideoRenderer(media, overlay, fps) {
   this._lockToMF = false;
   this.setMediaFragment();
   // Player State Attributes
-  // Naming convention:
-  //  _bool --> things the programmer / user can set
-  // Dynamic state
-  this._boolAutoplay = false; // set with `autoplay(bool=true)`
-  this._boolLoop = false; // set with `loop(bool=true)`
+  this._boolAutoplay = false;
+  this._boolLoop = false;
   this._boolPlaying = false;
-  this._boolManualSeek = false; // is the user manually scrubbing the video?
+  this._boolManualSeek = false;
   this._boolShowControls = false;
 }
-VideoRenderer.prototype = Object.create(Renderer51.prototype);
+VideoRenderer.prototype = Object.create(Renderer.prototype);
 VideoRenderer.prototype.constructor = VideoRenderer;
 
 
@@ -416,7 +413,7 @@ VideoRenderer.prototype.updateStateFromTimeChange = function() {
  */
 VideoRenderer.prototype.state = function() {
   return `
-VideoPlayer51 State Information:
+VideoPlayer State Information:
 frame number: ${this._frameNumber}
 playing: ${this._boolPlaying}
 autoplay:  ${this._boolAutoplay}
