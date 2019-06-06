@@ -30,16 +30,16 @@
   -o-transition: opacity .3s;
   -ms-transition: opacity .3s;
   transition: opacity .3s;
-  background-image: linear-gradient(bottom, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -o-linear-gradient(bottom, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -moz-linear-gradient(bottom, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -webkit-linear-gradient(bottom, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -ms-linear-gradient(bottom, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
+  background-image: linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
+  background-image: -o-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
+  background-image: -moz-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
+  background-image: -webkit-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
+  background-image: -ms-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
 
   background-image: -webkit-gradient(
     linear,
-    left bottom,
-    left top,
+    to right to top,
+    to right to bottom,
     color-stop(0.13, rgb(55,55,55)),
     color-stop(1, rgb(33,33,33))
   );
