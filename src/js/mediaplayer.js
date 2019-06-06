@@ -60,10 +60,6 @@ function MediaPlayer(type, media, overlay, fps) {
   this._posterURL = '';
 }
 
-/**
- * Implementation required
- */
-
 
 /**
  * Define abstract function poster to be implemented in subclasses
@@ -121,11 +117,6 @@ MediaPlayer.prototype.resetToFragment = function() {
 MediaPlayer.prototype.thumbnailMode = function(action) {
   throw new Error('Method thumbnailMode() must be implemented.');
 };
-
-
-/**
- * Implementation optional
- */
 
 
 /**

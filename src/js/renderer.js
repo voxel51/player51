@@ -69,11 +69,6 @@ function Renderer(media, overlay) {
 
 
 /**
- * Implementation required
- */
-
-
-/**
  * Define abstract function initPlayer to be implemented in subclasses
  *
  * @member initPlayer
@@ -174,11 +169,6 @@ Renderer.prototype.state = function() {
 Renderer.prototype.customDraw = function() {
   throw new Error('Method customDraw() must be implemented.');
 };
-
-
-/**
-* Implementation optional
-*/
 
 
 /**
