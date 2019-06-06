@@ -17,7 +17,7 @@ if (!Array.prototype.forEach) {
     }
     let t = Object(this);
     let len = t.length >>> 0;
-    if (typeof fun !== 'function') {
+    if (typeof(fun) !== 'function') {
       throw new TypeError();
     }
     let thisp = arguments[1];

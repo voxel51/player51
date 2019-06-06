@@ -5,7 +5,7 @@
     <style>
       body {
         background: black;
-        color:#CCCCCC; 
+        color:#CCCCCC;
       }
       #test-container {
         width: 640px;
@@ -26,7 +26,7 @@
 
     <div id="test-container" />
 
-    <script type="module"> 
+    <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -37,13 +37,13 @@
             src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4#t=30,33",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json", 
+          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
           25
         );
 
         console.log("Player51 created.");
 
-        player.boolDrawFrameNumber = true;
+        player.setBoolDrawFrameNumber(true);
         player.render('test-container');
 
         console.log("Player51 rendered and ready.");

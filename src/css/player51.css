@@ -1,10 +1,10 @@
 /* player51.css
  *
  * Creates the style sheet for the Player51 web component.
- * Part of this style sheet is for actual functionality while other parts are 
- * for look and feel.  These are denoted in the comments.  
+ * Part of this style sheet is for actual functionality while other parts are
+ * for look and feel.  These are denoted in the comments.
  *
- * Copyright 2017-2018, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  *
  * Jason Corso, jason@voxel51.com
  */
@@ -73,7 +73,7 @@
 
 
 /* Functionality Parts.  Do not edit. */
-.p51-contained-video, .p51-contained-canvas {
+.p51-contained-video, .p51-contained-image, .p51-contained-canvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -83,4 +83,3 @@
   z-index: 10;
   pointer-events: none;
 }
-
