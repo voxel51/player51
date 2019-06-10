@@ -33,5 +33,19 @@ export {
 function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
 }
-GalleryRenderer.prototype = object.create(Renderer.prototype);
+GalleryRenderer.prototype = Object.create(Renderer.prototype);
 GalleryRenderer.prototype.constructor = GalleryRenderer;
+
+
+/**
+ * Initializes an image gallery in parent
+ * @member initPlayer
+ * @required setParentandMedia called beforehand
+ */
+GalleryRenderer.prototype.initPlayer = function() {
+  this.checkParentandMedia();
+  this.checkBorderBox();
+  this.eleDivGallery = document.createElement('div');
+  this.eleDivGallery.className = 'p51-contained-image';
+  console.log(this);
+};
