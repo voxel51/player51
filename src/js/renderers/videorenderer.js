@@ -41,8 +41,13 @@ export {
 function VideoRenderer(media, overlay, fps) {
   Renderer.call(this, media, overlay);
 
-  // Attributes are organized by role
-  // privates have a leading underscore
+  // Player State Attributes
+  this._boolAutoplay = false;
+  this._boolLoop = false;
+  this._boolPlaying = false;
+  this._boolManualSeek = false;
+  this._boolShowControls = false;
+  this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1.0 / this.frameRate;
@@ -54,12 +59,6 @@ function VideoRenderer(media, overlay, fps) {
   this._mfEndF = null;
   this._lockToMF = false;
   this.setMediaFragment();
-  // Player State Attributes
-  this._boolAutoplay = false;
-  this._boolLoop = false;
-  this._boolPlaying = false;
-  this._boolManualSeek = false;
-  this._boolShowControls = false;
 }
 VideoRenderer.prototype = Object.create(Renderer.prototype);
 VideoRenderer.prototype.constructor = VideoRenderer;
@@ -169,6 +168,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
     // so that we see overlay and time stamp now that we are ready
     if ((!self.player._boolThumbnailMode) && (!self
         ._boolAutoplay)) {
+      self.processFrame();
+    }
+
+    if (self._boolSingleFrame) {
+      self.eleVideo.currentTime = self._mfBeginT;
+      self._frameNumber = self._mfBeginF;
       self.processFrame();
     }
   });
@@ -418,6 +423,7 @@ frame number: ${this._frameNumber}
 playing: ${this._boolPlaying}
 autoplay:  ${this._boolAutoplay}
 looping:  ${this._boolLoop}
+single frame: ${this._boolSingleFrame}
 isReadyProcessFrames: ${this._isReadyProcessFrames}
 isRendered:   ${this._isRendered}
 isSizePrepared:  ${this._isSizePrepared}
@@ -514,10 +520,7 @@ VideoRenderer.prototype.setMediaFragment = function() {
   // looping, for example, then it will always go to the beginning of the
   // fragment.  However, as soon as the user scrubs the video, we turn off the
   // importance of the fragment so that the user can watch the whole video.
-  // @todo an interface component needs to be added to show that we are in a
-  // fragment and allow locking / unlocking of the fragment.
   const mfParse = parseMediaFragmentsUri(this.media.src);
-
   if (typeof(mfParse.hash.t) !== 'undefined') {
     this._mfBeginT = mfParse.hash.t[0].startNormalized;
     this._mfEndT = mfParse.hash.t[0].endNormalized;
@@ -525,6 +528,10 @@ VideoRenderer.prototype.setMediaFragment = function() {
     this._mfEndF = this.computeFrameNumber(this._mfEndT);
     this._hasMediaFragment = true;
     this._lockToMF = true;
+    if (this._mfBeginF === this._mfEndF) {
+      this._boolSingleFrame = true;
+      this._lockToMF = false;
+    }
   }
 };
 

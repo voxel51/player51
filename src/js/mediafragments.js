@@ -112,7 +112,7 @@ let dimensions = {
       let startNormalized = convertToSeconds(start);
       let endNormalized = convertToSeconds(end);
       if (start && end) {
-        if (startNormalized < endNormalized) {
+        if (startNormalized <= endNormalized) {
           return {
             value: value,
             unit: 'npt',
@@ -122,7 +122,7 @@ let dimensions = {
             endNormalized: endNormalized
           };
         } else {
-          logWarning('Please ensure that start < end.');
+          logWarning('Please ensure that start <= end.');
           return false;
         }
       } else {
