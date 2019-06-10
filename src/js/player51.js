@@ -14,7 +14,7 @@
  * To switch between types of media, specify the type attribute in media
  * in the following format.
  * <media type>/<media format>
- * examples: image/jpg, video/mp4
+ * examples: image/jpg, video/mp4, gallery/jpg
 
    ```
     <div id="test-container" />
@@ -68,11 +68,14 @@
 
 // Imports
 import {
+  VideoPlayer,
+} from './videoplayer.js';
+import {
   ImageViewer,
 } from './imageviewer.js';
 import {
-  VideoPlayer,
-} from './videoplayer.js';
+  GalleryViewer,
+} from './galleryviewer.js';
 
 // ES6 module export
 export default Player51;
@@ -102,6 +105,8 @@ function Player51(media, overlay, fps) {
     this.player = new VideoPlayer(media, overlay, fps);
   } else if (this.mediaType === 'image') {
     this.player = new ImageViewer(media, overlay);
+  } else if (this.mediaType === 'gallery') {
+    this.player = new GalleryViewer(media, overlay);
   } else {
     console.log('WARN: Player51 doesn\'t support this media type yet.');
   }

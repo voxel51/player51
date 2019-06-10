@@ -4,9 +4,9 @@
  * produces the end output.
  *
  * @desc ImageRenderer is a class that controls the creation and viewing of
- * imageviewer51.
+ * imageviewer.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 

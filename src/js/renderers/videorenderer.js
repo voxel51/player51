@@ -4,9 +4,9 @@
  * produces the end output.
  *
  * @desc VideoRenderer is a class that controls the creation and viewing of
- * videoplayer51.
+ * videoplayer.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 

@@ -6,7 +6,7 @@
  * @desc MediaPlayer.js is an abstract class that defines the features
  * child players should be able to support.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
@@ -17,6 +17,9 @@ import {
 import {
   ImageRenderer,
 } from './renderers/imagerenderer.js';
+import {
+  GalleryRenderer,
+} from './renderers/galleryrenderer.js';
 
 // ES6 module export
 export {
@@ -46,6 +49,8 @@ function MediaPlayer(type, media, overlay, fps) {
     this.renderer = new VideoRenderer(media, overlay, fps);
   } else if (type === 'image') {
     this.renderer = new ImageRenderer(media, overlay);
+  } else if (type == 'gallery') {
+    this.renderer = new GalleryRenderer(media, overlay);
   } else {
     throw new Error('Renderer not initialized.');
   }
