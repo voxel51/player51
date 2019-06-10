@@ -1,7 +1,7 @@
 {
   "name": "player51",
   "version": "1.0.0",
-  "description": "Javascript video player that can render metadata overlays.",
+  "description": "Javascript media player that can render metadata overlays.",
   "main": "src/js/player51.js",
   "directories": {
     "test": "test"
