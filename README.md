@@ -5,6 +5,7 @@ Copyright 2017-2019, Voxel51, Inc.
 Player51 is a client-side media player based on javascript that can render metadata overlays.
 
 Jason Corso, jason@voxel51.com
+
 Kevin Qi, kevin@voxel51.com
 
 # Building Process
