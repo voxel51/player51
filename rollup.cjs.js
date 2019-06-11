@@ -3,7 +3,7 @@ import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
-import { uglify } from 'rollup-plugin-uglify';
+import {uglify} from 'rollup-plugin-uglify';
 
 export default {
   input: 'src/js/player51.js',
@@ -19,7 +19,7 @@ export default {
       exclude: [
         'node_modules/**',
         'src/css/**',
-      ]
+      ],
     }),
     babel({
       exclude: 'node_modules/**',

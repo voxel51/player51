@@ -1,10 +1,12 @@
 # Player51
 
-Copyright 2017-2018, Voxel51, Inc.
+Copyright 2017-2019, Voxel51, Inc.
 
-Player51 is a client-side video player based on javascript that can render metadata overlays.
+Player51 is a client-side media player based on javascript that can render metadata overlays.
 
 Jason Corso, jason@voxel51.com
+
+Kevin Qi, kevin@voxel51.com
 
 # Building Process
 
@@ -120,7 +122,7 @@ cd /tmp/react-player51
 npm start
 ```
 
-Note that the python web-server is also started to serve the mp4 to the react 
+Note that the python web-server is also started to serve the mp4 to the react
 client.  (TODO: figure out how to do this from react/npm.)
 
 Then you can point your browser to `http://localhost:3000`.
