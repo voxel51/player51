@@ -80,9 +80,6 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.setupCanvasContext();
     self._isDataLoaded = true;
     self.updateFromLoadingState();
-    if (!self.player._boolThumbnailMode) {
-      self.processFrame();
-    }
   });
 
   this.parent.addEventListener('mouseenter', function() {
@@ -164,6 +161,12 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
+  }
+
+  if (this._isOverlayPrepared) {
+    if (!this.player._boolThumbnailMode) {
+      this.processFrame();
+    }
   }
 };
 
