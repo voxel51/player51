@@ -282,9 +282,8 @@ function ObjectOverlay(d, renderer) {
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
   this.index = d.index;
-  if (typeof(this.index) == 'undefined') {
-    this.indexStr = '';
-  } else {
+  this.indexStr = '';
+  if (this.index != null) {
     this.indexStr = `${this.index}`;
   }
 
