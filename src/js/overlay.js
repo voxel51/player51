@@ -282,7 +282,10 @@ function ObjectOverlay(d, renderer) {
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
   this.index = d.index;
-  this.indexStr = `${this.index}`;
+  this.indexStr = '';
+  if (this.index != null) {
+    this.indexStr = `${this.index}`;
+  }
 
   this.frame_number = d.frame_number;
   this.bounding_box = d.bounding_box;
