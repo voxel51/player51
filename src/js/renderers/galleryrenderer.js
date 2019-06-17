@@ -32,6 +32,9 @@ export {
  */
 function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
+  // Data structures
+  this.imageFiles = {};
+  this.openContents();
 }
 GalleryRenderer.prototype = Object.create(Renderer.prototype);
 GalleryRenderer.prototype.constructor = GalleryRenderer;
@@ -45,7 +48,22 @@ GalleryRenderer.prototype.constructor = GalleryRenderer;
 GalleryRenderer.prototype.initPlayer = function() {
   this.checkParentandMedia();
   this.checkBorderBox();
-  this.eleDivGallery = document.createElement('div');
-  this.eleDivGallery.className = 'p51-contained-image';
-  console.log(this);
+};
+
+
+/**
+ * Opens up media and stores filenames in imageFiles by
+ * index (psuedo frameNumber)
+ *  @member openContents
+ */
+GalleryRenderer.prototype.openContents = function() {
+  if (!this.checkMediaFormat(this.media.src)) {
+    console.log('WARN: media is not a zip file.');
+    return;
+  }
+  console.log(this.media);
+};
+GalleryRenderer.prototype.checkMediaFormat = function(filename) {
+  const extension = filename.split('.').pop();
+  return (extension === 'zip');
 };
