@@ -13,6 +13,9 @@
 import {
   Renderer,
 } from '../renderer.js';
+import {
+  ZipLibrary,
+} from '../zipreader/zip.js';
 
 // ES6 module export
 export {
@@ -34,6 +37,8 @@ function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   // Data structures
   this.imageFiles = {};
+  this.reader = new ZipLibrary();
+  this.reader.workerScriptsPath = './';
   this.openContents();
 }
 GalleryRenderer.prototype = Object.create(Renderer.prototype);
@@ -54,15 +59,23 @@ GalleryRenderer.prototype.initPlayer = function() {
 /**
  * Opens up media and stores filenames in imageFiles by
  * index (psuedo frameNumber)
- *  @member openContents
+ * @member openContents
+ * @required media.src needs to be a zip file
  */
 GalleryRenderer.prototype.openContents = function() {
   if (!this.checkMediaFormat(this.media.src)) {
     console.log('WARN: media is not a zip file.');
     return;
   }
-  console.log(this.media);
 };
+
+
+/**
+ * Checks media extension for zip file format.
+ * @member checkMediaFormat
+ * @param {string} filename
+ * @return {bool}
+ */
 GalleryRenderer.prototype.checkMediaFormat = function(filename) {
   const extension = filename.split('.').pop();
   return (extension === 'zip');

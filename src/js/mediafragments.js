@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * @module mediafragments
  * @summary  A quick ES6 version of the mediafragment code.
