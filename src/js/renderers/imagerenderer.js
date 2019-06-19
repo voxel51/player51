@@ -64,7 +64,7 @@ ImageRenderer.prototype.initPlayer = function() {
 
 
 /**
- * This loads controls for imageviewer51
+ * This loads controls for imageviewer
  *
  * @member initPlayerControls
  * @required player to be set

@@ -378,6 +378,30 @@ Renderer.prototype.checkFontHeight = function(h) {
 
 
 /**
+ * Return media extension
+ *
+ * @member getExtension
+ * @return {string} extension
+ */
+Renderer.prototype.getExtension = function() {
+  const tmp = this.media.type.split('/');
+  return tmp.slice(-1)[0];
+};
+
+/**
+ * Return media extension of a file path
+ *
+ * @memeber getFileExtension
+ * @param {path} path
+ * @return {string} extension
+ */
+Renderer.prototype.getFileExtension = function(path) {
+  const tmp = path.split('.');
+  return tmp.slice(-1)[0];
+};
+
+
+/**
  * This function checks if player is set
  *
  * @member checkPlayer

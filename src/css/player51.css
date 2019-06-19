@@ -77,9 +77,43 @@
   position: absolute;
   top: 0;
   left: 0;
+  bottom: 0;
+  right: 0;
+  border: 1px solid white;
+  margin: auto;
 }
 
 .p51-contained-canvas {
   z-index: 10;
   pointer-events: none;
+}
+
+
+.p51-gallery-right-nav,
+.p51-gallery-left-nav {
+   cursor: pointer;
+   position: absolute;
+   top: 50%;
+   width: auto;
+   padding: 16px;
+   margin-top: -50px;
+   color: white;
+   font-weight: bold;
+   font-size: 25px;
+   border-radius: 0 3px 3px 0;
+   user-select: none;
+   -webkit-user-select: none;
+}
+
+
+.p51-gallery-right-nav:hover,
+.p51-gallery-left-nav:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid white;
+}
+
+
+.p51-gallery-right-nav {
+  right: 0;
+  border-radius: 3px 0 0 3px;
 }
