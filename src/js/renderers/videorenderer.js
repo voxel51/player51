@@ -379,7 +379,7 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
       this._isReadyProcessFrames = true;
     }
     // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this.overlayURL !== null)) {
+    if ((this._overlayData !== null) && (this._overlayURL !== null)) {
       this._overlayCanBePrepared = true;
     }
   }

@@ -35,12 +35,17 @@ export {
  */
 function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
+  this._frameNumber = 1;
   // Data structures
   this.imageFiles = {};
+  this.fileIndex = [];
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Loading state attributes
   this._isGalleryReady = false;
+  this._isImageInserted = false;
+  // Dynamic state attributes
+  this._currentIndex = 0;
   // Initialization
   this.openContents();
 }
@@ -72,6 +77,7 @@ GalleryRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivLeftNav);
   this.mediaDiv = this.eleDivImage;
   this.initCanvas();
+  this.updateFromLoadingState();
 };
 
 
@@ -128,6 +134,7 @@ GalleryRenderer.prototype.openContents = function() {
 
 /**
  * Reads the zip blob into files
+ *
  * @member readBlob
  * @param {blob} blob
  */
@@ -140,7 +147,10 @@ GalleryRenderer.prototype.readBlob = function(blob) {
         const extension = self.getExtension();
         if (self.getFileExtension(filename) === extension) {
           item.getData(new self.reader.BlobWriter(), function(content) {
-            self.imageFiles[filename] = content;
+            const tmp = filename.split('/');
+            const filenametruncated = tmp.slice(-1)[0];
+            self.imageFiles[filenametruncated] = content;
+            self.fileIndex.push(filenametruncated);
             self._isGalleryReady = true;
             self.updateFromLoadingState();
           });
@@ -156,6 +166,35 @@ GalleryRenderer.prototype.readBlob = function(blob) {
 
 
 /**
+ * Insert image into gallery
+ *
+ * @member insertImage
+ * @param {name} filename
+ * @default inserts the first file found in imageFiles
+ */
+GalleryRenderer.prototype.insertImage = function(filename='') {
+  const key = this.fileIndex[0];
+  if (filename !== '') {
+    key = filename;
+  }
+  const fileBlob = this.imageFiles[key];
+  const imageObj = document.createElement('img');
+  const tmpURL = URL.createObjectURL(fileBlob);
+  imageObj.className = 'p51-contained-image';
+  imageObj.setAttribute('src', tmpURL);
+  imageObj.setAttribute('type', this.getFileExtension(key));
+  const self = this;
+  imageObj.addEventListener('load', function() {
+    // self.updateSizeAndPadding();
+    console.log('Image Loaded');
+  });
+
+  this.eleDivImage.appendChild(imageObj);
+  this._isImageInserted = true;
+};
+
+
+/**
  * This function is a controller
  * The loading state of the player has changed and various settings have to be
  * toggled.
@@ -165,25 +204,16 @@ GalleryRenderer.prototype.readBlob = function(blob) {
 GalleryRenderer.prototype.updateFromLoadingState = function() {
   if (this._isGalleryReady) {
     // Able to load an image into gallery
-    console.log('An image is ready to be inserted.');
+    if (!this._isImageInserted) {
+      // Clear div first
+      this.insertImage();
+      console.log(this.state());
+    }
   }
-
   // Overlay controller
-  /*
-  if ((this._isRendered) && (this._isSizePrepared)) {
-    if (this._isDataLoaded) {
-      this._isReadyProcessFrames = true;
-    }
-    // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this.overlayURL !== null)) {
-      this._overlayCanBePrepared = true;
-    }
+  if ((this._overlayData !== null) && (this._overlayURL !== null)) {
+    this._overlayCanBePrepared = true;
   }
-
-  if (this._overlayCanBePrepared) {
-    this.prepareOverlay(this._overlayData);
-  }
-  */
 };
 
 
@@ -197,12 +227,8 @@ GalleryRenderer.prototype.state = function() {
   return `
 GalleryViewer State Information:
 isGalleryReady: ${this._isGalleryReady}
-isReadyProcessFrames: ${this._isReadyProcessFrames}
+isImageInserted: ${this._isImageInserted}
 isRendered:   ${this._isRendered}
-isSizePrepared:  ${this._isSizePrepared}
-isDataLoaded:  ${this._isDataLoaded}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
-isOverlayPrepared: ${this._isOverlayPrepared}
-isPreparingOverlay: ${this._isPreparingOverlay}
 `;
 };
