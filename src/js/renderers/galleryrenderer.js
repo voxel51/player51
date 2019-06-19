@@ -184,13 +184,26 @@ GalleryRenderer.prototype.insertImage = function(filename='') {
   imageObj.setAttribute('src', tmpURL);
   imageObj.setAttribute('type', this.getFileExtension(key));
   const self = this;
-  imageObj.addEventListener('load', function() {
-    // self.updateSizeAndPadding();
-    console.log('Image Loaded');
+  imageObj.addEventListener('load', function(event) {
+    self.updateSizeAndPadding(event.target);
+    console.log(self);
   });
 
   this.eleDivImage.appendChild(imageObj);
   this._isImageInserted = true;
+};
+
+
+/**
+ * This function updates the size of the canvas to match the image
+ *
+ * @member updateSizeAndPadding
+ * @param {object} imageObj
+ * @required imageObj to be loaded
+ */
+GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
+  this.eleCanvas.setAttribute('width', imageObj.width);
+  this.eleCanvas.setAttribute('height', imageObj.height);
 };
 
 
