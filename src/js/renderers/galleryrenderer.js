@@ -22,6 +22,7 @@ export {
   GalleryRenderer,
 };
 
+
 /**
  * GalleryRenderer Class Definition
  *
@@ -122,10 +123,17 @@ GalleryRenderer.prototype.initPlayerControls = function() {
  * @member updateFromLoadingState
  */
 GalleryRenderer.prototype.updateFromLoadingState = function() {
+  if (this._isRendered && !this._isGalleryReady) {
+    if (this.player._boolHasPoster) {
+      const imageObj = document.createElement('img');
+      imageObj.className = 'p51-contained-image';
+      imageObj.setAttribute('src', this.player._posterURL);
+      this.eleDivImage.appendChild(imageObj);
+    }
+  }
   if (this._isGalleryReady && this._isRendered) {
     // Able to load an image into gallery
     if (!this._isImageInserted) {
-      // Clear div first
       this.insertImage(this._currentIndex);
     }
   }
