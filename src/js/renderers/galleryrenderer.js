@@ -36,6 +36,7 @@ export {
 function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
+  this._currentIndex = 0;
   // Data structures
   this.imageFiles = {};
   this.fileIndex = [];
@@ -44,8 +45,6 @@ function GalleryRenderer(media, overlay) {
   // Loading state attributes
   this._isGalleryReady = false;
   this._isImageInserted = false;
-  // Dynamic state attributes
-  this._currentIndex = 0;
   // Initialization
   this.openContents();
 }
@@ -112,6 +111,110 @@ GalleryRenderer.prototype.initPlayerControls = function() {
       }
     }
   });
+};
+
+
+/**
+ * This function is a controller
+ * The loading state of the player has changed and various settings have to be
+ * toggled.
+ *
+ * @member updateFromLoadingState
+ */
+GalleryRenderer.prototype.updateFromLoadingState = function() {
+  if (this._isGalleryReady && this._isRendered) {
+    // Able to load an image into gallery
+    if (!this._isImageInserted) {
+      // Clear div first
+      this.insertImage(this._currentIndex);
+    }
+  }
+  // Overlay controller
+  if ((this._overlayData !== null) && (this._overlayURL !== null)) {
+    this._overlayCanBePrepared = true;
+  }
+};
+
+
+/**
+ * Generate a string that represents the state.
+ *
+ * @member state
+ * @return {dictionary} state
+ */
+GalleryRenderer.prototype.state = function() {
+  return `
+GalleryViewer State Information:
+currentIndex: ${this._currentIndex}
+isGalleryReady: ${this._isGalleryReady}
+isImageInserted: ${this._isImageInserted}
+isRendered:   ${this._isRendered}
+overlayCanBePrepared: ${this._overlayCanBePrepared}
+isReadyProcessFrames: ${this._isReadyProcessFrames}
+isOverlayPrepared: ${this._isOverlayPrepared}
+`;
+};
+
+
+/**
+ * Draws custom case objects onto a frame.
+ * @member customDraw
+ * @param {context} context
+ */
+GalleryRenderer.prototype.customDraw = function(context) {
+};
+
+
+/**
+ * This function prepares the overlay based on a specific filename.
+ * Overrides method in renderer.js
+ *
+ * @member prepareOverlay
+ * @param {string} filename
+ * @required imageObj to be loaded
+ */
+GalleryRenderer.prototype.prepareOverlay = function(filename) {
+  if (!this._overlayCanBePrepared) {
+    return;
+  }
+
+  let entry = {};
+  const frameKeys = Object.keys(this._overlayData.images);
+  for (const key in frameKeys) {
+    if (this._overlayData.images[key].filename === filename) {
+      entry = this._overlayData.images[key];
+      break;
+    }
+  }
+
+  const context = this.setupCanvasContext();
+  if (typeof(entry.objects) !== 'undefined') {
+    this._prepareOverlay_auxFormat1Objects(context, entry.objects, true);
+  }
+
+  if (typeof(entry.attrs) !== 'undefined') {
+    const o = new FrameAttributesOverlay(entry.attrs, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this.frameOverlay[this._frameNumber].push(o);
+  }
+  this._isOverlayPrepared = true;
+  this._isReadyProcessFrames = true;
+};
+
+
+/**
+ * This function updates the size of the canvas to match the image
+ * Overrides method in renderer.js
+ *
+ * @member updateSizeAndPadding
+ * @param {object} imageObj
+ * @required imageObj to be loaded
+ */
+GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
+  this.eleCanvas.setAttribute('width', imageObj.width);
+  this.eleCanvas.setAttribute('height', imageObj.height);
+  this.canvasWidth = imageObj.width;
+  this.canvasHeight = imageObj.height;
 };
 
 
@@ -237,107 +340,4 @@ GalleryRenderer.prototype.clearState = function() {
   }
   const context = this.setupCanvasContext();
   context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-};
-
-
-/**
- * This function prepares the overlay based on a specific filename.
- * Overrides method in renderer.js
- *
- * @member prepareOverlay
- * @param {string} filename
- * @required imageObj to be loaded
- */
-GalleryRenderer.prototype.prepareOverlay = function(filename) {
-  if (!this._overlayCanBePrepared) {
-    return;
-  }
-
-  let entry = {};
-  const frameKeys = Object.keys(this._overlayData.images);
-  for (const key in frameKeys) {
-    if (this._overlayData.images[key].filename === filename) {
-      entry = this._overlayData.images[key];
-      break;
-    }
-  }
-
-  const context = this.setupCanvasContext();
-  if (typeof(entry.objects) !== 'undefined') {
-    this._prepareOverlay_auxFormat1Objects(context, entry.objects, true);
-  }
-
-  if (typeof(entry.attrs) !== 'undefined') {
-    const o = new FrameAttributesOverlay(entry.attrs, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this.frameOverlay[this._frameNumber].push(o);
-  }
-  this._isOverlayPrepared = true;
-  this._isReadyProcessFrames = true;
-};
-
-
-/**
- * This function updates the size of the canvas to match the image
- *
- * @member updateSizeAndPadding
- * @param {object} imageObj
- * @required imageObj to be loaded
- */
-GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
-  this.eleCanvas.setAttribute('width', imageObj.width);
-  this.eleCanvas.setAttribute('height', imageObj.height);
-  this.canvasWidth = imageObj.width;
-  this.canvasHeight = imageObj.height;
-};
-
-
-/**
- * This function is a controller
- * The loading state of the player has changed and various settings have to be
- * toggled.
- *
- * @member updateFromLoadingState
- */
-GalleryRenderer.prototype.updateFromLoadingState = function() {
-  if (this._isGalleryReady && this._isRendered) {
-    // Able to load an image into gallery
-    if (!this._isImageInserted) {
-      // Clear div first
-      this.insertImage(this._currentIndex);
-    }
-  }
-  // Overlay controller
-  if ((this._overlayData !== null) && (this._overlayURL !== null)) {
-    this._overlayCanBePrepared = true;
-  }
-};
-
-
-/**
- * Generate a string that represents the state.
- *
- * @member state
- * @return {dictionary} state
- */
-GalleryRenderer.prototype.state = function() {
-  return `
-GalleryViewer State Information:
-currentIndex: ${this._currentIndex}
-isGalleryReady: ${this._isGalleryReady}
-isImageInserted: ${this._isImageInserted}
-isRendered:   ${this._isRendered}
-overlayCanBePrepared: ${this._overlayCanBePrepared}
-isReadyProcessFrames: ${this._isReadyProcessFrames}
-isOverlayPrepared: ${this._isOverlayPrepared}
-`;
-};
-
-
-/**
- * Draws custom case objects onto a frame.
- * @member customDraw
- * @param {context} context
- */
-GalleryRenderer.prototype.customDraw = function(context) {
 };
