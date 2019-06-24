@@ -40,57 +40,53 @@ GalleryViewer.prototype.constructor = GalleryViewer;
 
 /**
  * Poster is not for image galleries.
+ * Not supported.
  *
  * @member poster
  * @param {string} url Image to be shown while loading.
+ * not supported
  */
 GalleryViewer.prototype.poster = function(url) {
-  console.log('WARN: Poster not supposed to be called by GalleryViewer.');
 };
 
 
 /**
  * Loop is not for image galleries.
+ * Not supported.
  *
  * @member loop
  */
 GalleryViewer.prototype.loop = function() {
-  console.log('WARN: Loop not supposed to be called by GalleryViewer.');
 };
 
 
 /**
  * Autoplay is not for image galleries.
+ * Not supported.
  *
  * @member autoplay
  */
 GalleryViewer.prototype.autoplay = function() {
-  console.log('WARN: Autoplay not supposed to be called by GalleryViewer.');
 };
 
 
 /**
  * ResetToFragment is not for image galleries.
+ * Not supported.
  *
  * @member resetToFragment
  */
 GalleryViewer.prototype.resetToFragment = function() {
-  console.log(
-      'WARN: ResetToFragment not supposed to be called by GalleryViewer.');
 };
 
 
 /**
- * This changes the behaviour of the gallery viewer in the following ways.
- * 1. The caller can associate an action with clicking on an image.
- * 2. Annotations are drawn on mouse-over.
- * Caller probably wants to set the size of the images via forceSize()
+ * ThumbnailMode is not for image galleries.
+ * Not supported.
  *
  * @member thumbnailMode
  * @param {function} action (optional) a callback function to associate with
  * any click on an image.
  */
 GalleryViewer.prototype.thumbnailMode = function(action) {
-  this._boolThumbnailMode = true;
-  this._thumbnailClickAction = action;
 };

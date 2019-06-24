@@ -42,43 +42,42 @@ ImageViewer.prototype.constructor = ImageViewer;
 
 /**
  * Poster is not for images.
+ * Not supported
  *
  * @member poster
  * @param {string} url Image to be shown while loading.
  */
 ImageViewer.prototype.poster = function(url) {
-  console.log('WARN: Poster not supposed to be called by ImageViewer.');
 };
 
 
 /**
  * Loop is not for images.
+ * Not supported.
  *
  * @member loop
  */
 ImageViewer.prototype.loop = function() {
-  console.log('WARN: Loop not supposed to be called by ImageViewer.');
 };
 
 
 /**
  * Autoplay is not for images.
+ * Not supported.
  *
  * @member autoplay
  */
 ImageViewer.prototype.autoplay = function() {
-  console.log('WARN: Autoplay not supposed to be called by ImageViewer.');
 };
 
 
 /**
  * ResetToFragment is not for images
+ * Not supported.
  *
  * @member resetToFragment
  */
 ImageViewer.prototype.resetToFragment = function() {
-  console.log(
-      'WARN: ResetToFragment not supposed to be called by ImageViewer.');
 };
 
 

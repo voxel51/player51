@@ -315,17 +315,6 @@ GalleryRenderer.prototype.updateFromLoadingState = function() {
 
 
 /**
- * This function is a controller
- * The dynamic state of the player has changed and various setting have been
- * toggled.
- *
- * @member updateFromDynamicState
- */
-GalleryRenderer.prototype.updateFromDynamicState = function() {
-};
-
-
-/**
  * Generate a string that represents the state.
  *
  * @member state
