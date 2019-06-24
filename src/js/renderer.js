@@ -278,9 +278,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
  * @param {context} context
  * @param {array} objects is an Array of Objects with each entry an
  * object in Format 1 above.
+ * @param {bool} frameFlag forces frameNumber to be frameNumber property
  */
 Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
-    objects) {
+    objects, frameFlag = false) {
   if (typeof(objects) === 'undefined') {
     return;
   }
@@ -295,12 +296,20 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
           clearInterval(checkCanvasWidth);
           o.setup(context, this.canvasWidth, this
               .canvasHeight);
-          this._prepareOverlay_auxCheckAdd(o);
+          if (frameFlag) {
+            this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+          } else {
+            this._prepareOverlay_auxCheckAdd(o);
+          }
         }
       }, 1000);
     } else {
       o.setup(context, this.canvasWidth, this.canvasHeight);
-      this._prepareOverlay_auxCheckAdd(o);
+      if (frameFlag) {
+        this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+      } else {
+        this._prepareOverlay_auxCheckAdd(o);
+      }
     }
   }
 };

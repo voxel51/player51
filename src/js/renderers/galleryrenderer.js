@@ -89,6 +89,29 @@ GalleryRenderer.prototype.initPlayer = function() {
  */
 GalleryRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
+
+  const self = this;
+  this.eleDivRightNav.addEventListener('click', function() {
+    if (self._isImageInserted) {
+      const limit = self.fileIndex.length - 1;
+      if (self._currentIndex < limit) {
+        self._currentIndex++;
+        self.clearState();
+        self.insertImage(self._currentIndex);
+      }
+    }
+  });
+
+  this.eleDivLeftNav.addEventListener('click', function() {
+    if (self._isImageInserted) {
+      const limit = 0;
+      if (self._currentIndex > limit) {
+        self._currentIndex--;
+        self.clearState();
+        self.insertImage(self._currentIndex);
+      }
+    }
+  });
 };
 
 
@@ -169,28 +192,88 @@ GalleryRenderer.prototype.readBlob = function(blob) {
  * Insert image into gallery
  *
  * @member insertImage
- * @param {name} filename
- * @default inserts the first file found in imageFiles
+ * @param {int} index
  */
-GalleryRenderer.prototype.insertImage = function(filename='') {
-  const key = this.fileIndex[0];
-  if (filename !== '') {
-    key = filename;
-  }
+GalleryRenderer.prototype.insertImage = function(index) {
+  this.clearState();
+  const key = this.fileIndex[index];
   const fileBlob = this.imageFiles[key];
   const imageObj = document.createElement('img');
   const tmpURL = URL.createObjectURL(fileBlob);
+  this._currentImageURL = tmpURL;
   imageObj.className = 'p51-contained-image';
   imageObj.setAttribute('src', tmpURL);
   imageObj.setAttribute('type', this.getFileExtension(key));
   const self = this;
   imageObj.addEventListener('load', function(event) {
     self.updateSizeAndPadding(event.target);
-    console.log(self);
+    self.prepareOverlay(key);
+    self.processFrame();
   });
 
   this.eleDivImage.appendChild(imageObj);
   this._isImageInserted = true;
+};
+
+
+/**
+ * This function clears the state in preparation for the next image
+ * in the gallery.
+ *
+ * @member clearState
+ */
+GalleryRenderer.prototype.clearState = function() {
+  this._isOverlayPrepared = false;
+  this._isReadyProcessFrames = false;
+  while (this.eleDivImage.firstChild) {
+    this.eleDivImage.removeChild(this.eleDivImage.firstChild);
+  }
+  URL.revokeObjectURL(this._currentImageURL);
+  // Clear canvas
+  for (const key in this.frameOverlay) {
+    if (key) {
+      delete this.frameOverlay[key];
+    }
+  }
+  const context = this.setupCanvasContext();
+  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+};
+
+
+/**
+ * This function prepares the overlay based on a specific filename.
+ * Overrides method in renderer.js
+ *
+ * @member prepareOverlay
+ * @param {string} filename
+ * @required imageObj to be loaded
+ */
+GalleryRenderer.prototype.prepareOverlay = function(filename) {
+  if (!this._overlayCanBePrepared) {
+    return;
+  }
+
+  let entry = {};
+  const frameKeys = Object.keys(this._overlayData.images);
+  for (const key in frameKeys) {
+    if (this._overlayData.images[key].filename === filename) {
+      entry = this._overlayData.images[key];
+      break;
+    }
+  }
+
+  const context = this.setupCanvasContext();
+  if (typeof(entry.objects) !== 'undefined') {
+    this._prepareOverlay_auxFormat1Objects(context, entry.objects, true);
+  }
+
+  if (typeof(entry.attrs) !== 'undefined') {
+    const o = new FrameAttributesOverlay(entry.attrs, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this.frameOverlay[this._frameNumber].push(o);
+  }
+  this._isOverlayPrepared = true;
+  this._isReadyProcessFrames = true;
 };
 
 
@@ -204,6 +287,8 @@ GalleryRenderer.prototype.insertImage = function(filename='') {
 GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
   this.eleCanvas.setAttribute('width', imageObj.width);
   this.eleCanvas.setAttribute('height', imageObj.height);
+  this.canvasWidth = imageObj.width;
+  this.canvasHeight = imageObj.height;
 };
 
 
@@ -215,18 +300,28 @@ GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
  * @member updateFromLoadingState
  */
 GalleryRenderer.prototype.updateFromLoadingState = function() {
-  if (this._isGalleryReady) {
+  if (this._isGalleryReady && this._isRendered) {
     // Able to load an image into gallery
     if (!this._isImageInserted) {
       // Clear div first
-      this.insertImage();
-      console.log(this.state());
+      this.insertImage(this._currentIndex);
     }
   }
   // Overlay controller
   if ((this._overlayData !== null) && (this._overlayURL !== null)) {
     this._overlayCanBePrepared = true;
   }
+};
+
+
+/**
+ * This function is a controller
+ * The dynamic state of the player has changed and various setting have been
+ * toggled.
+ *
+ * @member updateFromDynamicState
+ */
+GalleryRenderer.prototype.updateFromDynamicState = function() {
 };
 
 
@@ -239,9 +334,21 @@ GalleryRenderer.prototype.updateFromLoadingState = function() {
 GalleryRenderer.prototype.state = function() {
   return `
 GalleryViewer State Information:
+currentIndex: ${this._currentIndex}
 isGalleryReady: ${this._isGalleryReady}
 isImageInserted: ${this._isImageInserted}
 isRendered:   ${this._isRendered}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
+isReadyProcessFrames: ${this._isReadyProcessFrames}
+isOverlayPrepared: ${this._isOverlayPrepared}
 `;
+};
+
+
+/**
+ * Draws custom case objects onto a frame.
+ * @member customDraw
+ * @param {context} context
+ */
+GalleryRenderer.prototype.customDraw = function(context) {
 };
