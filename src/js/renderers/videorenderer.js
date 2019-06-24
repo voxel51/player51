@@ -362,6 +362,9 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     this.eleDivVideoControls.style.opacity = '0.9';
   } else {
     this.eleDivVideoControls.style.opacity = '0.0';
+    if (this.player._boolThumbnailMode) {
+      this.eleDivVideoControls.remove();
+    }
   }
 };
 

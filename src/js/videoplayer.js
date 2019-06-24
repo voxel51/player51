@@ -99,7 +99,7 @@ VideoPlayer.prototype.resetToFragment = function() {
     return false;
   }
 
-  this.renderer.eleVideo.currentTime = this._mfBeginT;
+  this.renderer.eleVideo.currentTime = this.renderer._mfBeginT;
   this.renderer._lockToMF = true;
 
   this.renderer.updateFromDynamicState();
