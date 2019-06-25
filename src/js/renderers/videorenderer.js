@@ -172,6 +172,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
 
     if (self._boolSingleFrame) {
+      console.log(self._mfBeginT);
       self.eleVideo.currentTime = self._mfBeginT;
       self._frameNumber = self._mfBeginF;
       self.processFrame();
@@ -533,7 +534,7 @@ VideoRenderer.prototype.setMediaFragment = function() {
     this._lockToMF = true;
     if (this._mfBeginF === this._mfEndF) {
       this._boolSingleFrame = true;
-      this._lockToMF = false;
+      // this._lockToMF = false;
     }
   }
 };
