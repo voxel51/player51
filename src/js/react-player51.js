@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import Player51 from './player51';
+import PropTypes from "prop-types";
+import React from "react";
+import Player51 from "./player51";
 
 class ReactPlayer51 extends React.Component {
   constructor(props) {
@@ -17,7 +17,7 @@ class ReactPlayer51 extends React.Component {
   }
 
   componentDidMount = () => {
-    this.player.render('output-preview-container');
+    this.player.render("output-preview-container");
   }
 
   render() {

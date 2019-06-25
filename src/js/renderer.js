@@ -14,7 +14,7 @@ import {
   ColorGenerator,
   FrameAttributesOverlay,
   ObjectOverlay,
-} from './overlay.js';
+} from "./overlay.js";
 
 // ES6 module export
 export {
@@ -34,7 +34,7 @@ export {
  */
 function Renderer(media, overlay) {
   if (this.constructor === Renderer) {
-    throw new TypeError('Cannot instantiate abstract class.');
+    throw new TypeError("Cannot instantiate abstract class.");
   }
   // Data structures
   this.player = undefined;
@@ -51,7 +51,7 @@ function Renderer(media, overlay) {
   this.paddingRight = 0;
   this.paddingTop = 0;
   this.paddingBottom = 0;
-  this.metadataOverlayBGColor = 'hsla(210, 20%, 10%, 0.8)';
+  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
@@ -75,7 +75,7 @@ function Renderer(media, overlay) {
  * @abstract
  */
 Renderer.prototype.initPlayer = function() {
-  throw new Error('Method initPlayer() must be implemented.');
+  throw new Error("Method initPlayer() must be implemented.");
 };
 
 
@@ -86,7 +86,7 @@ Renderer.prototype.initPlayer = function() {
  * @abstract
  */
 Renderer.prototype.initPlayerControls = function() {
-  throw new Error('Method initPlayerControls() must be implemented.');
+  throw new Error("Method initPlayerControls() must be implemented.");
 };
 
 
@@ -98,7 +98,7 @@ Renderer.prototype.initPlayerControls = function() {
  * @abstract
  */
 Renderer.prototype.determineMediaDimensions = function() {
-  throw new Error('Method determineMediaDimensions() must be implemented.');
+  throw new Error("Method determineMediaDimensions() must be implemented.");
 };
 
 
@@ -109,7 +109,7 @@ Renderer.prototype.determineMediaDimensions = function() {
  * @abstract
  */
 Renderer.prototype.resizeControls = function() {
-  throw new Error('Method resizeControls() must be implemented.');
+  throw new Error("Method resizeControls() must be implemented.");
 };
 
 
@@ -121,7 +121,7 @@ Renderer.prototype.resizeControls = function() {
  * @abstract
  */
 Renderer.prototype.updateFromDynamicState = function() {
-  throw new Error('Method updateFromDynamicState() must be implemented.');
+  throw new Error("Method updateFromDynamicState() must be implemented.");
 };
 
 
@@ -133,7 +133,7 @@ Renderer.prototype.updateFromDynamicState = function() {
  * @abstract
  */
 Renderer.prototype.updateFromLoadingState = function() {
-  throw new Error('Method updateFromLoadingState() must be implemented.');
+  throw new Error("Method updateFromLoadingState() must be implemented.");
 };
 
 
@@ -145,7 +145,7 @@ Renderer.prototype.updateFromLoadingState = function() {
  * @abstract
  */
 Renderer.prototype.updateStateFromTimeChange = function() {
-  throw new Error('Method updateStateFromTimeChange() must be implemented.');
+  throw new Error("Method updateStateFromTimeChange() must be implemented.");
 };
 
 
@@ -156,7 +156,7 @@ Renderer.prototype.updateStateFromTimeChange = function() {
  * @abstract
  */
 Renderer.prototype.state = function() {
-  throw new Error('Method state() must be implemented.');
+  throw new Error("Method state() must be implemented.");
 };
 
 
@@ -167,7 +167,7 @@ Renderer.prototype.state = function() {
  * @abstract
  */
 Renderer.prototype.customDraw = function() {
-  throw new Error('Method customDraw() must be implemented.');
+  throw new Error("Method customDraw() must be implemented.");
 };
 
 
@@ -178,15 +178,15 @@ Renderer.prototype.customDraw = function() {
  * @param {string} overlay of overlay JSON
  */
 Renderer.prototype.handleOverlay = function(overlay) {
-  if ((overlay === null) || (typeof(overlay) === 'undefined')) {
+  if ((overlay === null) || (typeof(overlay) === "undefined")) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
-  } else if (typeof(overlay) === 'string') {
+  } else if (typeof(overlay) === "string") {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === 'object') && (overlay != null) && Object
-      .keys(overlay).length >
+  } else if ((typeof(overlay) === "object") && (overlay != null) && Object
+    .keys(overlay).length >
     0) {
     this._overlayURL = null;
     this._overlayData = overlay;
@@ -210,7 +210,7 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
       self.updateFromLoadingState();
     }
   };
-  xmlhttp.open('GET', overlayPath, true);
+  xmlhttp.open("GET", overlayPath, true);
   xmlhttp.send();
 };
 
@@ -230,27 +230,27 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this._isPreparingOverlay = true;
 
   // Format 1
-  if (typeof(rawjson.objects !== 'undefined')) {
+  if (typeof (rawjson.objects) !== "undefined") {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
   }
 
   // Format 2
-  if (typeof(rawjson.frames) !== 'undefined') {
+  if (typeof(rawjson.frames) !== "undefined") {
     const context = this.setupCanvasContext();
     const frameKeys = Object.keys(rawjson.frames);
     for (const frameKeyI in frameKeys) {
       if (frameKeyI) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
-        if (typeof(f.objects) !== 'undefined') {
+        if (typeof(f.objects) !== "undefined") {
           this._prepareOverlay_auxFormat1Objects(context, f.objects
-              .objects);
+            .objects);
         }
-        if (typeof(f.attrs) !== 'undefined') {
+        if (typeof(f.attrs) !== "undefined") {
           const o = new FrameAttributesOverlay(f.attrs, this);
           o.setup(
-              context, this.canvasWidth, this.canvasHeight);
+            context, this.canvasWidth, this.canvasHeight);
           this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
         }
       }
@@ -258,7 +258,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   }
 
   // Attributes for images
-  if (typeof(rawjson.attrs) !== 'undefined') {
+  if (typeof(rawjson.attrs) !== "undefined") {
     const context = this.setupCanvasContext();
     const o = new FrameAttributesOverlay(rawjson.attrs, this);
     o.setup(context, this.canvasWidth, this.canvasHeight);
@@ -281,21 +281,21 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
  * @param {bool} frameFlag forces frameNumber to be frameNumber property
  */
 Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
-    objects, frameFlag = false) {
-  if (typeof(objects) === 'undefined') {
+  objects, frameFlag = false) {
+  if (typeof(objects) === "undefined") {
     return;
   }
-  if (typeof(objects.length) === 'undefined') {
+  if (typeof(objects.length) === "undefined") {
     objects = objects.objects;
   }
   for (let len = objects.length, i = 0; i < len; i++) {
     const o = new ObjectOverlay(objects[i], this);
-    if (typeof(this.canvasWidth) === 'undefined') {
+    if (typeof(this.canvasWidth) === "undefined") {
       const checkCanvasWidth = setInterval(() => {
         if (this.canvasWidth) {
           clearInterval(checkCanvasWidth);
           o.setup(context, this.canvasWidth, this
-              .canvasHeight);
+            .canvasHeight);
           if (frameFlag) {
             this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
           } else {
@@ -327,7 +327,7 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
   if (fn == -1) {
     fn = o.frame_number;
   }
-  if (typeof(fn) === 'undefined') {
+  if (typeof(fn) === "undefined") {
     fn = this._frameNumber;
   }
   if (fn in this.frameOverlay) {
@@ -365,7 +365,7 @@ Renderer.prototype.processFrame = function() {
       const fm = this.frameOverlay[this._frameNumber];
       for (let len = fm.length, i = 0; i < len; i++) {
         fm[i].draw(
-            context, this.canvasWidth, this.canvasHeight);
+          context, this.canvasWidth, this.canvasHeight);
       }
     }
   }
@@ -382,7 +382,8 @@ Renderer.prototype.processFrame = function() {
  */
 Renderer.prototype.checkFontHeight = function(h) {
   if (h == 0) {
-    console.log('PLAYER51 WARN: fontheight 0');
+    /* eslint-disable-next-line no-console */
+    console.log("PLAYER51 WARN: fontheight 0");
     return 10;
   }
   return h;
@@ -396,7 +397,7 @@ Renderer.prototype.checkFontHeight = function(h) {
  * @return {string} extension
  */
 Renderer.prototype.getExtension = function() {
-  const tmp = this.media.type.split('/');
+  const tmp = this.media.type.split("/");
   return tmp.slice(-1)[0];
 };
 
@@ -408,7 +409,7 @@ Renderer.prototype.getExtension = function() {
  * @return {string} extension
  */
 Renderer.prototype.getFileExtension = function(path) {
-  const tmp = path.split('.');
+  const tmp = path.split(".");
   return tmp.slice(-1)[0];
 };
 
@@ -419,8 +420,8 @@ Renderer.prototype.getFileExtension = function(path) {
  * @member checkPlayer
  */
 Renderer.prototype.checkPlayer = function() {
-  if (typeof(this.player) === 'undefined') {
-    throw new TypeError('Player not set.');
+  if (typeof(this.player) === "undefined") {
+    throw new TypeError("Player not set.");
   }
 };
 
@@ -442,12 +443,12 @@ Renderer.prototype.setPlayer = function(player) {
  * @member checkParentandMedia
  */
 Renderer.prototype.checkParentandMedia = function() {
-  if (typeof(this.parent) === 'undefined') {
-    throw new TypeError('Parent not set.');
+  if (typeof(this.parent) === "undefined") {
+    throw new TypeError("Parent not set.");
   }
 
-  if (typeof(this.media) === 'undefined') {
-    throw new TypeError('Media not set.');
+  if (typeof(this.media) === "undefined") {
+    throw new TypeError("Media not set.");
   }
 };
 
@@ -460,7 +461,7 @@ Renderer.prototype.checkParentandMedia = function() {
  * Div object.
  */
 Renderer.prototype.setParentofMedia = function(parentElement) {
-  if (typeof(parentElement) === 'string') {
+  if (typeof(parentElement) === "string") {
     this.parent = document.getElementById(parentElement);
   } else {
     this.parent = parentElement;
@@ -475,8 +476,8 @@ Renderer.prototype.setParentofMedia = function(parentElement) {
  */
 Renderer.prototype.checkBorderBox = function() {
   const cBS = window.getComputedStyle(this.parent, null).getPropertyValue(
-      'box-sizing');
-  if (cBS === 'border-box') {
+    "box-sizing");
+  if (cBS === "border-box") {
     this._boolBorderBox = true;
   }
 };
@@ -490,10 +491,10 @@ Renderer.prototype.checkBorderBox = function() {
  */
 Renderer.prototype.initCanvas = function() {
   this.checkParentandMedia();
-  this.eleDivCanvas = document.createElement('div');
-  this.eleDivCanvas.className = 'p51-contained-canvas';
-  this.eleCanvas = document.createElement('canvas');
-  this.eleCanvas.className = 'p51-contained-canvas';
+  this.eleDivCanvas = document.createElement("div");
+  this.eleDivCanvas.className = "p51-contained-canvas";
+  this.eleCanvas = document.createElement("canvas");
+  this.eleCanvas.className = "p51-contained-canvas";
   this.eleDivCanvas.appendChild(this.eleCanvas);
   this.parent.appendChild(this.eleDivCanvas);
 };
@@ -509,18 +510,19 @@ Renderer.prototype.initCanvas = function() {
 Renderer.prototype.setupCanvasContext = function() {
   this.checkPlayer();
   if (!this._isRendered) {
+    /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: trying to set up canvas context but player not rendered'
+      "WARN: trying to set up canvas context but player not rendered"
     );
     return;
   }
-  const canvasContext = this.eleCanvas.getContext('2d');
-  canvasContext.strokeStyle = '#fff';
-  canvasContext.fillStyle = '#fff';
+  const canvasContext = this.eleCanvas.getContext("2d");
+  canvasContext.strokeStyle = "#fff";
+  canvasContext.fillStyle = "#fff";
   canvasContext.lineWidth = 3;
-  canvasContext.font = '14px sans-serif';
+  canvasContext.font = "14px sans-serif";
   // easier for setting offsets
-  canvasContext.textBaseline = 'bottom';
+  canvasContext.textBaseline = "bottom";
   return canvasContext;
 };
 
@@ -533,8 +535,8 @@ Renderer.prototype.setupCanvasContext = function() {
  */
 Renderer.prototype.initSharedControls = function() {
   this.checkPlayer();
-  if (typeof(this.player._thumbnailClickAction) !== 'undefined') {
-    this.parent.addEventListener('click', this.player._thumbnailClickAction);
+  if (typeof(this.player._thumbnailClickAction) !== "undefined") {
+    this.parent.addEventListener("click", this.player._thumbnailClickAction);
   }
 };
 
@@ -563,8 +565,9 @@ Renderer.prototype.updateSizeAndPadding = function() {
  */
 Renderer.prototype.handleWidthAndHeight = function() {
   if (!this._isRendered) {
+    /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: Player51 trying to update size, but it is not rendered.'
+      "WARN: Player51 trying to update size, but it is not rendered."
     );
     return;
   }
@@ -572,34 +575,34 @@ Renderer.prototype.handleWidthAndHeight = function() {
   this.determineMediaDimensions();
 
   this.paddingLeft = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-left');
+    .getPropertyValue("padding-left");
   this.paddingRight = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-right');
+    .getPropertyValue("padding-right");
   this.paddingTop = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-top');
+    .getPropertyValue("padding-top");
   this.paddingBottom = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-bottom');
+    .getPropertyValue("padding-bottom");
   this.paddingLeftN = parseInt(this.paddingLeft.substr(0, this.paddingLeft
-      .length - 2));
+    .length - 2));
   this.paddingRightN = parseInt(this.paddingRight.substr(0, this
-      .paddingRight.length - 2));
+    .paddingRight.length - 2));
   this.paddingTopN = parseInt(this.paddingTop.substr(0, this.paddingTop
-      .length - 2));
+    .length - 2));
   this.paddingBottomN = parseInt(this.paddingBottom.substr(0, this
-      .paddingBottom.length - 2));
+    .paddingBottom.length - 2));
 
 
   // Preservation is based on maintaining the height of the parent.
   // Try to maintain height of container first.  If fails, then set width.
   // Fails means that the width of the video is too wide for the container.
   this.height = this.parent.offsetHeight - this.paddingTopN - this
-      .paddingBottomN;
+    .paddingBottomN;
   this.width = this.height * this.mediaWidth / this.mediaHeight;
 
   if (this.width > this.parent.offsetWidth - this.paddingLeftN - this
-      .paddingRightN) {
+    .paddingRightN) {
     this.width = this.parent.offsetWidth - this.paddingLeftN - this
-        .paddingRightN;
+      .paddingRightN;
     this.height = this.width * this.mediaHeight / this.mediaWidth;
   }
 
@@ -621,8 +624,8 @@ Renderer.prototype.handleWidthAndHeight = function() {
   }
 
   // Set width and height
-  this.mediaElement.setAttribute('width', this.width);
-  this.mediaElement.setAttribute('height', this.height);
+  this.mediaElement.setAttribute("width", this.width);
+  this.mediaElement.setAttribute("height", this.height);
 };
 
 
@@ -648,14 +651,14 @@ Renderer.prototype.resizeCanvas = function() {
 
   const canvasWidth = 1280;
   const canvasHeight = canvasWidth * this.mediaHeight / this.mediaWidth;
-  this.eleCanvas.setAttribute('width', canvasWidth);
-  this.eleCanvas.setAttribute('height', canvasHeight);
+  this.eleCanvas.setAttribute("width", canvasWidth);
+  this.eleCanvas.setAttribute("height", canvasHeight);
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
   this.canvasMultiplier = canvasWidth / this.width;
 
-  this.parent.setAttribute('width', this.width);
-  this.parent.setAttribute('height', this.height);
+  this.parent.setAttribute("width", this.width);
+  this.parent.setAttribute("height", this.height);
 
   if (this._boolBorderBox) {
     const widthstr =
@@ -694,32 +697,32 @@ Renderer.prototype.resizeCanvas = function() {
     this.eleCanvas.style.paddingTop = this.paddingTop;
     this.eleCanvas.style.paddingBottom = this.paddingBottom;
   } else {
-    this.parent.style.width = (this.width + 'px');
-    this.parent.style.height = (this.height + 'px');
+    this.parent.style.width = (this.width + "px");
+    this.parent.style.height = (this.height + "px");
 
-    this.mediaDiv.style.width = (this.width + 'px');
-    this.mediaDiv.style.height = (this.height + 'px');
+    this.mediaDiv.style.width = (this.width + "px");
+    this.mediaDiv.style.height = (this.height + "px");
     this.mediaDiv.style.paddingLeft = this.paddingLeft;
     this.mediaDiv.style.paddingRight = this.paddingRight;
     this.mediaDiv.style.paddingTop = this.paddingTop;
     this.mediaDiv.style.paddingBottom = this.paddingBottom;
 
-    this.mediaElement.style.width = (this.width + 'px');
-    this.mediaElement.style.height = (this.height + 'px');
+    this.mediaElement.style.width = (this.width + "px");
+    this.mediaElement.style.height = (this.height + "px");
     this.mediaElement.style.paddingLeft = this.paddingLeft;
     this.mediaElement.style.paddingRight = this.paddingRight;
     this.mediaElement.style.paddingTop = this.paddingTop;
     this.mediaElement.style.paddingBottom = this.paddingBottom;
 
-    this.eleDivCanvas.style.width = (this.width + 'px');
-    this.eleDivCanvas.style.height = (this.height + 'px');
+    this.eleDivCanvas.style.width = (this.width + "px");
+    this.eleDivCanvas.style.height = (this.height + "px");
     this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
     this.eleDivCanvas.style.paddingRight = this.paddingRight;
     this.eleDivCanvas.style.paddingTop = this.paddingTop;
     this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
 
-    this.eleCanvas.style.width = (this.width + 'px');
-    this.eleCanvas.style.height = (this.height + 'px');
+    this.eleCanvas.style.width = (this.width + "px");
+    this.eleCanvas.style.height = (this.height + "px");
     this.eleCanvas.style.paddingLeft = this.paddingLeft;
     this.eleCanvas.style.paddingRight = this.paddingRight;
     this.eleCanvas.style.paddingTop = this.paddingTop;

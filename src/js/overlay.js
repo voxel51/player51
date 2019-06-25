@@ -28,13 +28,13 @@ function ColorGenerator() {
   this.colors = {};
 
   // standard colors
-  this.white = '#ffffff';
-  this.black = '#000000';
+  this.white = "#ffffff";
+  this.black = "#000000";
 
   this._colorSet = undefined;
-  this._colorS = '70%';
-  this._colorL = '40%';
-  this._colorA = '0.875';
+  this._colorS = "70%";
+  this._colorL = "40%";
+  this._colorA = "0.875";
 }
 
 
@@ -78,11 +78,11 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
  * @return {color} color
  */
 ColorGenerator.prototype.generateNewColor = function() {
-  if (typeof(this._colorSet) === 'undefined') {
+  if (typeof(this._colorSet) === "undefined") {
     this._generateColorSet();
   }
   return this._colorSet[Math.floor(Math.random() * this._colorSet
-      .length)];
+    .length)];
 };
 
 
@@ -98,10 +98,12 @@ const colorGenerator = new ColorGenerator();
  */
 function Overlay() {}
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
-  console.log('ERROR: draw called on abstract type');
+  /* eslint-disable-next-line no-console */
+  console.log("ERROR: draw called on abstract type");
 };
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-  console.log('ERROR: setup called on abstract type');
+  /* eslint-disable-next-line no-console */
+  console.log("ERROR: setup called on abstract type");
 };
 
 
@@ -149,7 +151,7 @@ FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
  * @param {int} canvasHeight
  */
 FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
-    canvasHeight) {
+  canvasHeight) {
   if (typeof(this.attrs) !== undefined) {
     this._parseAttrs();
   }
@@ -164,9 +166,9 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
 
   // this.w is set up by the _setupWidths function
   this.h = this.attrText.length * (this.attrFontHeight + this
-      .textPadder) + this.textPadder;
+    .textPadder) + this.textPadder;
 
-  if (typeof(context) === 'undefined') {
+  if (typeof(context) === "undefined") {
     return;
   }
   this._setupWidths(context, canvasWidth, canvasHeight);
@@ -186,19 +188,20 @@ FrameAttributesOverlay.prototype._parseAttrs = function() {
 
   for (let len = this.attrs.length, a = 0; a < len; a++) {
     const at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
-    this.attrText[a] = at.replace(new RegExp('_', 'g'), ' ');
+    this.attrText[a] = at.replace(new RegExp("_", "g"), " ");
   }
 };
 
 
 FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
-    canvasHeight) {
+  canvasHeight) {
   context.font = `${this.attrFontHeight}px sans-serif`;
   let mw = 0;
   for (let a = 0; a < this.attrText.length; a++) {
     const aw = context.measureText(this.attrText[a]).width;
     if (aw == 0) {
-      console.log('PLAYER51 WARN: rendering context broken');
+      /* eslint-disable-next-line no-console */
+      console.log("PLAYER51 WARN: rendering context broken");
       return;
     }
     if (aw > mw) {
@@ -219,8 +222,8 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
  * @param {int} canvasHeight
  */
 FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
-    canvasHeight) {
-  if (typeof(context) === 'undefined') {
+  canvasHeight) {
+  if (typeof(context) === "undefined") {
     return;
   }
 
@@ -229,8 +232,9 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
     // If something went wrong in trying to estimate the sizes of things, then
     // we still cannot draw.
     if (this.w <= 0) {
+      /* eslint-disable-next-line no-console */
       console.log(
-          'PLAYER51 WARN: FAO draw before setup; invalid canvas');
+        "PLAYER51 WARN: FAO draw before setup; invalid canvas");
       return;
     }
   }
@@ -246,9 +250,9 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
     // one row (attrFontHeight and textPadder)
     for (let a = 0; a < this.attrText.length; a++) {
       context.fillText(this.attrText[a],
-          this.x + this.textPadder,
-          this.y + (a + 1) * (this.attrFontHeight + this
-              .textPadder));
+        this.x + this.textPadder,
+        this.y + (a + 1) * (this.attrFontHeight + this
+          .textPadder));
     }
   }
 };
@@ -282,7 +286,7 @@ function ObjectOverlay(d, renderer) {
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
   this.index = d.index;
-  this.indexStr = '';
+  this.indexStr = "";
   if (this.index != null) {
     this.indexStr = `${this.index}`;
   }
@@ -290,7 +294,7 @@ function ObjectOverlay(d, renderer) {
   this.frame_number = d.frame_number;
   this.bounding_box = d.bounding_box;
 
-  if (typeof(d.attrs) !== 'undefined') {
+  if (typeof(d.attrs) !== "undefined") {
     this._attrs = d.attrs.attrs;
   }
   this.attrText = null;
@@ -333,21 +337,21 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.x = this.bounding_box.top_left.x * canvasWidth;
   this.y = this.bounding_box.top_left.y * canvasHeight;
   this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left
-      .x) * canvasWidth;
+    .x) * canvasWidth;
   this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
-      .y) * canvasHeight;
+    .y) * canvasHeight;
   this.color = colorGenerator.color(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
-      .headerFontHeight);
+    .headerFontHeight);
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   this.headerHeight = Math.min(26, 0.13 * canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
 
-  if (typeof(context) === 'undefined') {
+  if (typeof(context) === "undefined") {
     return;
   }
 
@@ -356,7 +360,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
-    canvasHeight) {
+  canvasHeight) {
   context.font = `${this.headerFontHeight}px sans-serif`;
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
@@ -365,7 +369,7 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
   this.attrFontWidth = context.measureText(this.attrText).width;
 
   if ((this.labelTextWidth + this.indexTextWidth + this
-      .labelIndexPadding + 2 * this.textPadder) <= this.w) {
+    .labelIndexPadding + 2 * this.textPadder) <= this.w) {
     this.headerWidth = this.w;
   } else {
     this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2 *
@@ -383,11 +387,11 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
  */
 ObjectOverlay.prototype._parseAttrs = function(attrs) {
   if (this.attrText === null) {
-    this.attrText = '';
+    this.attrText = "";
   }
 
-  if (typeof(attrs) === 'undefined') {
-    if (typeof(this._attrs) === 'undefined') {
+  if (typeof(attrs) === "undefined") {
+    if (typeof(this._attrs) === "undefined") {
       return;
     }
     attrs = this._attrs;
@@ -396,10 +400,10 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
   for (let a = 0; a < attrs.length; a++) {
     this.attrText = this.attrText + `${attrs[a].value}`;
     if (a < attrs.length - 1) {
-      this.attrText = this.attrText + ', ';
+      this.attrText = this.attrText + ", ";
     }
   }
-  this.attrText = this.attrText.replace(new RegExp('_', 'g'), ' ');
+  this.attrText = this.attrText.replace(new RegExp("_", "g"), " ");
 };
 
 
@@ -412,7 +416,7 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
  * @param {int} canvasHeight
  */
 ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
-  if (typeof(context) === 'undefined') {
+  if (typeof(context) === "undefined") {
     return;
   }
 
@@ -427,28 +431,28 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   if (!this.renderer.player._boolThumbnailMode) {
     // fill and stroke to account for line thickness variation
     context.strokeRect(this.x, this.y - this.headerHeight,
-        this.headerWidth, this.headerHeight);
+      this.headerWidth, this.headerHeight);
     context.fillRect(this.x, this.y - this.headerHeight,
-        this.headerWidth, this.headerHeight);
+      this.headerWidth, this.headerHeight);
 
     context.font = `${this.headerFontHeight}px sans-serif`;
     context.fillStyle = colorGenerator.white;
     context.fillText(this.labelUpper,
-        this.x + this.textPadder, this.y - this.textPadder);
+      this.x + this.textPadder, this.y - this.textPadder);
 
     context.fillText(this.indexStr,
-        this.x + this.headerWidth - 4 * this.textPadder - this
-            .indexTextWidth,
-        this.y - this.textPadder);
+      this.x + this.headerWidth - 4 * this.textPadder - this
+        .indexTextWidth,
+      this.y - this.textPadder);
 
     context.font = `${this.attrFontHeight}px sans-serif`;
-    if ((typeof(this.attrFontWidth) === 'undefined') ||
+    if ((typeof(this.attrFontWidth) === "undefined") ||
       (this.attrFontWidth === null)) {
       this.attrFontWidth = context.measureText(this.attrText).width;
     }
 
     context.fillText(this.attrText,
-        this.x + this.textPadder,
-        this.y + this.attrFontHeight + 3 * this.textPadder);
+      this.x + this.textPadder,
+      this.y + this.attrFontHeight + 3 * this.textPadder);
   }
 };

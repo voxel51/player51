@@ -13,7 +13,7 @@
 
 import {
   MediaPlayer,
-} from './mediaplayer.js';
+} from "./mediaplayer.js";
 
 // ES6 module export
 export {
@@ -34,7 +34,7 @@ export {
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
 function ImageViewer(media, overlay) {
-  MediaPlayer.call(this, 'image', media, overlay);
+  MediaPlayer.call(this, "image", media, overlay);
 }
 ImageViewer.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer.prototype.constructor = ImageViewer;

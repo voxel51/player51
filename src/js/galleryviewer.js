@@ -12,7 +12,7 @@
 
 import {
   MediaPlayer,
-} from './mediaplayer.js';
+} from "./mediaplayer.js";
 
 // ES6 module export
 export {
@@ -32,7 +32,7 @@ export {
  * @param {string} overlay is data that should be overlayed on the images.
  */
 function GalleryViewer(media, overlay) {
-  MediaPlayer.call(this, 'gallery', media, overlay);
+  MediaPlayer.call(this, "gallery", media, overlay);
 }
 GalleryViewer.prototype = Object.create(MediaPlayer.prototype);
 GalleryViewer.prototype.constructor = GalleryViewer;
