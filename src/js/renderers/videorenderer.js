@@ -165,15 +165,16 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
 
     self.updateFromLoadingState();
+
+    if (self._boolSingleFrame ) {
+      self.eleVideo.currentTime = self._mfBeginT;
+      self._frameNumber = self._mfBeginF;
+      // self.processFrame();
+    }
+
     // so that we see overlay and time stamp now that we are ready
     if ((!self.player._boolThumbnailMode) && (!self
         ._boolAutoplay)) {
-      self.processFrame();
-    }
-
-    if (self._boolSingleFrame) {
-      self.eleVideo.currentTime = self._mfBeginT;
-      self._frameNumber = self._mfBeginF;
       self.processFrame();
     }
   });
@@ -197,6 +198,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.eleVideo.currentTime = time;
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
+    self._boolSingleFrame = false;
     self.updateStateFromTimeChange();
   });
 
@@ -249,12 +251,16 @@ VideoRenderer.prototype.initPlayerControls = function() {
     // Two different behaviors.
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
+    // 3.  Single Frame Mode: annotate
     if (!self._isDataLoaded) {
       return;
     }
 
     if (self.player._boolThumbnailMode) {
       self._boolPlaying = true;
+      if (self._boolSingleFrame) {
+        self.processFrame();
+      }
     } else {
       self._boolShowControls = true;
     }
@@ -347,14 +353,19 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if ((!this._isRendered) || (!this._isSizePrepared)) {
     return;
   }
+
   this.eleVideo.toggleAttribute('autoplay', this._boolAutoplay);
   this.eleVideo.toggleAttribute('loop', this._boolLoop);
 
   if (this._boolPlaying) {
-    this.eleVideo.play();
+    if (!this._boolSingleFrame) {
+      this.eleVideo.play();
+    }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
-    this.eleVideo.pause();
+    if (!this._boolSingleFrame) {
+      this.eleVideo.pause();
+    }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
 
@@ -533,7 +544,6 @@ VideoRenderer.prototype.setMediaFragment = function() {
     this._lockToMF = true;
     if (this._mfBeginF === this._mfEndF) {
       this._boolSingleFrame = true;
-      this._lockToMF = false;
     }
   }
 };
