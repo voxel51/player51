@@ -151,9 +151,16 @@ Player51.prototype.determineMediaType = function(media) {
  *
  * @member poster
  * @param {string} url Image to be shown while loading
+ * @param {string} option 404/loading
  */
-Player51.prototype.poster = function(url) {
-  this.player.poster(url);
+Player51.prototype.poster = function(url, option='loading') {
+  if (option === 'loading') {
+    this.player.setLoadingPoster(url);
+  } else if (option === '404') {
+    this.player.setNotFoundPoster(url);
+  } else {
+    throw new Error('Invalid poster option.');
+  }
 };
 
 

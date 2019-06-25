@@ -57,19 +57,21 @@ function MediaPlayer(type, media, overlay, fps) {
   this._boolThumbnailMode = false;
   this._thumbnailClickAction = undefined;
   this._boolHasPoster = false;
-  this._posterURL = '';
+  this._boolNotFound = false;
+  this._loadingPosterURL = '';
+  this._notFoundURL = '';
 }
 
 
 /**
- * Define abstract function poster to be implemented in subclasses
+ * Define abstract function setLoadingPoster to be implemented in subclasses
  *
- * @member poster
+ * @member setLoadingPoster
  * @abstract
  * @param {string} url Image to be shown while loading
  */
-MediaPlayer.prototype.poster = function(url) {
-  throw new Error('Method poster() must be implemented.');
+MediaPlayer.prototype.setLoadingPoster = function(url) {
+  throw new Error('Method setLoadingPoster() must be implemented.');
 };
 
 
@@ -194,4 +196,16 @@ MediaPlayer.prototype.forceMax = function() {
     console.log('Warning!  forceSize wins.');
   }
   this._boolForcedMax = true;
+};
+
+
+/**
+ * Sets an image to be shown if requested media is not found
+ *
+ * @member setNotFoundPoster
+ * @param {string} url of the image to be shown
+ */
+MediaPlayer.prototype.setNotFoundPoster = function(url) {
+  this._boolNotFound = true;
+  this._notFoundURL = url;
 };

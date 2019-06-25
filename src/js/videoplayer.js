@@ -51,12 +51,12 @@ VideoPlayer.prototype.constructor = VideoPlayer;
 /**
  * Set a poster frame URL to display while the video itself is loading
  *
- * @member poster
+ * @member setLoadingPoster
  * @param {string} url Image to be shown while loading.
  */
-VideoPlayer.prototype.poster = function(url) {
+VideoPlayer.prototype.setLoadingPoster = function(url) {
   this._boolHasPoster = true;
-  this._posterURL = url;
+  this._loadingPosterURL = url;
 };
 
 

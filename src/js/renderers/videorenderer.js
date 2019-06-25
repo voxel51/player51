@@ -124,7 +124,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     this.eleVideo.toggleAttribute('loop', true);
   }
   if (this.player._boolHasPoster) {
-    this.eleVideo.setAttribute('poster', this.player._posterURL);
+    this.eleVideo.setAttribute('poster', this.player._loadingPosterURL);
     if (this.player._boolForcedSize) {
       const sizeStyleString = 'width:' + this.player._forcedWidth +
         'px; height:' + this.player._forcedHeight + 'px;';
@@ -175,6 +175,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
       self.eleVideo.currentTime = self._mfBeginT;
       self._frameNumber = self._mfBeginF;
       self.processFrame();
+    }
+  });
+
+  this.eleVideoSource.addEventListener('error', function() {
+    if (self.player._boolNotFound) {
+      self.eleVideo.setAttribute('poster', self.player._notFoundURL);
     }
   });
 
