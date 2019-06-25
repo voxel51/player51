@@ -79,6 +79,10 @@ VideoPlayer.prototype.loop = function(boolLoop = true) {
  * @param {bool} boolAutoplay
  */
 VideoPlayer.prototype.autoplay = function(boolAutoplay = true) {
+  if (this.renderer._boolSingleFrame && boolAutoplay) {
+    boolAutoplay = false;
+    this.renderer._boolPlaying = true;
+  }
   this.renderer._boolAutoplay = boolAutoplay;
   this.renderer.updateFromDynamicState();
 };

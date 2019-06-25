@@ -172,7 +172,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
 
     if (self._boolSingleFrame) {
-      console.log(self._mfBeginT);
       self.eleVideo.currentTime = self._mfBeginT;
       self._frameNumber = self._mfBeginF;
       self.processFrame();
@@ -198,6 +197,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.eleVideo.currentTime = time;
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
+    self._boolSingleFrame = false;
     self.updateStateFromTimeChange();
   });
 
@@ -348,14 +348,19 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if ((!this._isRendered) || (!this._isSizePrepared)) {
     return;
   }
+
   this.eleVideo.toggleAttribute('autoplay', this._boolAutoplay);
   this.eleVideo.toggleAttribute('loop', this._boolLoop);
 
   if (this._boolPlaying) {
-    this.eleVideo.play();
+    if (!this._boolSingleFrame) {
+      this.eleVideo.play();
+    }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
-    this.eleVideo.pause();
+    if (!this._boolSingleFrame) {
+      this.eleVideo.pause();
+    }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
 
@@ -534,7 +539,6 @@ VideoRenderer.prototype.setMediaFragment = function() {
     this._lockToMF = true;
     if (this._mfBeginF === this._mfEndF) {
       this._boolSingleFrame = true;
-      // this._lockToMF = false;
     }
   }
 };
