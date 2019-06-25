@@ -180,7 +180,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleVideoSource.addEventListener('error', function() {
     if (self.player._boolNotFound) {
-      self.eleVideo.setAttribute('poster', self.player._notFoundURL);
+      self.eleVideo.setAttribute('poster', self.player._notFoundPosterURL);
     }
   });
 

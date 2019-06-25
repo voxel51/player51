@@ -59,7 +59,7 @@ function MediaPlayer(type, media, overlay, fps) {
   this._boolHasPoster = false;
   this._boolNotFound = false;
   this._loadingPosterURL = '';
-  this._notFoundURL = '';
+  this._notFoundPosterURL = '';
 }
 
 
@@ -207,5 +207,5 @@ MediaPlayer.prototype.forceMax = function() {
  */
 MediaPlayer.prototype.setNotFoundPoster = function(url) {
   this._boolNotFound = true;
-  this._notFoundURL = url;
+  this._notFoundPosterURL = url;
 };

@@ -13,6 +13,12 @@
         position: relative;
         padding: 2rem;
       }
+      #image-test-container {
+        width: 640px;
+        height: 360px;
+        position: relative;
+        padding: 2rem;
+      }
     </style>
     <link rel="stylesheet" href="/src/css/player51.css">
   </head>
@@ -21,7 +27,9 @@
 
     <h1> Player51 404 Error Test </h1>
 
-    <div id="test-container" />
+    <div id="test-container" ></div>
+    <div id="image-test-container"></div>
+
 
     <script type="module">
       import Player51 from '/src/js/player51.js';
@@ -40,18 +48,25 @@
 
         console.log("Player51 created.");
 
-        player.setBoolDrawFrameNumber(true);
-        player.setBoolDrawTimeStamp(true);
-        player.loop();
-        player.autoplay();
-        player.resetToFragment();
-
         player.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");
         player.poster("https://i2.wp.com/learn.onemonth.com/wp-content/uploads/2017/08/1-10.png?w=845&ssl=1", "404");
-        player.forceMax();  // uncomment and video will maximize to pixel resolution
         player.render('test-container');
 
         console.log("Player51 rendered and ready.");
+
+        let player2 = new Player51(
+          {
+            src: "/test/player51-test-data/8dasfsdaf.png",
+            type: "image/png"
+          },
+          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
+        );
+
+        player2.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");
+        player2.poster("https://i2.wp.com/learn.onemonth.com/wp-content/uploads/2017/08/1-10.png?w=845&ssl=1", "404");
+        player2.render('image-test-container');
+
+
 
       });
     </script>
