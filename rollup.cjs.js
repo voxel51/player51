@@ -1,33 +1,33 @@
-import eslint from 'rollup-plugin-eslint-bundle';
-import babel from 'rollup-plugin-babel';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import replace from 'rollup-plugin-replace';
-import {uglify} from 'rollup-plugin-uglify';
+import eslint from "rollup-plugin-eslint-bundle";
+import babel from "rollup-plugin-babel";
+import resolve from "rollup-plugin-node-resolve";
+import commonjs from "rollup-plugin-commonjs";
+import replace from "rollup-plugin-replace";
+import {uglify} from "rollup-plugin-uglify";
 
 export default {
-  input: 'src/js/player51.js',
+  input: "src/js/player51.js",
   output: {
-    file: 'build/cjs/player51.min.js',
-    format: 'cjs',
-    name: 'Player51',
+    file: "build/cjs/player51.min.js",
+    format: "cjs",
+    name: "Player51",
   },
   plugins: [
     resolve(),
     commonjs(),
     eslint({
       exclude: [
-        'node_modules/**',
-        'src/css/**',
+        "node_modules/**",
+        "src/css/**",
       ],
     }),
     babel({
-      exclude: 'node_modules/**',
+      exclude: "node_modules/**",
     }),
     replace({
-      exclude: 'node_modules/**',
-      ENV: JSON.stringify(process.env.NODE_ENV || 'dev'),
+      exclude: "node_modules/**",
+      ENV: JSON.stringify(process.env.NODE_ENV || "dev"),
     }),
-    (process.env.NODE_ENV === 'prod' && uglify()),
+    (process.env.NODE_ENV === "prod" && uglify()),
   ],
 };
