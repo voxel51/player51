@@ -165,15 +165,16 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
 
     self.updateFromLoadingState();
+
+    if (self._boolSingleFrame ) {
+      self.eleVideo.currentTime = self._mfBeginT;
+      self._frameNumber = self._mfBeginF;
+      // self.processFrame();
+    }
+
     // so that we see overlay and time stamp now that we are ready
     if ((!self.player._boolThumbnailMode) && (!self
         ._boolAutoplay)) {
-      self.processFrame();
-    }
-
-    if (self._boolSingleFrame) {
-      self.eleVideo.currentTime = self._mfBeginT;
-      self._frameNumber = self._mfBeginF;
       self.processFrame();
     }
   });
@@ -250,12 +251,16 @@ VideoRenderer.prototype.initPlayerControls = function() {
     // Two different behaviors.
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
+    // 3.  Single Frame Mode: annotate
     if (!self._isDataLoaded) {
       return;
     }
 
     if (self.player._boolThumbnailMode) {
       self._boolPlaying = true;
+      if (self._boolSingleFrame) {
+        self.processFrame();
+      }
     } else {
       self._boolShowControls = true;
     }
