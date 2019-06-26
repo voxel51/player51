@@ -41,13 +41,12 @@ ImageViewer.prototype.constructor = ImageViewer;
 
 
 /**
- * Poster is not for images.
- * Not supported
+ * SetLoadingPoster is not for images.
+ * Not supported.
  *
- * @member poster
- * @param {string} url Image to be shown while loading.
+ * @member setLoadingPoster
  */
-ImageViewer.prototype.poster = function(url) {
+ImageViewer.prototype.setLoadingPoster = function(url) {
 };
 
 
