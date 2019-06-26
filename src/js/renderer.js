@@ -248,10 +248,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
               .objects);
         }
         if (typeof(f.attrs) !== 'undefined') {
-          const o = new FrameAttributesOverlay(f.attrs, this);
-          o.setup(
-              context, this.canvasWidth, this.canvasHeight);
-          this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+          this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
       }
     }
@@ -260,14 +257,32 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   // Attributes for images
   if (typeof(rawjson.attrs) !== 'undefined') {
     const context = this.setupCanvasContext();
-    const o = new FrameAttributesOverlay(rawjson.attrs, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this.frameOverlay[this._frameNumber].push(o);
+    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
+};
+
+
+/**
+ * Helper function to parse attributes of an overlay and add it to the overlay
+ * representation.
+ *
+ * @param {context} context
+ * @param {array} attributes is an Array of attributes
+ * @param {key} frameKey forces the usage of _prepareOverlay_auxCheckAdd
+ */
+Renderer.prototype._prepareOverlay_auxAttributes = function(context,
+    attributes, frameKey = null) {
+  const o = new FrameAttributesOverlay(attributes, this);
+  o.setup(context, this.canvasWidth, this.canvasHeight);
+  if (frameKey) {
+    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+  } else {
+    this.frameOverlay[this._frameNumber].push(o);
+  }
 };
 
 

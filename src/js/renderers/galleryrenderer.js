@@ -201,9 +201,7 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
   }
 
   if (typeof(entry.attrs) !== 'undefined') {
-    const o = new FrameAttributesOverlay(entry.attrs, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this.frameOverlay[this._frameNumber].push(o);
+    this._prepareOverlay_auxAttributes(context, entry.attrs);
   }
   this._isOverlayPrepared = true;
   this._isReadyProcessFrames = true;
