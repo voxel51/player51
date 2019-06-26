@@ -226,6 +226,7 @@ GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
 
 /**
  * Checks media extension for zip file format.
+ *
  * @member checkMediaFormat
  * @param {string} filename
  * @return {bool}
@@ -237,8 +238,22 @@ GalleryRenderer.prototype.checkMediaFormat = function(filename) {
 
 
 /**
+ * Checks for MACOSX from mac created zips.
+ *
+ * @member checkMACOSX
+ * @param {path} filename
+ * @return {bool}
+ */
+GalleryRenderer.prototype.checkMACOSX = function(filename) {
+  const elements = filename.split('/');
+  return elements.includes('__MACOSX');
+};
+
+
+/**
  * Opens up media and stores filenames in imageFiles by
  * index (psuedo frameNumber)
+ *
  * @member openContents
  * @required media.src needs to be a zip file
  */
@@ -278,7 +293,8 @@ GalleryRenderer.prototype.readBlob = function(blob) {
       entries.forEach(function(item) {
         const filename = item.filename;
         const extension = self.getFileExtension(filename);
-        if (self.checkImageExtension(extension)) {
+        if (self.checkImageExtension(extension) &&
+        !self.checkMACOSX(filename)) {
           item.getData(new self.reader.BlobWriter(), function(content) {
             const tmp = filename.split('/');
             const filenametruncated = tmp.slice(-1)[0];

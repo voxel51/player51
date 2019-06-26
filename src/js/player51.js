@@ -14,7 +14,7 @@
  * To switch between types of media, specify the type attribute in media
  * in the following format.
  * <media type>/<media format>
- * examples: image/jpg, video/mp4, gallery/zip
+ * examples: image/jpg, video/mp4, application/zip
 
    ```
     <div id="test-container" />
@@ -105,7 +105,7 @@ function Player51(media, overlay, fps) {
     this.player = new VideoPlayer(media, overlay, fps);
   } else if (this.mediaType === 'image') {
     this.player = new ImageViewer(media, overlay);
-  } else if (this.mediaType === 'gallery') {
+  } else if (this.mediaType === 'gallery' || this.mediaType === 'application') {
     this.player = new GalleryViewer(media, overlay);
   } else {
     /* eslint-disable-next-line no-console */
