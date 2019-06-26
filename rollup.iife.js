@@ -1,4 +1,4 @@
-import eslint from 'rollup-plugin-eslint-bundle';
+import {eslint} from 'rollup-plugin-eslint';
 import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
