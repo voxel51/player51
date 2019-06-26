@@ -13,13 +13,13 @@
 
 import {
   VideoRenderer,
-} from "./renderers/videorenderer.js";
+} from './renderers/videorenderer.js';
 import {
   ImageRenderer,
-} from "./renderers/imagerenderer.js";
+} from './renderers/imagerenderer.js';
 import {
   GalleryRenderer,
-} from "./renderers/galleryrenderer.js";
+} from './renderers/galleryrenderer.js';
 
 // ES6 module export
 export {
@@ -42,17 +42,17 @@ export {
  */
 function MediaPlayer(type, media, overlay, fps) {
   if (this.constructor === MediaPlayer) {
-    throw new TypeError("Cannot instantiate abstract class.");
+    throw new TypeError('Cannot instantiate abstract class.');
   }
 
-  if (type === "video") {
+  if (type === 'video') {
     this.renderer = new VideoRenderer(media, overlay, fps);
-  } else if (type === "image") {
+  } else if (type === 'image') {
     this.renderer = new ImageRenderer(media, overlay);
-  } else if (type == "gallery") {
+  } else if (type == 'gallery') {
     this.renderer = new GalleryRenderer(media, overlay);
   } else {
-    throw new Error("Renderer not initialized.");
+    throw new Error('Renderer not initialized.');
   }
   // Player prerender attributes
   this._boolForcedMax = false;
@@ -62,7 +62,7 @@ function MediaPlayer(type, media, overlay, fps) {
   this._boolThumbnailMode = false;
   this._thumbnailClickAction = undefined;
   this._boolHasPoster = false;
-  this._posterURL = "";
+  this._posterURL = '';
 }
 
 
@@ -74,7 +74,7 @@ function MediaPlayer(type, media, overlay, fps) {
  * @param {string} url Image to be shown while loading
  */
 MediaPlayer.prototype.poster = function(url) {
-  throw new Error("Method poster() must be implemented.");
+  throw new Error('Method poster() must be implemented.');
 };
 
 
@@ -85,7 +85,7 @@ MediaPlayer.prototype.poster = function(url) {
  * @abstract
  */
 MediaPlayer.prototype.loop = function() {
-  throw new Error("Method loop() must be implemented.");
+  throw new Error('Method loop() must be implemented.');
 };
 
 
@@ -96,7 +96,7 @@ MediaPlayer.prototype.loop = function() {
  * @abstract
  */
 MediaPlayer.prototype.autoplay = function() {
-  throw new Error("Method autoplay() must be implemented.");
+  throw new Error('Method autoplay() must be implemented.');
 };
 
 
@@ -107,7 +107,7 @@ MediaPlayer.prototype.autoplay = function() {
  * @abstract
  */
 MediaPlayer.prototype.resetToFragment = function() {
-  throw new Error("Method resetToFragment() must be implemented.");
+  throw new Error('Method resetToFragment() must be implemented.');
 };
 
 
@@ -120,7 +120,7 @@ MediaPlayer.prototype.resetToFragment = function() {
  * a click event.
  */
 MediaPlayer.prototype.thumbnailMode = function(action) {
-  throw new Error("Method thumbnailMode() must be implemented.");
+  throw new Error('Method thumbnailMode() must be implemented.');
 };
 
 
@@ -177,9 +177,9 @@ MediaPlayer.prototype.dynamicRender = function() {
 MediaPlayer.prototype.forceSize = function(width, height) {
   if (this._boolForcedMax) {
     /* eslint-disable-next-line no-console */
-    console.log("Warning!  Both forceSize and forcedMax were called.");
+    console.log('Warning!  Both forceSize and forcedMax were called.');
     /* eslint-disable-next-line no-console */
-    console.log("Warning!  forceSize wins.");
+    console.log('Warning!  forceSize wins.');
   }
   this._boolForcedSize = true;
   this._forcedWidth = width;
@@ -198,9 +198,9 @@ MediaPlayer.prototype.forceSize = function(width, height) {
 MediaPlayer.prototype.forceMax = function() {
   if (this._boolForcedSize) {
     /* eslint-disable-next-line no-console */
-    console.log("Warning!  Both forceSize and forcedMax were called.");
+    console.log('Warning!  Both forceSize and forcedMax were called.');
     /* eslint-disable-next-line no-console */
-    console.log("Warning!  forceSize wins.");
+    console.log('Warning!  forceSize wins.');
   }
   this._boolForcedMax = true;
 };

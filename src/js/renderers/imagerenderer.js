@@ -12,7 +12,7 @@
 
 import {
   Renderer,
-} from "../renderer.js";
+} from '../renderer.js';
 
 // ES6 module export
 export {
@@ -49,12 +49,12 @@ ImageRenderer.prototype.constructor = ImageRenderer;
 ImageRenderer.prototype.initPlayer = function() {
   this.checkParentandMedia();
   this.checkBorderBox();
-  this.eleDivImage = document.createElement("div");
-  this.eleDivImage.className = "p51-contained-image";
-  this.eleImage = document.createElement("img");
-  this.eleImage.className = "p51-contained-image";
-  this.eleImage.setAttribute("src", this.media.src);
-  this.eleImage.setAttribute("type", this.media.type);
+  this.eleDivImage = document.createElement('div');
+  this.eleDivImage.className = 'p51-contained-image';
+  this.eleImage = document.createElement('img');
+  this.eleImage.className = 'p51-contained-image';
+  this.eleImage.setAttribute('src', this.media.src);
+  this.eleImage.setAttribute('type', this.media.type);
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
   this.mediaElement = this.eleImage;
@@ -74,7 +74,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
   const self = this;
 
   // Update size
-  this.eleImage.addEventListener("load", function() {
+  this.eleImage.addEventListener('load', function() {
     self.updateSizeAndPadding();
     self.updateFromLoadingState();
     self.setupCanvasContext();
@@ -82,7 +82,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.updateFromLoadingState();
   });
 
-  this.parent.addEventListener("mouseenter", function() {
+  this.parent.addEventListener('mouseenter', function() {
     if (!self._isDataLoaded) {
       return;
     }
@@ -91,10 +91,10 @@ ImageRenderer.prototype.initPlayerControls = function() {
     }
   });
 
-  this.parent.addEventListener("mouseleave", function() {
+  this.parent.addEventListener('mouseleave', function() {
     if (self.player._boolThumbnailMode) {
       self.setupCanvasContext().clearRect(0, 0, self
-        .canvasWidth, self.canvasHeight);
+          .canvasWidth, self.canvasHeight);
     }
   });
 
@@ -179,7 +179,7 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
  */
 ImageRenderer.prototype.updateStateFromTimeChange = function() {
   /* eslint-disable-next-line no-console */
-  console.log("WARN: updateStateFromTimeChange() not for imageviewer51");
+  console.log('WARN: updateStateFromTimeChange() not for imageviewer51');
 };
 
 

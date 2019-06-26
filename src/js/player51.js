@@ -69,13 +69,13 @@
 // Imports
 import {
   VideoPlayer,
-} from "./videoplayer.js";
+} from './videoplayer.js';
 import {
   ImageViewer,
-} from "./imageviewer.js";
+} from './imageviewer.js';
 import {
   GalleryViewer,
-} from "./galleryviewer.js";
+} from './galleryviewer.js';
 
 // ES6 module export
 export default Player51;
@@ -101,15 +101,15 @@ export default Player51;
 function Player51(media, overlay, fps) {
   this.mediaType = this.determineMediaType(media);
   // Load correct player
-  if (this.mediaType === "video") {
+  if (this.mediaType === 'video') {
     this.player = new VideoPlayer(media, overlay, fps);
-  } else if (this.mediaType === "image") {
+  } else if (this.mediaType === 'image') {
     this.player = new ImageViewer(media, overlay);
-  } else if (this.mediaType === "gallery") {
+  } else if (this.mediaType === 'gallery') {
     this.player = new GalleryViewer(media, overlay);
   } else {
     /* eslint-disable-next-line no-console */
-    console.log("WARN: Player51 doesn't support this media type yet.");
+    console.log('WARN: Player51 doesn\'t support this media type yet.');
   }
 }
 
@@ -144,9 +144,9 @@ Player51.prototype.setBoolDrawFrameNumber = function(value) {
  * @return {string} image/video/etc..
  */
 Player51.prototype.determineMediaType = function(media) {
-  const splitResults = media.type.split("/");
+  const splitResults = media.type.split('/');
   if (splitResults.length !== 2) {
-    throw new Error("Media type is incorrect.");
+    throw new Error('Media type is incorrect.');
   }
   return splitResults[0];
 };

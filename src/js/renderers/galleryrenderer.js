@@ -12,10 +12,10 @@
 
 import {
   Renderer,
-} from "../renderer.js";
+} from '../renderer.js';
 import {
   ZipLibrary,
-} from "../zipreader/zip.js";
+} from '../zipreader/zip.js';
 
 // ES6 module export
 export {
@@ -42,7 +42,7 @@ function GalleryRenderer(media, overlay) {
   this.imageFiles = {};
   this.fileIndex = [];
   this.reader = new ZipLibrary();
-  this.reader.workerScriptsPath = "../src/js/zipreader/";
+  this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Loading state attributes
   this._isGalleryReady = false;
   this._isImageInserted = false;
@@ -62,17 +62,17 @@ GalleryRenderer.prototype.constructor = GalleryRenderer;
 GalleryRenderer.prototype.initPlayer = function() {
   this.checkParentandMedia();
   this.checkBorderBox();
-  this.eleDivImage = document.createElement("div");
-  this.eleDivImage.className = "p51-contained-image";
+  this.eleDivImage = document.createElement('div');
+  this.eleDivImage.className = 'p51-contained-image';
   this.parent.appendChild(this.eleDivImage);
 
   // Gallery controls
-  this.eleDivRightNav = document.createElement("a");
-  this.eleDivRightNav.className = "p51-gallery-right-nav";
-  this.eleDivRightNav.text = ">";
-  this.eleDivLeftNav = document.createElement("a");
-  this.eleDivLeftNav.className = "p51-gallery-left-nav";
-  this.eleDivLeftNav.text = "<";
+  this.eleDivRightNav = document.createElement('a');
+  this.eleDivRightNav.className = 'p51-gallery-right-nav';
+  this.eleDivRightNav.text = '>';
+  this.eleDivLeftNav = document.createElement('a');
+  this.eleDivLeftNav.className = 'p51-gallery-left-nav';
+  this.eleDivLeftNav.text = '<';
   this.parent.appendChild(this.eleDivRightNav);
   this.parent.appendChild(this.eleDivLeftNav);
   this.mediaDiv = this.eleDivImage;
@@ -91,7 +91,7 @@ GalleryRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
 
   const self = this;
-  this.eleDivRightNav.addEventListener("click", function() {
+  this.eleDivRightNav.addEventListener('click', function() {
     if (self._isImageInserted) {
       const limit = self.fileIndex.length - 1;
       if (self._currentIndex < limit) {
@@ -102,7 +102,7 @@ GalleryRenderer.prototype.initPlayerControls = function() {
     }
   });
 
-  this.eleDivLeftNav.addEventListener("click", function() {
+  this.eleDivLeftNav.addEventListener('click', function() {
     if (self._isImageInserted) {
       const limit = 0;
       if (self._currentIndex > limit) {
@@ -125,9 +125,9 @@ GalleryRenderer.prototype.initPlayerControls = function() {
 GalleryRenderer.prototype.updateFromLoadingState = function() {
   if (this._isRendered && !this._isGalleryReady) {
     if (this.player._boolHasPoster) {
-      const imageObj = document.createElement("img");
-      imageObj.className = "p51-contained-image";
-      imageObj.setAttribute("src", this.player._posterURL);
+      const imageObj = document.createElement('img');
+      imageObj.className = 'p51-contained-image';
+      imageObj.setAttribute('src', this.player._posterURL);
       this.eleDivImage.appendChild(imageObj);
     }
   }
@@ -196,11 +196,11 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
   }
 
   const context = this.setupCanvasContext();
-  if (typeof(entry.objects) !== "undefined") {
+  if (typeof(entry.objects) !== 'undefined') {
     this._prepareOverlay_auxFormat1Objects(context, entry.objects, true);
   }
 
-  if (typeof(entry.attrs) !== "undefined") {
+  if (typeof(entry.attrs) !== 'undefined') {
     const o = new FrameAttributesOverlay(entry.attrs, this);
     o.setup(context, this.canvasWidth, this.canvasHeight);
     this.frameOverlay[this._frameNumber].push(o);
@@ -219,8 +219,8 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
  * @required imageObj to be loaded
  */
 GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
-  this.eleCanvas.setAttribute("width", imageObj.width);
-  this.eleCanvas.setAttribute("height", imageObj.height);
+  this.eleCanvas.setAttribute('width', imageObj.width);
+  this.eleCanvas.setAttribute('height', imageObj.height);
   this.canvasWidth = imageObj.width;
   this.canvasHeight = imageObj.height;
 };
@@ -233,8 +233,8 @@ GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
  * @return {bool}
  */
 GalleryRenderer.prototype.checkMediaFormat = function(filename) {
-  const extension = filename.split(".").pop();
-  return (extension === "zip");
+  const extension = filename.split('.').pop();
+  return (extension === 'zip');
 };
 
 
@@ -248,7 +248,7 @@ GalleryRenderer.prototype.openContents = function() {
   const zipPath = this.media.src;
   if (!this.checkMediaFormat(zipPath)) {
     /* eslint-disable-next-line no-console */
-    console.log("WARN: media is not a zip file.");
+    console.log('WARN: media is not a zip file.');
     return;
   }
 
@@ -261,8 +261,8 @@ GalleryRenderer.prototype.openContents = function() {
       self.readBlob(zipBlob);
     }
   };
-  xmlhttp.responseType = "blob";
-  xmlhttp.open("GET", zipPath, true);
+  xmlhttp.responseType = 'blob';
+  xmlhttp.open('GET', zipPath, true);
   xmlhttp.send();
 };
 
@@ -282,7 +282,7 @@ GalleryRenderer.prototype.readBlob = function(blob) {
         const extension = self.getExtension();
         if (self.getFileExtension(filename) === extension) {
           item.getData(new self.reader.BlobWriter(), function(content) {
-            const tmp = filename.split("/");
+            const tmp = filename.split('/');
             const filenametruncated = tmp.slice(-1)[0];
             self.imageFiles[filenametruncated] = content;
             self.fileIndex.push(filenametruncated);
@@ -312,14 +312,14 @@ GalleryRenderer.prototype.insertImage = function(index) {
   this.clearState();
   const key = this.fileIndex[index];
   const fileBlob = this.imageFiles[key];
-  const imageObj = document.createElement("img");
+  const imageObj = document.createElement('img');
   const tmpURL = URL.createObjectURL(fileBlob);
   this._currentImageURL = tmpURL;
-  imageObj.className = "p51-contained-image";
-  imageObj.setAttribute("src", tmpURL);
-  imageObj.setAttribute("type", this.getFileExtension(key));
+  imageObj.className = 'p51-contained-image';
+  imageObj.setAttribute('src', tmpURL);
+  imageObj.setAttribute('type', this.getFileExtension(key));
   const self = this;
-  imageObj.addEventListener("load", function(event) {
+  imageObj.addEventListener('load', function(event) {
     self.updateSizeAndPadding(event.target);
     self.prepareOverlay(key);
     self.processFrame();

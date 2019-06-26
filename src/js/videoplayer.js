@@ -15,7 +15,7 @@
 
 import {
   MediaPlayer,
-} from "./mediaplayer.js";
+} from './mediaplayer.js';
 
 // ES6 module export
 export {
@@ -39,7 +39,7 @@ export {
  * then it will be guessed.
  */
 function VideoPlayer(media, overlay, fps) {
-  MediaPlayer.call(this, "video", media, overlay, fps);
+  MediaPlayer.call(this, 'video', media, overlay, fps);
   // Player View Attributes
   this.boolDrawFrameNumber = false;
   this.boolDrawTimestamp = false;

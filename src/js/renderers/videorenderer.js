@@ -12,10 +12,10 @@
 
 import {
   Renderer,
-} from "../renderer.js";
+} from '../renderer.js';
 import {
   parseMediaFragmentsUri,
-} from "../mediafragments.js";
+} from '../mediafragments.js';
 
 // ES6 module export
 export {
@@ -73,32 +73,32 @@ VideoRenderer.prototype.constructor = VideoRenderer;
 VideoRenderer.prototype.initPlayer = function() {
   this.checkParentandMedia();
   this.checkBorderBox();
-  this.eleDivVideo = document.createElement("div");
-  this.eleDivVideo.className = "p51-contained-video";
-  this.eleVideo = document.createElement("video");
-  this.eleVideo.className = "p51-contained-video";
-  this.eleVideo.setAttribute("preload", "metadata");
+  this.eleDivVideo = document.createElement('div');
+  this.eleDivVideo.className = 'p51-contained-video';
+  this.eleVideo = document.createElement('video');
+  this.eleVideo.className = 'p51-contained-video';
+  this.eleVideo.setAttribute('preload', 'metadata');
   this.eleVideo.muted =
     true; // this works whereas .setAttribute does not
 
-  this.eleVideoSource = document.createElement("source");
-  this.eleVideoSource.setAttribute("src", this.media.src);
-  this.eleVideoSource.setAttribute("type", this.media.type);
+  this.eleVideoSource = document.createElement('source');
+  this.eleVideoSource.setAttribute('src', this.media.src);
+  this.eleVideoSource.setAttribute('type', this.media.type);
   this.eleVideo.appendChild(this.eleVideoSource);
   this.eleDivVideo.appendChild(this.eleVideo);
   this.parent.appendChild(this.eleDivVideo);
 
   // Video controls
-  this.eleDivVideoControls = document.createElement("div");
-  this.eleDivVideoControls.className = "p51-video-controls";
-  this.elePlayPauseButton = document.createElement("button");
-  this.elePlayPauseButton.setAttribute("type", "button");
-  this.elePlayPauseButton.className = "p51-play-pause";
-  this.elePlayPauseButton.innerHTML = "Play";
-  this.eleSeekBar = document.createElement("input");
-  this.eleSeekBar.setAttribute("type", "range");
-  this.eleSeekBar.setAttribute("value", "0");
-  this.eleSeekBar.className = "p51-seek-bar";
+  this.eleDivVideoControls = document.createElement('div');
+  this.eleDivVideoControls.className = 'p51-video-controls';
+  this.elePlayPauseButton = document.createElement('button');
+  this.elePlayPauseButton.setAttribute('type', 'button');
+  this.elePlayPauseButton.className = 'p51-play-pause';
+  this.elePlayPauseButton.innerHTML = 'Play';
+  this.eleSeekBar = document.createElement('input');
+  this.eleSeekBar.setAttribute('type', 'range');
+  this.eleSeekBar.setAttribute('value', '0');
+  this.eleSeekBar.className = 'p51-seek-bar';
   this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
   this.parent.appendChild(this.eleDivVideoControls);
@@ -118,19 +118,19 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
 
   if (this._boolAutoplay) {
-    this.eleVideo.toggleAttribute("autoplay", true);
+    this.eleVideo.toggleAttribute('autoplay', true);
   }
   if (this._boolLoop) {
-    this.eleVideo.toggleAttribute("loop", true);
+    this.eleVideo.toggleAttribute('loop', true);
   }
   if (this.player._boolHasPoster) {
-    this.eleVideo.setAttribute("poster", this.player._posterURL);
+    this.eleVideo.setAttribute('poster', this.player._posterURL);
     if (this.player._boolForcedSize) {
-      const sizeStyleString = "width:" + this.player._forcedWidth +
-        "px; height:" + this.player._forcedHeight + "px;";
-      this.eleVideo.setAttribute("style", sizeStyleString);
-      this.eleDivVideo.setAttribute("style", sizeStyleString);
-      this.parent.setAttribute("style", sizeStyleString);
+      const sizeStyleString = 'width:' + this.player._forcedWidth +
+        'px; height:' + this.player._forcedHeight + 'px;';
+      this.eleVideo.setAttribute('style', sizeStyleString);
+      this.eleDivVideo.setAttribute('style', sizeStyleString);
+      this.parent.setAttribute('style', sizeStyleString);
     }
   }
 
@@ -138,14 +138,14 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // will be needed during playback
   const self = this;
 
-  this.eleVideo.addEventListener("loadedmetadata", function() {
+  this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
     self.updateFromLoadingState();
     self.setupCanvasContext();
     self.updateFromLoadingState();
   });
 
-  this.eleVideo.addEventListener("loadeddata", function() {
+  this.eleVideo.addEventListener('loadeddata', function() {
     self._isDataLoaded = true;
 
     // Handles the case that we have a poster frame to indicate the video is
@@ -167,7 +167,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromLoadingState();
     // so that we see overlay and time stamp now that we are ready
     if ((!self.player._boolThumbnailMode) && (!self
-      ._boolAutoplay)) {
+        ._boolAutoplay)) {
       self.processFrame();
     }
 
@@ -179,7 +179,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Event listener for the play/pause button
-  this.elePlayPauseButton.addEventListener("click", function() {
+  this.elePlayPauseButton.addEventListener('click', function() {
     if (self._boolPlaying !== true) {
       self._boolPlaying = true;
     } else {
@@ -189,10 +189,10 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Event listener for the seek bar
-  this.eleSeekBar.addEventListener("change", function() {
+  this.eleSeekBar.addEventListener('change', function() {
     // Calculate the new time
     const time = self.eleVideo.duration * (self.eleSeekBar
-      .valueAsNumber / 100.0);
+        .valueAsNumber / 100.0);
     // Update the video time
     self.eleVideo.currentTime = time;
     // Unlock the fragment so the user can browse the whole video
@@ -201,7 +201,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Pause the video when the seek handle is being dragged
-  this.eleSeekBar.addEventListener("mousedown", function() {
+  this.eleSeekBar.addEventListener('mousedown', function() {
     if (!self.player._boolThumbnailMode) {
       self._boolManualSeek = true;
       // Unlock the fragment so the user can browse the whole video
@@ -213,19 +213,19 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener("mouseup", function() {
+  this.eleSeekBar.addEventListener('mouseup', function() {
     self._boolManualSeek = false;
     if (self._boolPlaying) {
       self.eleVideo.play();
     }
   });
 
-  this.eleVideo.addEventListener("ended", function() {
+  this.eleVideo.addEventListener('ended', function() {
     self._boolPlaying = false;
     self.updateFromDynamicState();
   });
 
-  this.eleVideo.addEventListener("pause", function() {
+  this.eleVideo.addEventListener('pause', function() {
     // this is a pause that is fired from the video player itself and not from
     // the user clicking the play/pause button.
     // Noting the checkForFragmentReset function calls updateFromDynamicState
@@ -233,19 +233,19 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Update the seek bar as the video plays
-  this.eleVideo.addEventListener("timeupdate", function() {
+  this.eleVideo.addEventListener('timeupdate', function() {
     // Calculate the slider value
     const value = (100 / self.eleVideo.duration) * self.eleVideo
-      .currentTime;
+        .currentTime;
     // Update the slider value
     self.eleSeekBar.value = value;
   });
 
-  this.eleVideo.addEventListener("play", function() {
+  this.eleVideo.addEventListener('play', function() {
     self.timerCallback();
   }, false);
 
-  this.parent.addEventListener("mouseenter", function() {
+  this.parent.addEventListener('mouseenter', function() {
     // Two different behaviors.
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
@@ -261,7 +261,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
-  this.parent.addEventListener("mouseleave", function() {
+  this.parent.addEventListener('mouseleave', function() {
     if (!self._isDataLoaded) {
       return;
     }
@@ -269,8 +269,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
       self._boolPlaying = false;
       // clear things we do not want to render any more
       self.setupCanvasContext().clearRect(0, 0, self
-        .canvasWidth, self
-        .canvasHeight);
+          .canvasWidth, self
+          .canvasHeight);
     } else {
       self._boolShowControls = false;
     }
@@ -303,10 +303,10 @@ VideoRenderer.prototype.resizeControls = function() {
   if (this._boolBorderBox) {
     // need to size the controls too.
     // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + "px");
+    this.eleDivVideoControls.style.width = (this.width + 'px');
     this.eleDivVideoControls.style.height = (
       Math.min(60 + this.paddingBottomN, 0.1 * this.height +
-        this.paddingBottomN) + "px"
+        this.paddingBottomN) + 'px'
     );
 
     // controls have 0 padding because we want them only to show
@@ -314,14 +314,14 @@ VideoRenderer.prototype.resizeControls = function() {
     this.eleDivVideoControls.style.paddingLeft = 0;
     this.eleDivVideoControls.style.paddingRight = 0;
     this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
-      2) + "px";
+      2) + 'px';
     this.eleDivVideoControls.style.left = this.paddingLeft;
   } else {
     // need to size the controls too.
     // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + "px");
+    this.eleDivVideoControls.style.width = (this.width + 'px');
     this.eleDivVideoControls.style.height = (
-      Math.min(80, 0.1 * this.height) + "px"
+      Math.min(80, 0.1 * this.height) + 'px'
     );
     // controls have 0 padding because we want them only to show
     // on the video, this impacts their left location too.
@@ -347,21 +347,21 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if ((!this._isRendered) || (!this._isSizePrepared)) {
     return;
   }
-  this.eleVideo.toggleAttribute("autoplay", this._boolAutoplay);
-  this.eleVideo.toggleAttribute("loop", this._boolLoop);
+  this.eleVideo.toggleAttribute('autoplay', this._boolAutoplay);
+  this.eleVideo.toggleAttribute('loop', this._boolLoop);
 
   if (this._boolPlaying) {
     this.eleVideo.play();
-    this.elePlayPauseButton.innerHTML = "Pause";
+    this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
     this.eleVideo.pause();
-    this.elePlayPauseButton.innerHTML = "Play";
+    this.elePlayPauseButton.innerHTML = 'Play';
   }
 
   if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = "0.9";
+    this.eleDivVideoControls.style.opacity = '0.9';
   } else {
-    this.eleDivVideoControls.style.opacity = "0.0";
+    this.eleDivVideoControls.style.opacity = '0.0';
     if (this.player._boolThumbnailMode) {
       this.eleDivVideoControls.remove();
     }
@@ -449,7 +449,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   // every time.
   // @todo double-buffering
   context.clearRect(
-    0, 0, this.canvasWidth, this.canvasHeight);
+      0, 0, this.canvasWidth, this.canvasHeight);
 
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
@@ -508,7 +508,7 @@ VideoRenderer.prototype.timerCallback = function() {
     }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
   } else {
     /* eslint-disable-next-line no-console */
-    console.log("NOT SETTING TIME CALLBACK");
+    console.log('NOT SETTING TIME CALLBACK');
   }
 };
 
@@ -525,7 +525,7 @@ VideoRenderer.prototype.setMediaFragment = function() {
   // fragment.  However, as soon as the user scrubs the video, we turn off the
   // importance of the fragment so that the user can watch the whole video.
   const mfParse = parseMediaFragmentsUri(this.media.src);
-  if (typeof(mfParse.hash.t) !== "undefined") {
+  if (typeof(mfParse.hash.t) !== 'undefined') {
     this._mfBeginT = mfParse.hash.t[0].startNormalized;
     this._mfEndT = mfParse.hash.t[0].endNormalized;
     this._mfBeginF = this.computeFrameNumber(this._mfBeginT);
@@ -583,7 +583,7 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
  * @return {time}
  */
 VideoRenderer.prototype.computeFrameNumber = function(time) {
-  if (typeof(time) === "undefined") {
+  if (typeof(time) === 'undefined') {
     time = this.eleVideo.currentTime;
   }
   const currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
@@ -606,16 +606,16 @@ VideoRenderer.prototype.currentTimestamp = function(decimals = 1) {
   const minutes = Math.floor(numSeconds / 60);
   const seconds = numSeconds % 60;
 
-  return this._seconds_to_hhmmss_aux(hours) + ":" +
-    this._seconds_to_hhmmss_aux(minutes) + ":" +
+  return this._seconds_to_hhmmss_aux(hours) + ':' +
+    this._seconds_to_hhmmss_aux(minutes) + ':' +
     this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
 };
 VideoRenderer.prototype._seconds_to_hhmmss_aux = function(number) {
-  let str = "";
+  let str = '';
   if (number == 0) {
-    str = "00";
+    str = '00';
   } else if (number < 10) {
-    str += "0" + number;
+    str += '0' + number;
   } else {
     str = `${number}`;
   }

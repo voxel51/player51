@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* jshint worker:true */
 (function main(global) {
 	"use strict";
@@ -94,7 +95,7 @@
 		}
 		if (!isAppend && (task.crcInput || task.crcOutput))
 			rmsg.crc = task.crc.get();
-		
+
 		// posting a message with transferables will fail on IE10
 		try {
 			postMessage(rmsg, transferables);
