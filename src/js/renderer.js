@@ -438,7 +438,7 @@ Renderer.prototype.getFileExtension = function(path) {
  */
 Renderer.prototype.checkImageExtension = function(extension) {
   const validImageTypes = ['png', 'jpg', 'gif', 'jpeg', 'bmp'];
-  return validImageTypes.includes(extension);
+  return validImageTypes.includes(extension.toLowerCase());
 };
 
 
