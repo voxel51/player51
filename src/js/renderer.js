@@ -430,6 +430,19 @@ Renderer.prototype.getFileExtension = function(path) {
 
 
 /**
+ * Check image extension
+ *
+ * @member checkImageExtension
+ * @param {string} extension
+ * @return {bool}
+ */
+Renderer.prototype.checkImageExtension = function(extension) {
+  const validImageTypes = ['png', 'jpg', 'gif', 'jpeg', 'bmp'];
+  return validImageTypes.includes(extension);
+};
+
+
+/**
  * This function checks if player is set
  *
  * @member checkPlayer

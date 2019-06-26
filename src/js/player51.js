@@ -14,7 +14,7 @@
  * To switch between types of media, specify the type attribute in media
  * in the following format.
  * <media type>/<media format>
- * examples: image/jpg, video/mp4, gallery/jpg
+ * examples: image/jpg, video/mp4, gallery/zip
 
    ```
     <div id="test-container" />

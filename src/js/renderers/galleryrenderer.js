@@ -277,8 +277,8 @@ GalleryRenderer.prototype.readBlob = function(blob) {
     reader.getEntries(function(entries) {
       entries.forEach(function(item) {
         const filename = item.filename;
-        const extension = self.getExtension();
-        if (self.getFileExtension(filename) === extension) {
+        const extension = self.getFileExtension(filename);
+        if (self.checkImageExtension(extension)) {
           item.getData(new self.reader.BlobWriter(), function(content) {
             const tmp = filename.split('/');
             const filenametruncated = tmp.slice(-1)[0];
