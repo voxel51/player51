@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Simple Gallery Viewer Test</title>
+    <style>
+      body {
+        background: black;
+        color:#CCCCCC;
+      }
+      #test-container {
+        width: 1200px;
+        height: 800px;
+        position: relative;
+        padding: 0px;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Gallery Viewer Test </h1>
+
+    <div id="test-container" />
+
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+
+        let player = new Player51(
+          {
+            src: "/test/player51-test-data/mixedtest.zip",
+            type: "gallery/zip"
+          },
+          "/test/player51-test-data/gallerytest.json",
+        );
+
+        console.log("Player51 created.");
+
+
+        player.setBoolDrawTimeStamp(true);
+
+        player.loop();
+        player.autoplay();
+        player.resetToFragment();
+
+        player.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");
+        player.poster("https://i2.wp.com/learn.onemonth.com/wp-content/uploads/2017/08/1-10.png?w=845&ssl=1", "404");
+
+
+        player.render('test-container');
+
+      });
+    </script>
+  </body>
+</html>

@@ -4,9 +4,9 @@
  * produces the end output.
  *
  * @desc VideoRenderer is a class that controls the creation and viewing of
- * videoplayer51.
+ * videoplayer.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
@@ -399,7 +399,7 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
       this._isReadyProcessFrames = true;
     }
     // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this.overlayURL !== null)) {
+    if ((this._overlayData !== null) && (this._overlayURL !== null)) {
       this._overlayCanBePrepared = true;
     }
   }
@@ -524,6 +524,7 @@ VideoRenderer.prototype.timerCallback = function() {
       self.timerCallback();
     }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
   } else {
+    /* eslint-disable-next-line no-console */
     console.log('NOT SETTING TIME CALLBACK');
   }
 };

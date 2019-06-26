@@ -4,9 +4,9 @@
  * produces the end output.
  *
  * @desc ImageRenderer is a class that controls the creation and viewing of
- * imageviewer51.
+ * imageviewer.
  *
- * Copyright 2019-2020, Voxel51, Inc.
+ * Copyright 2017-2019, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
@@ -64,7 +64,7 @@ ImageRenderer.prototype.initPlayer = function() {
 
 
 /**
- * This loads controls for imageviewer51
+ * This loads controls for imageviewer
  *
  * @member initPlayerControls
  * @required player to be set
@@ -163,7 +163,7 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
       this._isReadyProcessFrames = true;
     }
     // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this.overlayURL !== null)) {
+    if ((this._overlayData !== null) && (this._overlayURL !== null)) {
       this._overlayCanBePrepared = true;
     }
   }
@@ -187,6 +187,7 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  */
 ImageRenderer.prototype.updateStateFromTimeChange = function() {
+  /* eslint-disable-next-line no-console */
   console.log('WARN: updateStateFromTimeChange() not for imageviewer51');
 };
 

@@ -230,7 +230,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this._isPreparingOverlay = true;
 
   // Format 1
-  if (typeof(rawjson.objects !== 'undefined')) {
+  if (typeof (rawjson.objects) !== 'undefined') {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
   }
@@ -248,10 +248,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
               .objects);
         }
         if (typeof(f.attrs) !== 'undefined') {
-          const o = new FrameAttributesOverlay(f.attrs, this);
-          o.setup(
-              context, this.canvasWidth, this.canvasHeight);
-          this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+          this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
       }
     }
@@ -260,14 +257,32 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   // Attributes for images
   if (typeof(rawjson.attrs) !== 'undefined') {
     const context = this.setupCanvasContext();
-    const o = new FrameAttributesOverlay(rawjson.attrs, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this.frameOverlay[this._frameNumber].push(o);
+    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
+};
+
+
+/**
+ * Helper function to parse attributes of an overlay and add it to the overlay
+ * representation.
+ *
+ * @param {context} context
+ * @param {array} attributes is an Array of attributes
+ * @param {key} frameKey forces the usage of _prepareOverlay_auxCheckAdd
+ */
+Renderer.prototype._prepareOverlay_auxAttributes = function(context,
+    attributes, frameKey = null) {
+  const o = new FrameAttributesOverlay(attributes, this);
+  o.setup(context, this.canvasWidth, this.canvasHeight);
+  if (frameKey) {
+    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+  } else {
+    this.frameOverlay[this._frameNumber].push(o);
+  }
 };
 
 
@@ -278,9 +293,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
  * @param {context} context
  * @param {array} objects is an Array of Objects with each entry an
  * object in Format 1 above.
+ * @param {bool} frameFlag forces frameNumber to be frameNumber property
  */
 Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
-    objects) {
+    objects, frameFlag = false) {
   if (typeof(objects) === 'undefined') {
     return;
   }
@@ -295,12 +311,20 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
           clearInterval(checkCanvasWidth);
           o.setup(context, this.canvasWidth, this
               .canvasHeight);
-          this._prepareOverlay_auxCheckAdd(o);
+          if (frameFlag) {
+            this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+          } else {
+            this._prepareOverlay_auxCheckAdd(o);
+          }
         }
       }, 1000);
     } else {
       o.setup(context, this.canvasWidth, this.canvasHeight);
-      this._prepareOverlay_auxCheckAdd(o);
+      if (frameFlag) {
+        this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+      } else {
+        this._prepareOverlay_auxCheckAdd(o);
+      }
     }
   }
 };
@@ -373,10 +397,48 @@ Renderer.prototype.processFrame = function() {
  */
 Renderer.prototype.checkFontHeight = function(h) {
   if (h == 0) {
+    /* eslint-disable-next-line no-console */
     console.log('PLAYER51 WARN: fontheight 0');
     return 10;
   }
   return h;
+};
+
+
+/**
+ * Return media extension
+ *
+ * @member getExtension
+ * @return {string} extension
+ */
+Renderer.prototype.getExtension = function() {
+  const tmp = this.media.type.split('/');
+  return tmp.slice(-1)[0];
+};
+
+/**
+ * Return media extension of a file path
+ *
+ * @memeber getFileExtension
+ * @param {path} path
+ * @return {string} extension
+ */
+Renderer.prototype.getFileExtension = function(path) {
+  const tmp = path.split('.');
+  return tmp.slice(-1)[0];
+};
+
+
+/**
+ * Check image extension
+ *
+ * @member checkImageExtension
+ * @param {string} extension
+ * @return {bool}
+ */
+Renderer.prototype.checkImageExtension = function(extension) {
+  const validImageTypes = ['png', 'jpg', 'gif', 'jpeg', 'bmp'];
+  return validImageTypes.includes(extension.toLowerCase());
 };
 
 
@@ -476,6 +538,7 @@ Renderer.prototype.initCanvas = function() {
 Renderer.prototype.setupCanvasContext = function() {
   this.checkPlayer();
   if (!this._isRendered) {
+    /* eslint-disable-next-line no-console */
     console.log(
         'WARN: trying to set up canvas context but player not rendered'
     );
@@ -530,6 +593,7 @@ Renderer.prototype.updateSizeAndPadding = function() {
  */
 Renderer.prototype.handleWidthAndHeight = function() {
   if (!this._isRendered) {
+    /* eslint-disable-next-line no-console */
     console.log(
         'WARN: Player51 trying to update size, but it is not rendered.'
     );

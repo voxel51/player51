@@ -98,9 +98,11 @@ const colorGenerator = new ColorGenerator();
  */
 function Overlay() {}
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
+  /* eslint-disable-next-line no-console */
   console.log('ERROR: draw called on abstract type');
 };
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
+  /* eslint-disable-next-line no-console */
   console.log('ERROR: setup called on abstract type');
 };
 
@@ -198,6 +200,7 @@ FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
   for (let a = 0; a < this.attrText.length; a++) {
     const aw = context.measureText(this.attrText[a]).width;
     if (aw == 0) {
+      /* eslint-disable-next-line no-console */
       console.log('PLAYER51 WARN: rendering context broken');
       return;
     }
@@ -229,6 +232,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
     // If something went wrong in trying to estimate the sizes of things, then
     // we still cannot draw.
     if (this.w <= 0) {
+      /* eslint-disable-next-line no-console */
       console.log(
           'PLAYER51 WARN: FAO draw before setup; invalid canvas');
       return;
