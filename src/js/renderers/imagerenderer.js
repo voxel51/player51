@@ -82,6 +82,15 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.updateFromLoadingState();
   });
 
+  this.eleImage.addEventListener('error', function() {
+    if (self.player._boolNotFound) {
+      const tmpImage = document.createElement('img');
+      tmpImage.className = 'p51-contained-image';
+      tmpImage.setAttribute('src', self.player._notFoundPosterURL);
+      self.parent.appendChild(tmpImage);
+    }
+  });
+
   this.parent.addEventListener('mouseenter', function() {
     if (!self._isDataLoaded) {
       return;
