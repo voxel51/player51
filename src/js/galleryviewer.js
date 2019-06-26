@@ -39,15 +39,14 @@ GalleryViewer.prototype.constructor = GalleryViewer;
 
 
 /**
- * Set a poster image to display while the gallery is loading.
+ * Set a poster frame URL to display while the video itself is loading
  *
- * @member poster
+ * @member setLoadingPoster
  * @param {string} url Image to be shown while loading.
- * not supported
  */
-GalleryViewer.prototype.poster = function(url) {
+GalleryViewer.prototype.setLoadingPoster = function(url) {
   this._boolHasPoster = true;
-  this._posterURL = url;
+  this._loadingPosterURL = url;
 };
 
 

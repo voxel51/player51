@@ -44,6 +44,7 @@ function GalleryRenderer(media, overlay) {
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Loading state attributes
+  this._boolBadZip = false;
   this._isGalleryReady = false;
   this._isImageInserted = false;
   // Initialization
@@ -124,10 +125,16 @@ GalleryRenderer.prototype.initPlayerControls = function() {
  */
 GalleryRenderer.prototype.updateFromLoadingState = function() {
   if (this._isRendered && !this._isGalleryReady) {
-    if (this.player._boolHasPoster) {
-      const imageObj = document.createElement('img');
-      imageObj.className = 'p51-contained-image';
-      imageObj.setAttribute('src', this.player._posterURL);
+    while (this.eleDivImage.firstChild) {
+      this.eleDivImage.removeChild(this.eleDivImage.firstChild);
+    }
+    const imageObj = document.createElement('img');
+    imageObj.className = 'p51-contained-image';
+    if (this._boolBadZip && this.player._boolNotFound) {
+      imageObj.setAttribute('src', this.player._notFoundPosterURL);
+      this.eleDivImage.appendChild(imageObj);
+    } else if (!this._boolBadZip && this.player._boolHasPoster) {
+      imageObj.setAttribute('src', this.player._loadingPosterURL);
       this.eleDivImage.appendChild(imageObj);
     }
   }
@@ -272,6 +279,9 @@ GalleryRenderer.prototype.openContents = function() {
     if (this.readyState === 4 && this.status === 200) {
       const zipBlob = this.response;
       self.readBlob(zipBlob);
+    } else if (this.status === 404) {
+      self._boolBadZip = true;
+      self.updateFromLoadingState();
     }
   };
   xmlhttp.responseType = 'blob';
