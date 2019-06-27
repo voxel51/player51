@@ -99,10 +99,9 @@ VideoPlayer.prototype.autoplay = function(boolAutoplay = true) {
  * @return {bool} true if reset happens
  */
 VideoPlayer.prototype.resetToFragment = function() {
-  if (!this.renderer._hasMediaFragment || !this.isRendered) {
+  if (!this.renderer._hasMediaFragment || !this.renderer._isRendered) {
     return false;
   }
-
   this.renderer.eleVideo.currentTime = this.renderer._mfBeginT;
   this.renderer._lockToMF = true;
 

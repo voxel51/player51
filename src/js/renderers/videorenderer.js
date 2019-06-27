@@ -451,6 +451,7 @@ isDataLoaded:  ${this._isDataLoaded}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
 isOverlayPrepared: ${this._isOverlayPrepared}
 isPreparingOverlay: ${this._isPreparingOverlay}
+hasMediaFragment: ${this._hasMediaFragment}
 `;
 };
 
