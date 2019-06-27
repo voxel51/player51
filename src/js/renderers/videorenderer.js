@@ -574,7 +574,8 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
     return fn;
   }
 
-  if (fn >= this._mfEndF) {
+  const lastFrame = this.computeFrameNumber(this.eleVideo.duration);
+  if (fn >= this._mfEndF || fn >= lastFrame) {
     if (this._boolLoop) {
       this.eleVideo.currentTime = this._mfBeginT;
       fn = this._mfBeginF;
