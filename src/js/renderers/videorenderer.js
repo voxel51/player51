@@ -185,11 +185,13 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
   });
 
+
   this.eleVideo.addEventListener('pause', function() {
-    // this is a pause that is fired from the video player itself and not from
-    // the user clicking the play/pause button.
-    // Noting the checkForFragmentReset function calls updateFromDynamicState
     self.checkForFragmentReset(self.computeFrameNumber());
+    if (self._boolPlaying && !self._lockToMF && !self._boolManualSeek
+      && !self.eleVideo.ended) {
+      self.eleVideo.play();
+    }
   });
 
   // Update the seek bar as the video plays
@@ -421,6 +423,7 @@ VideoRenderer.prototype.updateStateFromTimeChange = function() {
   // check if we have a media fragment and should be looping
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
+  this.updateFromDynamicState();
   if (cfn !== this._frameNumber) {
     this._frameNumber = cfn;
     this.processFrame();
@@ -513,7 +516,6 @@ VideoRenderer.prototype.customDraw = function(context) {
  */
 VideoRenderer.prototype.timerCallback = function() {
   if (this.eleVideo.paused || this.eleVideo.ended) {
-    console.log('Paused!');
     return;
   }
   this.updateStateFromTimeChange();
@@ -581,10 +583,6 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
     } else {
       this._boolPlaying = false;
     }
-  }
-
-  if (!this._boolLoop) {
-    this.updateFromDynamicState();
   }
 
   return fn;
