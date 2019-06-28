@@ -120,9 +120,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   if (this._boolAutoplay) {
     this.eleVideo.toggleAttribute('autoplay', true);
   }
-  if (this._boolLoop) {
-    this.eleVideo.toggleAttribute('loop', true);
-  }
+
   if (this.player._boolHasPoster) {
     this.eleVideo.setAttribute('poster', this.player._loadingPosterURL);
     if (this.player._boolForcedSize) {
@@ -169,7 +167,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (self._boolSingleFrame ) {
       self.eleVideo.currentTime = self._mfBeginT;
       self._frameNumber = self._mfBeginF;
-      // self.processFrame();
     }
 
     // so that we see overlay and time stamp now that we are ready
@@ -178,6 +175,37 @@ VideoRenderer.prototype.initPlayerControls = function() {
       self.processFrame();
     }
   });
+
+  this.eleVideo.addEventListener('ended', function() {
+    if (self._boolLoop) {
+      self.eleVideo.play();
+    } else {
+      self._boolPlaying = false;
+      self.updateFromDynamicState();
+    }
+  });
+
+
+  this.eleVideo.addEventListener('pause', function() {
+    self.checkForFragmentReset(self.computeFrameNumber());
+    if (self._boolPlaying && !self._lockToMF && !self._boolManualSeek
+      && !self.eleVideo.ended) {
+      self.eleVideo.play();
+    }
+  });
+
+  // Update the seek bar as the video plays
+  this.eleVideo.addEventListener('timeupdate', function() {
+    // Calculate the slider value
+    const value = (100 / self.eleVideo.duration) * self.eleVideo
+        .currentTime;
+    // Update the slider value
+    self.eleSeekBar.value = value;
+  });
+
+  this.eleVideo.addEventListener('play', function() {
+    self.timerCallback();
+  }, false);
 
   this.eleVideoSource.addEventListener('error', function() {
     if (self.player._boolNotFound) {
@@ -227,31 +255,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
       self.eleVideo.play();
     }
   });
-
-  this.eleVideo.addEventListener('ended', function() {
-    self._boolPlaying = false;
-    self.updateFromDynamicState();
-  });
-
-  this.eleVideo.addEventListener('pause', function() {
-    // this is a pause that is fired from the video player itself and not from
-    // the user clicking the play/pause button.
-    // Noting the checkForFragmentReset function calls updateFromDynamicState
-    self.checkForFragmentReset(self.computeFrameNumber());
-  });
-
-  // Update the seek bar as the video plays
-  this.eleVideo.addEventListener('timeupdate', function() {
-    // Calculate the slider value
-    const value = (100 / self.eleVideo.duration) * self.eleVideo
-        .currentTime;
-    // Update the slider value
-    self.eleSeekBar.value = value;
-  });
-
-  this.eleVideo.addEventListener('play', function() {
-    self.timerCallback();
-  }, false);
 
   this.parent.addEventListener('mouseenter', function() {
     // Two different behaviors.
@@ -360,9 +363,6 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     return;
   }
 
-  this.eleVideo.toggleAttribute('autoplay', this._boolAutoplay);
-  this.eleVideo.toggleAttribute('loop', this._boolLoop);
-
   if (this._boolPlaying) {
     if (!this._boolSingleFrame) {
       this.eleVideo.play();
@@ -423,6 +423,7 @@ VideoRenderer.prototype.updateStateFromTimeChange = function() {
   // check if we have a media fragment and should be looping
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
+  this.updateFromDynamicState();
   if (cfn !== this._frameNumber) {
     this._frameNumber = cfn;
     this.processFrame();
@@ -451,6 +452,7 @@ isDataLoaded:  ${this._isDataLoaded}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
 isOverlayPrepared: ${this._isOverlayPrepared}
 isPreparingOverlay: ${this._isPreparingOverlay}
+hasMediaFragment: ${this._hasMediaFragment}
 `;
 };
 
@@ -574,16 +576,13 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
     return fn;
   }
 
-  if (fn >= this._mfEndF) {
+  if (fn >= this._mfEndF || this.eleVideo.ended) {
     if (this._boolLoop) {
       this.eleVideo.currentTime = this._mfBeginT;
       fn = this._mfBeginF;
     } else {
       this._boolPlaying = false;
     }
-    // Important to only update in here since this is only the case that the
-    // state has changed.
-    this.updateFromDynamicState();
   }
 
   return fn;
