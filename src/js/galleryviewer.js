@@ -38,7 +38,7 @@ GalleryViewer.prototype.constructor = GalleryViewer;
 
 
 /**
- * Set a poster frame URL to display while the video itself is loading
+ * Set a poster frame URL to display while the gallery itself is loading
  *
  * @member setLoadingPoster
  * @param {string} url Image to be shown while loading.
