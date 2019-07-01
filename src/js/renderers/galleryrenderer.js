@@ -13,9 +13,6 @@
 import {
   Renderer,
 } from '../renderer.js';
-import {
-  ZipLibrary,
-} from '../zipreader/zip.js';
 
 // ES6 module export
 export {
@@ -41,11 +38,7 @@ function GalleryRenderer(media, overlay) {
   // Data structures
   this.imageFiles = {};
   this.fileIndex = [];
-  this.reader = new ZipLibrary();
-  this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Loading state attributes
-  this._boolBadZip = false;
-  this._isGalleryReady = false;
   this._isImageInserted = false;
   // Initialization
   this.openContents();
@@ -124,7 +117,7 @@ GalleryRenderer.prototype.initPlayerControls = function() {
  * @member updateFromLoadingState
  */
 GalleryRenderer.prototype.updateFromLoadingState = function() {
-  if (this._isRendered && !this._isGalleryReady) {
+  if (this._isRendered && !this._isZipReady) {
     while (this.eleDivImage.firstChild) {
       this.eleDivImage.removeChild(this.eleDivImage.firstChild);
     }
@@ -138,7 +131,7 @@ GalleryRenderer.prototype.updateFromLoadingState = function() {
       this.eleDivImage.appendChild(imageObj);
     }
   }
-  if (this._isGalleryReady && this._isRendered) {
+  if (this._isZipReady && this._isRendered) {
     // Able to load an image into gallery
     if (!this._isImageInserted) {
       this.insertImage(this._currentIndex);
@@ -161,7 +154,7 @@ GalleryRenderer.prototype.state = function() {
   return `
 GalleryViewer State Information:
 currentIndex: ${this._currentIndex}
-isGalleryReady: ${this._isGalleryReady}
+isZipReady: ${this._isZipReady}
 isImageInserted: ${this._isImageInserted}
 isRendered:   ${this._isRendered}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
@@ -172,11 +165,29 @@ isOverlayPrepared: ${this._isOverlayPrepared}
 
 
 /**
- * Draws custom case objects onto a frame.
+ * Draws custom case objects onto a frame
+ *
  * @member customDraw
  * @param {context} context
  */
 GalleryRenderer.prototype.customDraw = function(context) {
+};
+
+
+/**
+ * Loads blob data into datastructures
+ *
+ * @member handleBlob
+ * @param {blob} blob
+ * @param {path} filename
+ */
+GalleryRenderer.prototype.handleBlob = function(blob, filename) {
+  const tmp = filename.split('/');
+  const filenametruncated = tmp.slice(-1)[0];
+  this.imageFiles[filenametruncated] = blob;
+  this.fileIndex.push(filenametruncated);
+  this._isZipReady = true;
+  this.updateFromLoadingState();
 };
 
 
@@ -228,101 +239,6 @@ GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
   this.eleCanvas.setAttribute('height', imageObj.height);
   this.canvasWidth = imageObj.width;
   this.canvasHeight = imageObj.height;
-};
-
-
-/**
- * Checks media extension for zip file format.
- *
- * @member checkMediaFormat
- * @param {string} filename
- * @return {bool}
- */
-GalleryRenderer.prototype.checkMediaFormat = function(filename) {
-  const extension = filename.split('.').pop();
-  return (extension === 'zip');
-};
-
-
-/**
- * Checks for MACOSX from mac created zips.
- *
- * @member checkMACOSX
- * @param {path} filename
- * @return {bool}
- */
-GalleryRenderer.prototype.checkMACOSX = function(filename) {
-  const elements = filename.split('/');
-  return elements.includes('__MACOSX');
-};
-
-
-/**
- * Opens up media and stores filenames in imageFiles by
- * index (psuedo frameNumber)
- *
- * @member openContents
- * @required media.src needs to be a zip file
- */
-GalleryRenderer.prototype.openContents = function() {
-  const zipPath = this.media.src;
-  if (!this.checkMediaFormat(zipPath)) {
-    /* eslint-disable-next-line no-console */
-    console.log('WARN: media is not a zip file.');
-    return;
-  }
-
-  const self = this;
-  this._isGalleryReady = false;
-  const xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 200) {
-      const zipBlob = this.response;
-      self.readBlob(zipBlob);
-    } else if (this.status === 404) {
-      self._boolBadZip = true;
-      self.updateFromLoadingState();
-    }
-  };
-  xmlhttp.responseType = 'blob';
-  xmlhttp.open('GET', zipPath, true);
-  xmlhttp.send();
-};
-
-
-/**
- * Reads the zip blob into files
- *
- * @member readBlob
- * @param {blob} blob
- */
-GalleryRenderer.prototype.readBlob = function(blob) {
-  const self = this;
-  this.reader.createReader(new this.reader.BlobReader(blob), function(reader) {
-    reader.getEntries(function(entries) {
-      entries.forEach(function(item) {
-        const filename = item.filename;
-        const extension = self.getFileExtension(filename);
-        if (self.checkImageExtension(extension) &&
-        !self.checkMACOSX(filename)) {
-          item.getData(new self.reader.BlobWriter(), function(content) {
-            const tmp = filename.split('/');
-            const filenametruncated = tmp.slice(-1)[0];
-            self.imageFiles[filenametruncated] = content;
-            self.fileIndex.push(filenametruncated);
-            self._isGalleryReady = true;
-            self.updateFromLoadingState();
-          });
-        }
-      });
-    }, function(error) {
-      /* eslint-disable-next-line no-console */
-      console.log(error);
-    });
-  }, function(error) {
-    /* eslint-disable-next-line no-console */
-    console.log(error);
-  });
 };
 
 

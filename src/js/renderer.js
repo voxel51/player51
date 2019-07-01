@@ -15,6 +15,9 @@ import {
   FrameAttributesOverlay,
   ObjectOverlay,
 } from './overlay.js';
+import {
+  ZipLibrary,
+} from './zipreader/zip.js';
 
 // ES6 module export
 export {
@@ -41,6 +44,8 @@ function Renderer(media, overlay) {
   this.parent = undefined;
   this.media = media;
   this.frameOverlay = {};
+  this.reader = new ZipLibrary();
+  this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Player state attributes
   this._isRendered = false;
   this._isSizePrepared = false;
@@ -64,6 +69,8 @@ function Renderer(media, overlay) {
   this._isPreparingOverlay = false;
   this._overlayData = null;
   this._overlayURL = null;
+  this._boolBadZip = false;
+  this._isZipReady = false;
   this.handleOverlay(overlay);
 }
 
@@ -168,6 +175,18 @@ Renderer.prototype.state = function() {
  */
 Renderer.prototype.customDraw = function() {
   throw new Error('Method customDraw() must be implemented.');
+};
+
+
+/**
+ * Define abstract function handleBlob to be implemented in subclasses
+ * that load zip files
+ *
+ * @member handleBlob
+ * @abstract
+ */
+Renderer.prototype.handleBlob = function() {
+  throw new Error('Method handleBlob() must be implemented.');
 };
 
 
@@ -439,6 +458,96 @@ Renderer.prototype.getFileExtension = function(path) {
 Renderer.prototype.checkImageExtension = function(extension) {
   const validImageTypes = ['png', 'jpg', 'gif', 'jpeg', 'bmp'];
   return validImageTypes.includes(extension.toLowerCase());
+};
+
+
+/**
+ * Checks media extension for zip file format.
+ *
+ * @member checkMediaFormat
+ * @param {string} filename
+ * @return {bool}
+ */
+Renderer.prototype.checkMediaFormat = function(filename) {
+  const extension = filename.split('.').pop();
+  return (extension === 'zip');
+};
+
+
+/**
+ * Checks for MACOSX from mac created zips.
+ *
+ * @member checkMACOSX
+ * @param {path} filename
+ * @return {bool}
+ */
+Renderer.prototype.checkMACOSX = function(filename) {
+  const elements = filename.split('/');
+  return elements.includes('__MACOSX');
+};
+
+
+/**
+ * Opens up media and stores filenames in imageFiles by
+ * index (psuedo frameNumber)
+ *
+ * @member openContents
+ * @required media.src needs to be a zip file
+ */
+Renderer.prototype.openContents = function() {
+  const zipPath = this.media.src;
+  if (!this.checkMediaFormat(zipPath)) {
+    /* eslint-disable-next-line no-console */
+    console.log('WARN: media is not a zip file.');
+    return;
+  }
+
+  const self = this;
+  this._isZipReady = false;
+  const xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState === 4 && this.status === 200) {
+      const zipBlob = this.response;
+      self.readBlob(zipBlob);
+    } else if (this.status === 404) {
+      self._boolBadZip = true;
+      self.updateFromLoadingState();
+    }
+  };
+  xmlhttp.responseType = 'blob';
+  xmlhttp.open('GET', zipPath, true);
+  xmlhttp.send();
+};
+
+
+/**
+ * Reads the zip blob into files
+ *
+ * @member readBlob
+ * @param {blob} blob
+ */
+Renderer.prototype.readBlob = function(blob) {
+  const self = this;
+  this.reader.createReader(new this.reader.BlobReader(blob), function(reader) {
+    reader.getEntries(function(entries) {
+      entries.forEach(function(item) {
+        const filename = item.filename;
+        const extension = self.getFileExtension(filename);
+        if (self.checkImageExtension(extension) &&
+        !self.checkMACOSX(filename)) {
+          item.getData(new self.reader.BlobWriter(), function(content) {
+            self.handleBlob(content, filename);
+          });
+        }
+      });
+    }, function(error) {
+      /* eslint-disable-next-line no-console */
+      console.log(error);
+    });
+  }, function(error) {
+    /* eslint-disable-next-line no-console */
+    console.log(error);
+  });
 };
 
 
