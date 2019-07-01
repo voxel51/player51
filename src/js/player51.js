@@ -14,7 +14,7 @@
  * To switch between types of media, specify the type attribute in media
  * in the following format.
  * <media type>/<media format>
- * examples: image/jpg, video/mp4, application/zip
+ * examples: image/jpg, video/mp4, application/zip, imagesequence/zip
 
    ```
     <div id="test-container" />
@@ -77,7 +77,6 @@ import {
   GalleryViewer,
 } from './galleryviewer.js';
 
-// ES6 module export
 export default Player51;
 
 

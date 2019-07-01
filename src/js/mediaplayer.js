@@ -21,7 +21,6 @@ import {
   GalleryRenderer,
 } from './renderers/galleryrenderer.js';
 
-// ES6 module export
 export {
   MediaPlayer,
 };

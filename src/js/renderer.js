@@ -19,7 +19,6 @@ import {
   ZipLibrary,
 } from './zipreader/zip.js';
 
-// ES6 module export
 export {
   Renderer,
 };

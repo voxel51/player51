@@ -14,7 +14,6 @@ import {
   Renderer,
 } from '../renderer.js';
 
-// ES6 module export
 export {
   GalleryRenderer,
 };

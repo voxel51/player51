@@ -17,7 +17,6 @@ import {
   parseMediaFragmentsUri,
 } from '../mediafragments.js';
 
-// ES6 module export
 export {
   VideoRenderer,
 };
