@@ -76,6 +76,9 @@ import {
 import {
   GalleryViewer,
 } from './galleryviewer.js';
+import {
+  ImageSequence,
+} from './imagesequence.js';
 
 export default Player51;
 
@@ -106,6 +109,8 @@ function Player51(media, overlay, fps) {
     this.player = new ImageViewer(media, overlay);
   } else if (this.mediaType === 'gallery' || this.mediaType === 'application') {
     this.player = new GalleryViewer(media, overlay);
+  } else if (this.mediaType === 'imagesequence') {
+    this.player = new ImageSequence(media, overlay);
   } else {
     /* eslint-disable-next-line no-console */
     console.log('WARN: Player51 doesn\'t support this media type yet.');

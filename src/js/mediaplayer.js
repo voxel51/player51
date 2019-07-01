@@ -20,6 +20,9 @@ import {
 import {
   GalleryRenderer,
 } from './renderers/galleryrenderer.js';
+import {
+  ImageSequenceRenderer,
+} from './renderers/imagesequencerenderer.js';
 
 export {
   MediaPlayer,
@@ -50,6 +53,8 @@ function MediaPlayer(type, media, overlay, fps) {
     this.renderer = new ImageRenderer(media, overlay);
   } else if (type == 'gallery') {
     this.renderer = new GalleryRenderer(media, overlay);
+  } else if (type == 'imagesequence') {
+    this.renderer = new ImageSequenceRenderer(media, overlay);
   } else {
     throw new Error('Renderer not initialized.');
   }
