@@ -54,7 +54,7 @@ function MediaPlayer(type, media, overlay, fps) {
   } else if (type == 'gallery') {
     this.renderer = new GalleryRenderer(media, overlay);
   } else if (type == 'imagesequence') {
-    this.renderer = new ImageSequenceRenderer(media, overlay);
+    this.renderer = new ImageSequenceRenderer(media, overlay, fps);
   } else {
     throw new Error('Renderer not initialized.');
   }

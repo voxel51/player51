@@ -29,8 +29,9 @@ export {
  * ex. type: "imagesequence/zip"
  * @param {string} overlay is data that should be overlayed on the psuedo video.
  * Overlay is a path to a file of eta.core.image.ImageSetLabels format.
+ * @param {int} fps is the frame-rate of the media.
  */
-function ImageSequenceRenderer(media, overlay) {
+function ImageSequenceRenderer(media, overlay, fps) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
   // Data structures
@@ -38,6 +39,9 @@ function ImageSequenceRenderer(media, overlay) {
   this._currentImageURL = null;
   // Loading state attributes
   this._isFrameInserted = false;
+  // Content Attributes
+  this.frameRate = fps;
+  this.frameDuration = 1.0 / this.frameRate;
   // Initialization
   this.openContents();
 }
@@ -83,6 +87,14 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
  * @member updateFromLoadingState
  */
 ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
+  if (this._isRendered && !this._isZipReady) {
+    if (this._boolBadZip && this.player._boolNotFound) {
+      this.eleImage.setAttribute('src', this.player._notFoundPosterURL);
+    } else if (!this._boolBadZip && this.player._boolHasPoster) {
+      this.eleImage.setAttribute('src', this.player._loadingPosterURL);
+    }
+  }
+
   if (this._isRendered && this._isZipReady) {
     // Able to load first frame
     if (!this._isFrameInserted) {
@@ -179,7 +191,6 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
     this.eleImage.addEventListener('load', function() {
       self.updateSizeAndPadding();
       self.updateFromLoadingState();
-      console.log(self);
     });
     this._isFrameInserted = true;
   }
