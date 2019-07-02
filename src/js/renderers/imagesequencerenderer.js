@@ -32,10 +32,12 @@ export {
  */
 function ImageSequenceRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
+  this._frameNumber = 1;
   // Data structures
   this.imageFiles = {};
+  this._currentImageURL = null;
   // Loading state attributes
-  this._isImageInserted = false;
+  this._isFrameInserted = false;
   // Initialization
   this.openContents();
 }
@@ -54,6 +56,9 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   this.checkBorderBox();
   this.eleDivImage = document.createElement('div');
   this.eleDivImage.className = 'p51-contained-image';
+  this.eleImage = document.createElement('img');
+  this.eleImage.className = 'p51-contained-image';
+  this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
   this.initCanvas();
 };
@@ -78,8 +83,19 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
  * @member updateFromLoadingState
  */
 ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
-  /*
-  if (this._isRendered) {
+  if (this._isRendered && this._isZipReady) {
+    // Able to load first frame
+    if (!this._isFrameInserted) {
+      this.insertFrame(this._frameNumber);
+    }
+  }
+
+  // Overlay controller
+  if ((this._isRendered) && (this._isSizePrepared)) {
+    if (this._isDataLoaded) {
+      this._isReadyProcessFrames = true;
+    }
+    // If we had to download the overlay data and it is ready
     if ((this._overlayData !== null) && (this._overlayURL !== null)) {
       this._overlayCanBePrepared = true;
     }
@@ -87,9 +103,7 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
-    console.log(this);
   }
-  */
 };
 
 
@@ -102,10 +116,13 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
 ImageSequenceRenderer.prototype.state = function() {
   return `
 ImageSequenceRenderer State Information:
+frame number: ${this._frameNumber}
+isReadyProcessFrames: ${this._isReadyProcessFrames}
 isZipReady: ${this._isZipReady}
 isRendered:   ${this._isRendered}
+isSizePrepared:  ${this._isSizePrepared}
+isDataLoaded:  ${this._isDataLoaded}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
-isReadyProcessFrames: ${this._isReadyProcessFrames}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
 isOverlayPrepared: ${this._isOverlayPrepared}
 isPreparingOverlay: ${this._isPreparingOverlay}
@@ -121,5 +138,62 @@ isPreparingOverlay: ${this._isPreparingOverlay}
  * @param {path} filename
  */
 ImageSequenceRenderer.prototype.handleBlob = function(blob, filename) {
-  console.log('WHAT UP!');
+  const key = parseInt(filename.replace(/[^0-9]/g, ''));
+  this.imageFiles[key] = blob;
+  if (key === 1) {
+    this._isZipReady = true;
+    this.updateFromLoadingState();
+  }
+};
+
+
+/**
+ * This function updates the size of the canvas to match the image
+ * Overrides method in renderer.js
+ *
+ * @member updateSizeAndPadding
+ */
+ImageSequenceRenderer.prototype.updateSizeAndPadding = function() {
+  this.eleCanvas.setAttribute('width', this.eleImage.width);
+  this.eleCanvas.setAttribute('height', this.eleImage.height);
+  this.canvasWidth = this.eleImage.width;
+  this.canvasHeight = this.eleImage.height;
+  this._isSizePrepared = true;
+};
+
+
+/**
+ * Insert frame into player
+ *
+ * @member insertFrame
+ * @param {int} frameNumber
+ */
+ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
+  this.clearState();
+  if (this.imageFiles.hasOwnProperty(frameNumber)) {
+    const fileBlob = this.imageFiles[frameNumber];
+    const tmpURL = URL.createObjectURL(fileBlob);
+    this._currentImageURL = tmpURL;
+    this.eleImage.setAttribute('src', this._currentImageURL);
+    const self = this;
+    this.eleImage.addEventListener('load', function() {
+      self.updateSizeAndPadding();
+      self.updateFromLoadingState();
+      console.log(self);
+    });
+    this._isFrameInserted = true;
+  }
+};
+
+
+/**
+ * This function clears state and serves as memory cleanup
+ *
+ * @member clearState
+ */
+ImageSequenceRenderer.prototype.clearState = function() {
+  URL.revokeObjectURL(this._currentImageURL);
+  // Clear canvas
+  const context = this.setupCanvasContext();
+  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 };

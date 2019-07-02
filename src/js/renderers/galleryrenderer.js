@@ -37,6 +37,7 @@ function GalleryRenderer(media, overlay) {
   // Data structures
   this.imageFiles = {};
   this.fileIndex = [];
+  this._currentImageURL = null;
   // Loading state attributes
   this._isImageInserted = false;
   // Initialization
@@ -255,7 +256,7 @@ GalleryRenderer.prototype.insertImage = function(index) {
   const tmpURL = URL.createObjectURL(fileBlob);
   this._currentImageURL = tmpURL;
   imageObj.className = 'p51-contained-image';
-  imageObj.setAttribute('src', tmpURL);
+  imageObj.setAttribute('src', this._currentImageURL);
   imageObj.setAttribute('type', this.getFileExtension(key));
   const self = this;
   imageObj.addEventListener('load', function(event) {
