@@ -64,6 +64,8 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
+  this.mediaElement = this.eleImage;
+  this.mediaDiv = this.eleDivImage;
   this.initCanvas();
 };
 
@@ -76,6 +78,18 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
  */
 ImageSequenceRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
+};
+
+
+/**
+ * This determines the dimensions of the media
+ *
+ * @member determineMediaDimensions
+ * @required initPlayer() to be called
+ */
+ImageSequenceRenderer.prototype.determineMediaDimensions = function() {
+  this.mediaHeight = this.mediaElement.height;
+  this.mediaWidth = this.mediaElement.width;
 };
 
 
@@ -160,21 +174,6 @@ ImageSequenceRenderer.prototype.handleBlob = function(blob, filename) {
 
 
 /**
- * This function updates the size of the canvas to match the image
- * Overrides method in renderer.js
- *
- * @member updateSizeAndPadding
- */
-ImageSequenceRenderer.prototype.updateSizeAndPadding = function() {
-  this.eleCanvas.setAttribute('width', this.eleImage.width);
-  this.eleCanvas.setAttribute('height', this.eleImage.height);
-  this.canvasWidth = this.eleImage.width;
-  this.canvasHeight = this.eleImage.height;
-  this._isSizePrepared = true;
-};
-
-
-/**
  * Insert frame into player
  *
  * @member insertFrame
@@ -189,7 +188,7 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
     this.eleImage.setAttribute('src', this._currentImageURL);
     const self = this;
     this.eleImage.addEventListener('load', function() {
-      self.updateSizeAndPadding();
+      self.updateSizeAndPaddingByParent();
       self.updateFromLoadingState();
     });
     this._isFrameInserted = true;
