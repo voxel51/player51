@@ -248,8 +248,6 @@ GalleryRenderer.prototype.insertImage = function(index) {
   this._currentImageURL = tmpURL;
   this.eleImage.setAttribute('src', this._currentImageURL);
   this.eleImage.setAttribute('type', this.getFileExtension(key));
-  this.eleImage.height = null;
-  this.eleImage.width = null;
   this.eleImage.addEventListener('load', this.loadCallback(key));
   this._isImageInserted = true;
 };
@@ -263,7 +261,6 @@ GalleryRenderer.prototype.insertImage = function(index) {
  */
 GalleryRenderer.prototype.loadCallback = function(filename) {
   console.log('Image Loaded Event!');
-  console.log(this.eleImage.attributes);
   this.updateSizeAndPaddingByParent();
   this.prepareOverlay(filename);
   this.processFrame();
