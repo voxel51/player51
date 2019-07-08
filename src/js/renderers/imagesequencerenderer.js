@@ -95,6 +95,17 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
   const self = this;
 
+
+  this.elePlayPauseButton.addEventListener('click', function() {
+    if (self._boolPlaying !== true) {
+      self._boolPlaying = true;
+    } else {
+      self._boolPlaying = false;
+    }
+    self.updateFromDynamicState();
+  });
+
+
   this.parent.addEventListener('mouseenter', function() {
     if (!self._isFrameInserted) {
       return;
@@ -123,6 +134,12 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isZipReady) {
     return;
+  }
+
+  if (this._boolPlaying) {
+    this.elePlayPauseButton.innerHTML = 'Pause';
+  } else {
+    this.elePlayPauseButton.innerHTML = 'Play';
   }
 
   if (this._boolShowControls) {
