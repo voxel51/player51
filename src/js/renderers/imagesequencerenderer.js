@@ -99,6 +99,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
   this.elePlayPauseButton.addEventListener('click', function() {
     if (self._boolPlaying !== true) {
       self._boolPlaying = true;
+      self.timerCallback();
     } else {
       self._boolPlaying = false;
     }
@@ -191,6 +192,22 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
 
 
 /**
+ * This function is a controller.
+ * This function updates the player state when the current frame has been
+ * changed which happens when the imageseqeunce is played or the user manually
+ * srubs.
+ *
+ * @member updateStateFromTimeChange
+ */
+ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
+  console.log(this._frameNumber);
+  this.updateFromDynamicState();
+  this.insertFrame(this._frameNumber);
+  this.processFrame();
+};
+
+
+/**
  * Generate a string that represents the state.
  *
  * @member state
@@ -211,6 +228,15 @@ overlayCanBePrepared: ${this._overlayCanBePrepared}
 isOverlayPrepared: ${this._isOverlayPrepared}
 isPreparingOverlay: ${this._isPreparingOverlay}
 `;
+};
+
+
+/**
+ * Draws custom case objects onto a frame.
+ * @member customDraw
+ * @param {context} context
+ */
+ImageSequenceRenderer.prototype.customDraw = function(context) {
 };
 
 
@@ -282,4 +308,23 @@ ImageSequenceRenderer.prototype.clearState = function() {
   // Clear canvas
   const context = this.setupCanvasContext();
   context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+};
+
+
+/**
+ * This is called when playing the image sequence. It iterates through the
+ * frames while drawing overlays.
+ *
+ * @member timerCallback
+ */
+ImageSequenceRenderer.prototype.timerCallback = function() {
+  if (!this._boolPlaying) {
+    return;
+  }
+  this._frameNumber++;
+  this.updateStateFromTimeChange();
+  const self = this;
+  setTimeout(function() {
+    self.timerCallback();
+  }, this.frameDuration * 1000);
 };
