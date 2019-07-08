@@ -64,6 +64,21 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
+
+  // Video controls
+  this.eleDivVideoControls = document.createElement('div');
+  this.eleDivVideoControls.className = 'p51-video-controls controls-auto-size';
+  this.elePlayPauseButton = document.createElement('button');
+  this.elePlayPauseButton.setAttribute('type', 'button');
+  this.elePlayPauseButton.className = 'p51-play-pause';
+  this.elePlayPauseButton.innerHTML = 'Play';
+  this.eleSeekBar = document.createElement('input');
+  this.eleSeekBar.setAttribute('type', 'range');
+  this.eleSeekBar.setAttribute('value', '0');
+  this.eleSeekBar.className = 'p51-seek-bar';
+  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
+  this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  this.parent.appendChild(this.eleDivVideoControls);
   this.initCanvas();
 };
 
@@ -189,7 +204,10 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
     this.eleImage.setAttribute('src', this._currentImageURL);
     const self = this;
     this.eleImage.addEventListener('load', function() {
-      self.updateSizeAndPadding();
+      self._isDataLoaded = true;
+      if (!self._isSizePrepared) {
+        self.updateSizeAndPadding();
+      }
       self.updateFromLoadingState();
     });
     this._isFrameInserted = true;
