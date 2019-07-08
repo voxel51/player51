@@ -36,6 +36,7 @@ function ImageSequenceRenderer(media, overlay, fps) {
   this._frameNumber = 1;
   this._boolShowControls = false;
   this._boolPlaying = false;
+  this._boolManualSeek = true;
   // Data structures
   this.imageFiles = {};
   this._currentImageURL = null;
@@ -107,6 +108,20 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
+  this.eleSeekBar.addEventListener('mousedown', function() {
+    self._boolPlaying = false;
+  });
+
+  this.eleSeekBar.addEventListener('mouseup', function() {
+    self._boolPlaying = true;
+  });
+
+  this.eleSeekBar.addEventListener('change', function() {
+    // Calculate new frame
+    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100)
+    * self._totalNumberOfFrames);
+    self.timerCallback();
+  });
 
   this.parent.addEventListener('mouseenter', function() {
     if (!self._isFrameInserted) {
@@ -145,6 +160,10 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
     this.eleSeekBar.value = value;
   } else {
     this.elePlayPauseButton.innerHTML = 'Play';
+    if (this._frameNumber === this._totalNumberOfFrames) {
+      // Reset
+      this._frameNumber = 1;
+    }
   }
 
   if (this._boolShowControls) {
@@ -331,6 +350,7 @@ ImageSequenceRenderer.prototype.timerCallback = function() {
   if (!this._boolPlaying) {
     return;
   }
+
   this._frameNumber++;
   this.updateStateFromTimeChange();
   const self = this;
