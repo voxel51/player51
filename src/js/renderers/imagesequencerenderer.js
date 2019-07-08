@@ -44,6 +44,7 @@ function ImageSequenceRenderer(media, overlay, fps) {
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1.0 / this.frameRate;
+  this._totalNumberOfFrames = 0;
   // Initialization
   this.openContents();
 }
@@ -139,6 +140,9 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
 
   if (this._boolPlaying) {
     this.elePlayPauseButton.innerHTML = 'Pause';
+    // Update slider value
+    const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
+    this.eleSeekBar.value = value;
   } else {
     this.elePlayPauseButton.innerHTML = 'Play';
   }
@@ -172,6 +176,10 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
     if (!this._isFrameInserted) {
       this.insertFrame(this._frameNumber);
     }
+    const newLength = Object.keys(this.imageFiles).length;
+    if (this._totalNumberOfFrames !== newLength) {
+      this._totalNumberOfFrames = newLength;
+    }
   }
 
   // Overlay controller
@@ -200,7 +208,9 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  */
 ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
-  console.log(this._frameNumber);
+  if (this._frameNumber === this._totalNumberOfFrames) {
+    this._boolPlaying = false;
+  }
   this.updateFromDynamicState();
   this.insertFrame(this._frameNumber);
   this.processFrame();
