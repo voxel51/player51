@@ -357,7 +357,7 @@ VideoRenderer.prototype.resizeControls = function() {
  * @member updateFromDynamicState
  */
 VideoRenderer.prototype.updateFromDynamicState = function() {
-  if ((!this._isRendered) || (!this._isSizePrepared)) {
+  if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
 
@@ -392,7 +392,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
  * @member updateFromLoadingState
  */
 VideoRenderer.prototype.updateFromLoadingState = function() {
-  if ((this._isRendered) && (this._isSizePrepared)) {
+  if (this._isRendered && this._isSizePrepared) {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }

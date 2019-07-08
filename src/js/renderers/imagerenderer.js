@@ -140,7 +140,7 @@ ImageRenderer.prototype.resizeControls = function() {
  * @member updateFromDynamicState
  */
 ImageRenderer.prototype.updateFromDynamicState = function() {
-  if ((!this._isRendered) || (!this._isSizePrepared)) {
+  if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
   if (this.player._boolThumbnailMode) {
@@ -157,7 +157,7 @@ ImageRenderer.prototype.updateFromDynamicState = function() {
  * @member updateFromLoadingState
  */
 ImageRenderer.prototype.updateFromLoadingState = function() {
-  if ((this._isRendered) && (this._isSizePrepared)) {
+  if (this._isRendered && this._isSizePrepared) {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }
@@ -176,18 +176,6 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
       this.processFrame();
     }
   }
-};
-
-
-/**
- * This function is a controller
- * Not for ImageViewer51
- *
- * @member updateStateFromTimeChange
- */
-ImageRenderer.prototype.updateStateFromTimeChange = function() {
-  /* eslint-disable-next-line no-console */
-  console.log('WARN: updateStateFromTimeChange() not for imageviewer51');
 };
 
 

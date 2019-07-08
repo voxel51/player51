@@ -34,6 +34,8 @@ export {
 function ImageSequenceRenderer(media, overlay, fps) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
+  this._boolShowControls = false;
+  this._boolPlaying = false;
   // Data structures
   this.imageFiles = {};
   this._currentImageURL = null;
@@ -91,6 +93,43 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
  */
 ImageSequenceRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
+  const self = this;
+
+  this.parent.addEventListener('mouseenter', function() {
+    if (!self._isFrameInserted) {
+      return;
+    }
+    self._boolShowControls = true;
+    self.updateFromDynamicState();
+  });
+
+  this.parent.addEventListener('mouseleave', function() {
+    if (!self._isFrameInserted) {
+      return;
+    }
+    self._boolShowControls = false;
+    self.updateFromDynamicState();
+  });
+};
+
+
+/**
+ * This function is a controller
+ * The dynamic state of the player has changed and various settings have to be
+ * toggled.
+ *
+ * @member updateFromDynamicState
+ */
+ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
+  if (!this._isRendered || !this._isZipReady) {
+    return;
+  }
+
+  if (this._boolShowControls) {
+    this.eleDivVideoControls.style.opacity = '0.9';
+  } else {
+    this.eleDivVideoControls.style.opacity = '0.0';
+  }
 };
 
 
@@ -118,7 +157,7 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
   }
 
   // Overlay controller
-  if ((this._isRendered) && (this._isSizePrepared)) {
+  if (this._isRendered && this._isSizePrepared) {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }
@@ -144,6 +183,7 @@ ImageSequenceRenderer.prototype.state = function() {
   return `
 ImageSequenceRenderer State Information:
 frame number: ${this._frameNumber}
+isFrameInserted: ${this._isFrameInserted}
 isReadyProcessFrames: ${this._isReadyProcessFrames}
 isZipReady: ${this._isZipReady}
 isRendered:   ${this._isRendered}
