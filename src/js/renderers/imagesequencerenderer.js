@@ -149,6 +149,14 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
     self._boolShowControls = false;
     self.updateFromDynamicState();
   });
+
+  this.eleImage.addEventListener('load', function() {
+    self._isDataLoaded = true;
+    if (!self._isSizePrepared && self._isFrameInserted) {
+      self.updateSizeAndPaddingByParent();
+    }
+    self.updateFromLoadingState();
+  });
 };
 
 
@@ -235,7 +243,7 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
     }
   }
 
-  if (this._overlayCanBePrepared) {
+  if (this._overlayCanBePrepared && this._isFrameInserted) {
     this.prepareOverlay(this._overlayData);
   }
 };
@@ -321,17 +329,8 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
     const fileBlob = this.imageFiles[frameNumber];
     const tmpURL = URL.createObjectURL(fileBlob);
     this._currentImageURL = tmpURL;
-    this.eleImage.setAttribute('src', this._currentImageURL);
-
-    const self = this;
-    this.eleImage.addEventListener('load', function() {
-      self._isDataLoaded = true;
-      if (!self._isSizePrepared) {
-        self.updateSizeAndPaddingByParent();
-      }
-      self.updateFromLoadingState();
-    });
     this._isFrameInserted = true;
+    this.eleImage.setAttribute('src', this._currentImageURL);
   }
 };
 
