@@ -60,7 +60,7 @@
  *
  * Also note that there are two options for rendering zip files,
  * Default: render as an image gallery.
- * SequenceFlag = true: render as a psuedp videoplayer.
+ * SequenceFlag = true: render as a psuedo videoplayer.
  *
  * Copyright 2017-2019, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
