@@ -34,6 +34,7 @@ function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
   this._currentIndex = 0;
+  this._currentKey = null;
   // Data structures
   this.imageFiles = {};
   this.fileIndex = [];
@@ -107,6 +108,14 @@ GalleryRenderer.prototype.initPlayerControls = function() {
       }
     }
   });
+
+  this.eleImage.addEventListener('load', function() {
+    self.updateSizeAndPaddingByParent();
+    if (self._currentKey) {
+      self.prepareOverlay(self._currentKey);
+      self.processFrame();
+    }
+  });
 };
 
 
@@ -119,8 +128,6 @@ GalleryRenderer.prototype.initPlayerControls = function() {
 GalleryRenderer.prototype.determineMediaDimensions = function() {
   this.mediaHeight = this.mediaElement.height;
   this.mediaWidth = this.mediaElement.width;
-  console.log(this.eleImage.height);
-  console.log(this.eleImage.width);
 };
 
 
@@ -243,27 +250,13 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
 GalleryRenderer.prototype.insertImage = function(index) {
   this.clearState();
   const key = this.fileIndex[index];
+  this._currentKey = key;
   const fileBlob = this.imageFiles[key];
   const tmpURL = URL.createObjectURL(fileBlob);
   this._currentImageURL = tmpURL;
   this.eleImage.setAttribute('src', this._currentImageURL);
   this.eleImage.setAttribute('type', this.getFileExtension(key));
-  this.eleImage.addEventListener('load', this.loadCallback(key));
   this._isImageInserted = true;
-};
-
-
-/**
- * Load callback
- *
- * @member loadCallback
- * @param {string} filename
- */
-GalleryRenderer.prototype.loadCallback = function(filename) {
-  console.log('Image Loaded Event!');
-  this.updateSizeAndPaddingByParent();
-  this.prepareOverlay(filename);
-  this.processFrame();
 };
 
 
