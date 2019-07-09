@@ -693,6 +693,24 @@ Renderer.prototype.updateSizeAndPadding = function() {
 
 
 /**
+ * This function updates the size and padding based on parent
+ *
+ * @member updateSizeAndPaddingByParent
+ * @required the viewer must be rendered.
+ */
+Renderer.prototype.updateSizeAndPaddingByParent = function() {
+  this.checkPlayer();
+  this.checkParentandMedia();
+  this.determineMediaDimensions();
+  this.eleCanvas.setAttribute('width', this.mediaWidth);
+  this.eleCanvas.setAttribute('height', this.mediaHeight);
+  this.canvasWidth = this.mediaWidth;
+  this.canvasHeight = this.mediaHeight;
+  this._isSizePrepared = true;
+};
+
+
+/**
  * This method is a helper function that computes necessary padding and
  * width/height and sets the media element.
  *

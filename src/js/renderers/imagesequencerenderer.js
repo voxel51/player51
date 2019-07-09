@@ -184,6 +184,18 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
 
 
 /**
+ * This determines the dimensions of the media
+ *
+ * @member determineMediaDimensions
+ * @required initPlayer() to be called
+ */
+ImageSequenceRenderer.prototype.determineMediaDimensions = function() {
+  this.mediaHeight = this.mediaElement.height;
+  this.mediaWidth = this.mediaElement.width;
+};
+
+
+/**
  * This function is a controller
  * The loading state of the player has changed and various settings have to be
  * toggled.
@@ -292,21 +304,6 @@ ImageSequenceRenderer.prototype.handleBlob = function(blob, filename) {
     this._isZipReady = true;
     this.updateFromLoadingState();
   }
-};
-
-
-/**
- * This function updates the size of the canvas to match the image
- * Overrides method in renderer.js
- *
- * @member updateSizeAndPadding
- */
-ImageSequenceRenderer.prototype.updateSizeAndPadding = function() {
-  this.eleCanvas.setAttribute('width', this.eleImage.width);
-  this.eleCanvas.setAttribute('height', this.eleImage.height);
-  this.canvasWidth = this.eleImage.width;
-  this.canvasHeight = this.eleImage.height;
-  this._isSizePrepared = true;
 };
 
 
