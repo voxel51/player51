@@ -34,6 +34,10 @@ export {
 function ImageSequenceRenderer(media, overlay, fps) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
+  this._boolShowControls = false;
+  this._boolPlaying = false;
+  this._boolPaused = true;
+  this._boolManualSeek = true;
   // Data structures
   this.imageFiles = {};
   this._currentImageURL = null;
@@ -42,6 +46,7 @@ function ImageSequenceRenderer(media, overlay, fps) {
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1.0 / this.frameRate;
+  this._totalNumberOfFrames = 0;
   // Initialization
   this.openContents();
 }
@@ -64,8 +69,21 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
-  this.mediaElement = this.eleImage;
-  this.mediaDiv = this.eleDivImage;
+
+  // Video controls
+  this.eleDivVideoControls = document.createElement('div');
+  this.eleDivVideoControls.className = 'p51-video-controls controls-auto-size';
+  this.elePlayPauseButton = document.createElement('button');
+  this.elePlayPauseButton.setAttribute('type', 'button');
+  this.elePlayPauseButton.className = 'p51-play-pause';
+  this.elePlayPauseButton.innerHTML = 'Play';
+  this.eleSeekBar = document.createElement('input');
+  this.eleSeekBar.setAttribute('type', 'range');
+  this.eleSeekBar.setAttribute('value', '0');
+  this.eleSeekBar.className = 'p51-seek-bar';
+  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
+  this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  this.parent.appendChild(this.eleDivVideoControls);
   this.initCanvas();
 };
 
@@ -78,6 +96,90 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
  */
 ImageSequenceRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
+  const self = this;
+
+
+  this.elePlayPauseButton.addEventListener('click', function() {
+    if (self._boolPlaying !== true) {
+      self._boolPlaying = true;
+      self._boolPaused = false;
+      self.timerCallback();
+    } else {
+      self._boolPlaying = false;
+      self._boolPaused = true;
+    }
+    self.updateFromDynamicState();
+  });
+
+  this.eleSeekBar.addEventListener('mousedown', function() {
+    self._boolPlaying = false;
+  });
+
+  this.eleSeekBar.addEventListener('mouseup', function() {
+    self._boolPlaying = true;
+    if (self._boolPaused) {
+      self._boolPlaying = false;
+    }
+  });
+
+  this.eleSeekBar.addEventListener('change', function() {
+    // Calculate new frame
+    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100)
+    * self._totalNumberOfFrames);
+    if (!self._boolPlaying) {
+      self.updateStateFromTimeChange();
+    }
+    self.timerCallback();
+  });
+
+  this.parent.addEventListener('mouseenter', function() {
+    if (!self._isFrameInserted) {
+      return;
+    }
+    self._boolShowControls = true;
+    self.updateFromDynamicState();
+  });
+
+  this.parent.addEventListener('mouseleave', function() {
+    if (!self._isFrameInserted) {
+      return;
+    }
+    self._boolShowControls = false;
+    self.updateFromDynamicState();
+  });
+};
+
+
+/**
+ * This function is a controller
+ * The dynamic state of the player has changed and various settings have to be
+ * toggled.
+ *
+ * @member updateFromDynamicState
+ */
+ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
+  if (!this._isRendered || !this._isZipReady) {
+    return;
+  }
+
+  if (this._boolPlaying) {
+    this.elePlayPauseButton.innerHTML = 'Pause';
+    // Update slider value
+    const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
+    this.eleSeekBar.value = value;
+  } else {
+    this.elePlayPauseButton.innerHTML = 'Play';
+    if (this._frameNumber === this._totalNumberOfFrames) {
+      // Reset
+      this._frameNumber = 1;
+    }
+  }
+
+  if (this._boolShowControls) {
+    this.eleDivVideoControls.style.opacity = '0.9';
+  } else {
+    this.eleDivVideoControls.style.opacity = '0.0';
+  }
 };
 
 
@@ -114,10 +216,14 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
     if (!this._isFrameInserted) {
       this.insertFrame(this._frameNumber);
     }
+    const newLength = Object.keys(this.imageFiles).length;
+    if (this._totalNumberOfFrames !== newLength) {
+      this._totalNumberOfFrames = newLength;
+    }
   }
 
   // Overlay controller
-  if ((this._isRendered) && (this._isSizePrepared)) {
+  if (this._isRendered && this._isSizePrepared) {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }
@@ -134,6 +240,24 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
 
 
 /**
+ * This function is a controller.
+ * This function updates the player state when the current frame has been
+ * changed which happens when the imageseqeunce is played or the user manually
+ * srubs.
+ *
+ * @member updateStateFromTimeChange
+ */
+ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
+  if (this._frameNumber === this._totalNumberOfFrames) {
+    this._boolPlaying = false;
+  }
+  this.updateFromDynamicState();
+  this.insertFrame(this._frameNumber);
+  this.processFrame();
+};
+
+
+/**
  * Generate a string that represents the state.
  *
  * @member state
@@ -143,6 +267,7 @@ ImageSequenceRenderer.prototype.state = function() {
   return `
 ImageSequenceRenderer State Information:
 frame number: ${this._frameNumber}
+isFrameInserted: ${this._isFrameInserted}
 isReadyProcessFrames: ${this._isReadyProcessFrames}
 isZipReady: ${this._isZipReady}
 isRendered:   ${this._isRendered}
@@ -153,6 +278,15 @@ overlayCanBePrepared: ${this._overlayCanBePrepared}
 isOverlayPrepared: ${this._isOverlayPrepared}
 isPreparingOverlay: ${this._isPreparingOverlay}
 `;
+};
+
+
+/**
+ * Draws custom case objects onto a frame.
+ * @member customDraw
+ * @param {context} context
+ */
+ImageSequenceRenderer.prototype.customDraw = function(context) {
 };
 
 
@@ -188,7 +322,10 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
     this.eleImage.setAttribute('src', this._currentImageURL);
     const self = this;
     this.eleImage.addEventListener('load', function() {
-      self.updateSizeAndPaddingByParent();
+      self._isDataLoaded = true;
+      if (!self._isSizePrepared) {
+        self.updateSizeAndPadding();
+      }
       self.updateFromLoadingState();
     });
     this._isFrameInserted = true;
@@ -206,4 +343,24 @@ ImageSequenceRenderer.prototype.clearState = function() {
   // Clear canvas
   const context = this.setupCanvasContext();
   context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+};
+
+
+/**
+ * This is called when playing the image sequence. It iterates through the
+ * frames while drawing overlays.
+ *
+ * @member timerCallback
+ */
+ImageSequenceRenderer.prototype.timerCallback = function() {
+  if (!this._boolPlaying) {
+    return;
+  }
+
+  this._frameNumber++;
+  this.updateStateFromTimeChange();
+  const self = this;
+  setTimeout(function() {
+    self.timerCallback();
+  }, this.frameDuration * 1000);
 };
