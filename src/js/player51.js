@@ -111,7 +111,7 @@ function Player51(media, overlay, fps = 0, sequenceFlag = false) {
     this.player = new VideoPlayer(media, overlay, fps);
   } else if (this.mediaType === 'image') {
     this.player = new ImageViewer(media, overlay);
-  } else if (this.mediaType === 'application') {
+  } else if (this.mediaType === 'application' && this.mediaFormat === 'zip') {
     if (sequenceFlag) {
       this.player = new ImageSequence(media, overlay, fps);
     } else {
@@ -171,6 +171,7 @@ Player51.prototype.determineMediaType = function(media) {
   if (splitResults.length !== 2) {
     throw new Error('Media type is incorrect.');
   }
+  this.mediaFormat = splitResults[1];
   return splitResults[0];
 };
 
