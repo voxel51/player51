@@ -220,11 +220,25 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
   }
 
   let entry = {};
-  const frameKeys = Object.keys(this._overlayData.images);
-  for (const key in frameKeys) {
-    if (this._overlayData.images[key].filename === filename) {
-      entry = this._overlayData.images[key];
-      break;
+
+  if (typeof(this._overlayData.images) !== 'undefined') {
+    const frameKeys = Object.keys(this._overlayData.images);
+    for (const key in frameKeys) {
+      if (this._overlayData.images[key].filename === filename) {
+        entry = this._overlayData.images[key];
+        break;
+      }
+    }
+  }
+
+  if (typeof(this._overlayData.frames !== 'undefined')) {
+    const frameKeys = Object.keys(this._overlayData.frames);
+    const frameNumber = parseInt(filename.replace(/[^0-9]/g, ''));
+    for (const key in frameKeys) {
+      if (parseInt(key) === frameNumber) {
+        entry = this._overlayData.frames[key];
+        break;
+      }
     }
   }
 
