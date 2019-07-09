@@ -69,7 +69,7 @@ function Renderer(media, overlay) {
   this._overlayData = null;
   this._overlayURL = null;
   this._boolBadZip = false;
-  this._isZipReady = false;
+  this._boolZipReady = false;
   this.handleOverlay(overlay);
 }
 
@@ -469,7 +469,7 @@ Renderer.prototype.checkImageExtension = function(extension) {
  */
 Renderer.prototype.checkMediaFormat = function(filename) {
   const extension = filename.split('.').pop();
-  return (extension === 'zip');
+  return (extension.toLowerCase() === 'zip');
 };
 
 
@@ -502,7 +502,7 @@ Renderer.prototype.openContents = function() {
   }
 
   const self = this;
-  this._isZipReady = false;
+  this._boolZipReady = false;
   const xmlhttp = new XMLHttpRequest();
   xmlhttp.onreadystatechange = function() {
     if (this.readyState === 4 && this.status === 200) {

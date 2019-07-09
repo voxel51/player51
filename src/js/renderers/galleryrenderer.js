@@ -139,14 +139,14 @@ GalleryRenderer.prototype.determineMediaDimensions = function() {
  * @member updateFromLoadingState
  */
 GalleryRenderer.prototype.updateFromLoadingState = function() {
-  if (this._isRendered && !this._isZipReady) {
+  if (this._isRendered && !this._boolZipReady) {
     if (this._boolBadZip && this.player._boolNotFound) {
       this.eleImage.setAttribute('src', this.player._notFoundPosterURL);
     } else if (!this._boolBadZip && this.player._boolHasPoster) {
       this.eleImage.setAttribute('src', this.player._loadingPosterURL);
     }
   }
-  if (this._isZipReady && this._isRendered) {
+  if (this._boolZipReady && this._isRendered) {
     // Able to load an image into gallery
     if (!this._isImageInserted) {
       this.insertImage(this._currentIndex);
@@ -169,7 +169,7 @@ GalleryRenderer.prototype.state = function() {
   return `
 GalleryViewer State Information:
 currentIndex: ${this._currentIndex}
-isZipReady: ${this._isZipReady}
+boolZipReady: ${this._boolZipReady}
 isImageInserted: ${this._isImageInserted}
 isRendered:   ${this._isRendered}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
@@ -201,7 +201,7 @@ GalleryRenderer.prototype.handleBlob = function(blob, filename) {
   const filenametruncated = tmp.slice(-1)[0];
   this.imageFiles[filenametruncated] = blob;
   this.fileIndex.push(filenametruncated);
-  this._isZipReady = true;
+  this._boolZipReady = true;
   this.updateFromLoadingState();
 };
 

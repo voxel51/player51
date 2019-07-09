@@ -147,6 +147,19 @@ Player51.prototype.setBoolDrawFrameNumber = function(value) {
 
 
 /**
+ * This function sets player.renderer.reader.workerScriptsPath
+ *
+ * @member setZipLibraryParameters
+ * @param {string} path relative to zip.js
+ */
+Player51.prototype.setZipLibraryParameters = function(path) {
+  if (this.player.renderer) {
+    this.player.renderer.reader.workerScriptsPath = path;
+  }
+};
+
+
+/**
  * This function figures out the type of media to be rendered.
  *
  * @member determineMediaType

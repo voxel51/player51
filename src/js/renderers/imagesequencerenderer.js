@@ -160,7 +160,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
  * @member updateFromDynamicState
  */
 ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
-  if (!this._isRendered || !this._isZipReady) {
+  if (!this._isRendered || !this._boolZipReady) {
     return;
   }
 
@@ -205,7 +205,7 @@ ImageSequenceRenderer.prototype.determineMediaDimensions = function() {
  * @member updateFromLoadingState
  */
 ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
-  if (this._isRendered && !this._isZipReady) {
+  if (this._isRendered && !this._boolZipReady) {
     if (this._boolBadZip && this.player._boolNotFound) {
       this.eleImage.setAttribute('src', this.player._notFoundPosterURL);
     } else if (!this._boolBadZip && this.player._boolHasPoster) {
@@ -213,7 +213,7 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
     }
   }
 
-  if (this._isRendered && this._isZipReady) {
+  if (this._isRendered && this._boolZipReady) {
     // Able to load first frame
     if (!this._isFrameInserted) {
       this.insertFrame(this._frameNumber);
@@ -271,7 +271,7 @@ ImageSequenceRenderer State Information:
 frame number: ${this._frameNumber}
 isFrameInserted: ${this._isFrameInserted}
 isReadyProcessFrames: ${this._isReadyProcessFrames}
-isZipReady: ${this._isZipReady}
+boolZipReady: ${this._boolZipReady}
 isRendered:   ${this._isRendered}
 isSizePrepared:  ${this._isSizePrepared}
 isDataLoaded:  ${this._isDataLoaded}
@@ -303,7 +303,7 @@ ImageSequenceRenderer.prototype.handleBlob = function(blob, filename) {
   const key = parseInt(filename.replace(/[^0-9]/g, ''));
   this.imageFiles[key] = blob;
   if (key === 1) {
-    this._isZipReady = true;
+    this._boolZipReady = true;
     this.updateFromLoadingState();
   }
 };
