@@ -229,7 +229,7 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
         break;
       }
     }
-  } else if (typeof(this._overlayData.frames !== 'undefined')) {
+  } else if (typeof(this._overlayData.frames) !== 'undefined') {
     const frameKeys = Object.keys(this._overlayData.frames);
     const frameNumber = parseInt(filename.replace(/[^0-9]/g, ''));
     for (const key in frameKeys) {
