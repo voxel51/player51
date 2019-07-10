@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Player51 Simple Gallery Viewer Test</title>
+    <title>Player51 ImageSequence Test</title>
     <style>
       body {
         background: black;
         color:#CCCCCC;
       }
       #test-container {
-        width: 1200px;
-        height: 800px;
+        width: 1400px;
+        height: 900px;
         position: relative;
         padding: 0px;
+        border: 1px solid white;
       }
     </style>
     <link rel="stylesheet" href="/src/css/player51.css">
@@ -19,7 +20,7 @@
 
   <body>
 
-    <h1> Player51: Gallery Viewer Test </h1>
+    <h1> Player51: ImageSequence Test </h1>
 
     <div id="test-container" />
 
@@ -30,10 +31,12 @@
 
         let player = new Player51(
           {
-            src: "/test/player51-test-data/mixedtest.zip",
+            src: "/test/player51-test-data/frames.zip",
             type: "application/zip"
           },
-          "/test/player51-test-data/gallerytest.json",
+          "/test/player51-test-data/frames.json",
+          25,
+          true
         );
 
         console.log("Player51 created.");
@@ -47,6 +50,7 @@
 
         player.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");
         player.poster("https://i2.wp.com/learn.onemonth.com/wp-content/uploads/2017/08/1-10.png?w=845&ssl=1", "404");
+
 
         player.render('test-container');
 

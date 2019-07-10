@@ -15,7 +15,6 @@ import {
   MediaPlayer,
 } from './mediaplayer.js';
 
-// ES6 module export
 export {
   ImageViewer,
 };

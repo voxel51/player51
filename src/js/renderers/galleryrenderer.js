@@ -13,11 +13,7 @@
 import {
   Renderer,
 } from '../renderer.js';
-import {
-  ZipLibrary,
-} from '../zipreader/zip.js';
 
-// ES6 module export
 export {
   GalleryRenderer,
 };
@@ -38,14 +34,12 @@ function GalleryRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
   this._currentIndex = 0;
+  this._currentKey = null;
   // Data structures
   this.imageFiles = {};
   this.fileIndex = [];
-  this.reader = new ZipLibrary();
-  this.reader.workerScriptsPath = '../src/js/zipreader/';
+  this._currentImageURL = null;
   // Loading state attributes
-  this._boolBadZip = false;
-  this._isGalleryReady = false;
   this._isImageInserted = false;
   // Initialization
   this.openContents();
@@ -66,6 +60,9 @@ GalleryRenderer.prototype.initPlayer = function() {
   this.eleDivImage = document.createElement('div');
   this.eleDivImage.className = 'p51-contained-image';
   this.parent.appendChild(this.eleDivImage);
+  this.eleImage = document.createElement('img');
+  this.eleImage.className = 'p51-contained-image';
+  this.eleDivImage.appendChild(this.eleImage);
 
   // Gallery controls
   this.eleDivRightNav = document.createElement('a');
@@ -76,9 +73,9 @@ GalleryRenderer.prototype.initPlayer = function() {
   this.eleDivLeftNav.text = '<';
   this.parent.appendChild(this.eleDivRightNav);
   this.parent.appendChild(this.eleDivLeftNav);
+  this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
   this.initCanvas();
-  this.updateFromLoadingState();
 };
 
 
@@ -97,7 +94,6 @@ GalleryRenderer.prototype.initPlayerControls = function() {
       const limit = self.fileIndex.length - 1;
       if (self._currentIndex < limit) {
         self._currentIndex++;
-        self.clearState();
         self.insertImage(self._currentIndex);
       }
     }
@@ -108,11 +104,30 @@ GalleryRenderer.prototype.initPlayerControls = function() {
       const limit = 0;
       if (self._currentIndex > limit) {
         self._currentIndex--;
-        self.clearState();
         self.insertImage(self._currentIndex);
       }
     }
   });
+
+  this.eleImage.addEventListener('load', function() {
+    self.updateSizeAndPaddingByParent();
+    if (self._currentKey) {
+      self.prepareOverlay(self._currentKey);
+      self.processFrame();
+    }
+  });
+};
+
+
+/**
+ * This determines the dimensions of the media
+ *
+ * @member determineMediaDimensions
+ * @required initPlayer() to be called
+ */
+GalleryRenderer.prototype.determineMediaDimensions = function() {
+  this.mediaHeight = this.mediaElement.height;
+  this.mediaWidth = this.mediaElement.width;
 };
 
 
@@ -124,21 +139,14 @@ GalleryRenderer.prototype.initPlayerControls = function() {
  * @member updateFromLoadingState
  */
 GalleryRenderer.prototype.updateFromLoadingState = function() {
-  if (this._isRendered && !this._isGalleryReady) {
-    while (this.eleDivImage.firstChild) {
-      this.eleDivImage.removeChild(this.eleDivImage.firstChild);
-    }
-    const imageObj = document.createElement('img');
-    imageObj.className = 'p51-contained-image';
+  if (this._isRendered && !this._boolZipReady) {
     if (this._boolBadZip && this.player._boolNotFound) {
-      imageObj.setAttribute('src', this.player._notFoundPosterURL);
-      this.eleDivImage.appendChild(imageObj);
+      this.eleImage.setAttribute('src', this.player._notFoundPosterURL);
     } else if (!this._boolBadZip && this.player._boolHasPoster) {
-      imageObj.setAttribute('src', this.player._loadingPosterURL);
-      this.eleDivImage.appendChild(imageObj);
+      this.eleImage.setAttribute('src', this.player._loadingPosterURL);
     }
   }
-  if (this._isGalleryReady && this._isRendered) {
+  if (this._boolZipReady && this._isRendered) {
     // Able to load an image into gallery
     if (!this._isImageInserted) {
       this.insertImage(this._currentIndex);
@@ -161,7 +169,7 @@ GalleryRenderer.prototype.state = function() {
   return `
 GalleryViewer State Information:
 currentIndex: ${this._currentIndex}
-isGalleryReady: ${this._isGalleryReady}
+boolZipReady: ${this._boolZipReady}
 isImageInserted: ${this._isImageInserted}
 isRendered:   ${this._isRendered}
 overlayCanBePrepared: ${this._overlayCanBePrepared}
@@ -172,11 +180,29 @@ isOverlayPrepared: ${this._isOverlayPrepared}
 
 
 /**
- * Draws custom case objects onto a frame.
+ * Draws custom case objects onto a frame
+ *
  * @member customDraw
  * @param {context} context
  */
 GalleryRenderer.prototype.customDraw = function(context) {
+};
+
+
+/**
+ * Loads blob data into datastructures
+ *
+ * @member handleBlob
+ * @param {blob} blob
+ * @param {path} filename
+ */
+GalleryRenderer.prototype.handleBlob = function(blob, filename) {
+  const tmp = filename.split('/');
+  const filenametruncated = tmp.slice(-1)[0];
+  this.imageFiles[filenametruncated] = blob;
+  this.fileIndex.push(filenametruncated);
+  this._boolZipReady = true;
+  this.updateFromLoadingState();
 };
 
 
@@ -194,11 +220,23 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
   }
 
   let entry = {};
-  const frameKeys = Object.keys(this._overlayData.images);
-  for (const key in frameKeys) {
-    if (this._overlayData.images[key].filename === filename) {
-      entry = this._overlayData.images[key];
-      break;
+
+  if (typeof(this._overlayData.images) !== 'undefined') {
+    const frameKeys = Object.keys(this._overlayData.images);
+    for (const key in frameKeys) {
+      if (this._overlayData.images[key].filename === filename) {
+        entry = this._overlayData.images[key];
+        break;
+      }
+    }
+  } else if (typeof(this._overlayData.frames !== 'undefined')) {
+    const frameKeys = Object.keys(this._overlayData.frames);
+    const frameNumber = parseInt(filename.replace(/[^0-9]/g, ''));
+    for (const key in frameKeys) {
+      if (parseInt(key) === frameNumber) {
+        entry = this._overlayData.frames[key];
+        break;
+      }
     }
   }
 
@@ -216,117 +254,6 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
 
 
 /**
- * This function updates the size of the canvas to match the image
- * Overrides method in renderer.js
- *
- * @member updateSizeAndPadding
- * @param {object} imageObj
- * @required imageObj to be loaded
- */
-GalleryRenderer.prototype.updateSizeAndPadding = function(imageObj) {
-  this.eleCanvas.setAttribute('width', imageObj.width);
-  this.eleCanvas.setAttribute('height', imageObj.height);
-  this.canvasWidth = imageObj.width;
-  this.canvasHeight = imageObj.height;
-};
-
-
-/**
- * Checks media extension for zip file format.
- *
- * @member checkMediaFormat
- * @param {string} filename
- * @return {bool}
- */
-GalleryRenderer.prototype.checkMediaFormat = function(filename) {
-  const extension = filename.split('.').pop();
-  return (extension === 'zip');
-};
-
-
-/**
- * Checks for MACOSX from mac created zips.
- *
- * @member checkMACOSX
- * @param {path} filename
- * @return {bool}
- */
-GalleryRenderer.prototype.checkMACOSX = function(filename) {
-  const elements = filename.split('/');
-  return elements.includes('__MACOSX');
-};
-
-
-/**
- * Opens up media and stores filenames in imageFiles by
- * index (psuedo frameNumber)
- *
- * @member openContents
- * @required media.src needs to be a zip file
- */
-GalleryRenderer.prototype.openContents = function() {
-  const zipPath = this.media.src;
-  if (!this.checkMediaFormat(zipPath)) {
-    /* eslint-disable-next-line no-console */
-    console.log('WARN: media is not a zip file.');
-    return;
-  }
-
-  const self = this;
-  this._isGalleryReady = false;
-  const xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
-    if (this.readyState === 4 && this.status === 200) {
-      const zipBlob = this.response;
-      self.readBlob(zipBlob);
-    } else if (this.status === 404) {
-      self._boolBadZip = true;
-      self.updateFromLoadingState();
-    }
-  };
-  xmlhttp.responseType = 'blob';
-  xmlhttp.open('GET', zipPath, true);
-  xmlhttp.send();
-};
-
-
-/**
- * Reads the zip blob into files
- *
- * @member readBlob
- * @param {blob} blob
- */
-GalleryRenderer.prototype.readBlob = function(blob) {
-  const self = this;
-  this.reader.createReader(new this.reader.BlobReader(blob), function(reader) {
-    reader.getEntries(function(entries) {
-      entries.forEach(function(item) {
-        const filename = item.filename;
-        const extension = self.getFileExtension(filename);
-        if (self.checkImageExtension(extension) &&
-        !self.checkMACOSX(filename)) {
-          item.getData(new self.reader.BlobWriter(), function(content) {
-            const tmp = filename.split('/');
-            const filenametruncated = tmp.slice(-1)[0];
-            self.imageFiles[filenametruncated] = content;
-            self.fileIndex.push(filenametruncated);
-            self._isGalleryReady = true;
-            self.updateFromLoadingState();
-          });
-        }
-      });
-    }, function(error) {
-      /* eslint-disable-next-line no-console */
-      console.log(error);
-    });
-  }, function(error) {
-    /* eslint-disable-next-line no-console */
-    console.log(error);
-  });
-};
-
-
-/**
  * Insert image into gallery
  *
  * @member insertImage
@@ -335,21 +262,12 @@ GalleryRenderer.prototype.readBlob = function(blob) {
 GalleryRenderer.prototype.insertImage = function(index) {
   this.clearState();
   const key = this.fileIndex[index];
+  this._currentKey = key;
   const fileBlob = this.imageFiles[key];
-  const imageObj = document.createElement('img');
   const tmpURL = URL.createObjectURL(fileBlob);
   this._currentImageURL = tmpURL;
-  imageObj.className = 'p51-contained-image';
-  imageObj.setAttribute('src', tmpURL);
-  imageObj.setAttribute('type', this.getFileExtension(key));
-  const self = this;
-  imageObj.addEventListener('load', function(event) {
-    self.updateSizeAndPadding(event.target);
-    self.prepareOverlay(key);
-    self.processFrame();
-  });
-
-  this.eleDivImage.appendChild(imageObj);
+  this.eleImage.setAttribute('src', this._currentImageURL);
+  this.eleImage.setAttribute('type', this.getFileExtension(key));
   this._isImageInserted = true;
 };
 
@@ -363,9 +281,6 @@ GalleryRenderer.prototype.insertImage = function(index) {
 GalleryRenderer.prototype.clearState = function() {
   this._isOverlayPrepared = false;
   this._isReadyProcessFrames = false;
-  while (this.eleDivImage.firstChild) {
-    this.eleDivImage.removeChild(this.eleDivImage.firstChild);
-  }
   URL.revokeObjectURL(this._currentImageURL);
   // Clear canvas
   for (const key in this.frameOverlay) {

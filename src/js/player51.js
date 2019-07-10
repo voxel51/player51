@@ -12,7 +12,7 @@
  * usage is here.
  *
  * To switch between types of media, specify the type attribute in media
- * in the following format.
+ * in the following format, otherwise known as MIME type.
  * <media type>/<media format>
  * examples: image/jpg, video/mp4, application/zip
 
@@ -44,7 +44,7 @@
     </script>
 
    ```
-
+ * For videos and images,
  * Note that default behavior is to mirror the size of the enclosing container.
  * You can, however, alter this in two ways.
  * 1. You can call `player.forceMax()` which will force the video or
@@ -54,10 +54,13 @@
  *    or image and its enclosing container to the width and height you pass in.
  *    Both such calls need to be made before the render call.
  *
- * TODO: implement an abstraction to for the overlay rendering.  Currently it
- * is directly tied to a canvas.  But, one can consider implementing this via
- * div/DOM rendering and bringing the full power of CSS to bear on the
- * overlays, including animation.
+ * For zip files,
+ * Note that the default behaviour is to have each image mirror the size of the
+ * enclosing container.
+ *
+ * Also note that there are two options for rendering zip files,
+ * Default: render as an image gallery.
+ * SequenceFlag = true: render as a psuedo videoplayer.
  *
  * Copyright 2017-2019, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
@@ -76,8 +79,10 @@ import {
 import {
   GalleryViewer,
 } from './galleryviewer.js';
+import {
+  ImageSequence,
+} from './imagesequence.js';
 
-// ES6 module export
 export default Player51;
 
 
@@ -96,17 +101,22 @@ export default Player51;
  * In the case of images: Overlay can be a string pointing to a single URL.
  * @param {int} fps is the frame-rate of the media.  If it is not provided
  * then it will be guessed. Ignore in the case of images.
- *
+ * @param {bool} sequenceFlag tells the player to render the zip file as either
+ * an image gallery or a video player.
  */
-function Player51(media, overlay, fps) {
+function Player51(media, overlay, fps = 0, sequenceFlag = false) {
   this.mediaType = this.determineMediaType(media);
   // Load correct player
   if (this.mediaType === 'video') {
     this.player = new VideoPlayer(media, overlay, fps);
   } else if (this.mediaType === 'image') {
     this.player = new ImageViewer(media, overlay);
-  } else if (this.mediaType === 'gallery' || this.mediaType === 'application') {
-    this.player = new GalleryViewer(media, overlay);
+  } else if (this.mediaType === 'application' && this.mediaFormat === 'zip') {
+    if (sequenceFlag) {
+      this.player = new ImageSequence(media, overlay, fps);
+    } else {
+      this.player = new GalleryViewer(media, overlay);
+    }
   } else {
     /* eslint-disable-next-line no-console */
     console.log('WARN: Player51 doesn\'t support this media type yet.');
@@ -137,6 +147,19 @@ Player51.prototype.setBoolDrawFrameNumber = function(value) {
 
 
 /**
+ * This function sets player.renderer.reader.workerScriptsPath
+ *
+ * @member setZipLibraryParameters
+ * @param {string} path relative to zip.js
+ */
+Player51.prototype.setZipLibraryParameters = function(path) {
+  if (this.player.renderer) {
+    this.player.renderer.reader.workerScriptsPath = path;
+  }
+};
+
+
+/**
  * This function figures out the type of media to be rendered.
  *
  * @member determineMediaType
@@ -148,6 +171,7 @@ Player51.prototype.determineMediaType = function(media) {
   if (splitResults.length !== 2) {
     throw new Error('Media type is incorrect.');
   }
+  this.mediaFormat = splitResults[1];
   return splitResults[0];
 };
 

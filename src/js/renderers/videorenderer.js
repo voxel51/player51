@@ -17,7 +17,6 @@ import {
   parseMediaFragmentsUri,
 } from '../mediafragments.js';
 
-// ES6 module export
 export {
   VideoRenderer,
 };
@@ -35,8 +34,7 @@ export {
  * @param {string} overlay is data that should be overlayed on the video.
  * Overlay can be empty (`null`), a string point to a single URL or
  * an object that is preloaded data.
- * @param {int} fps is the frame-rate of the media.  If it is not provided
- * then it will be guessed.
+ * @param {int} fps is the frame-rate of the media.
  */
 function VideoRenderer(media, overlay, fps) {
   Renderer.call(this, media, overlay);
@@ -359,7 +357,7 @@ VideoRenderer.prototype.resizeControls = function() {
  * @member updateFromDynamicState
  */
 VideoRenderer.prototype.updateFromDynamicState = function() {
-  if ((!this._isRendered) || (!this._isSizePrepared)) {
+  if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
 
@@ -394,7 +392,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
  * @member updateFromLoadingState
  */
 VideoRenderer.prototype.updateFromLoadingState = function() {
-  if ((this._isRendered) && (this._isSizePrepared)) {
+  if (this._isRendered && this._isSizePrepared) {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }

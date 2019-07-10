@@ -10,7 +10,6 @@
  */
 
 
-// ES6 module export
 export {
   ColorGenerator,
   Overlay,
