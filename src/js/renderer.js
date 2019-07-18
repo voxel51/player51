@@ -461,19 +461,6 @@ Renderer.prototype.checkImageExtension = function(extension) {
 
 
 /**
- * Checks media extension for zip file format.
- *
- * @member checkMediaFormat
- * @param {string} filename
- * @return {bool}
- */
-Renderer.prototype.checkMediaFormat = function(filename) {
-  const extension = filename.split('.').pop();
-  return (extension.toLowerCase() === 'zip');
-};
-
-
-/**
  * Checks for MACOSX from mac created zips.
  *
  * @member checkMACOSX
@@ -495,12 +482,6 @@ Renderer.prototype.checkMACOSX = function(filename) {
  */
 Renderer.prototype.openContents = function() {
   const zipPath = this.media.src;
-  if (!this.checkMediaFormat(zipPath)) {
-    /* eslint-disable-next-line no-console */
-    console.log('WARN: media is not a zip file.');
-    return;
-  }
-
   const self = this;
   this._boolZipReady = false;
   const xmlhttp = new XMLHttpRequest();
