@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Build script for creating various versions of the Player51.
 # Requires rollup to be installed.
 
