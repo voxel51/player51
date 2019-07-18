@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 ROLLUP="./node_modules/.bin/rollup"
 POSTCSS="./node_modules/.bin/postcss"
 
-if [ -z "$NODE_ENV"]; then
+if [ -z "$NODE_ENV" ]; then
   export NODE_ENV='prod'
 fi
 
