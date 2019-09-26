@@ -312,7 +312,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 Renderer.prototype._prepareOverlay_auxAttributes = function(context,
     attributes, frameKey = null) {
   const o = new FrameAttributesOverlay(attributes, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight);
+  waitUntil(() => (typeof(this.canvasWidth) != 'undefined' &&
+                   typeof(this.canvasHeight) != 'undefined'),
+    () => o.setup(context, this.canvasWidth, this.canvasHeight),
+    500);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
