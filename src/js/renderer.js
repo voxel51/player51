@@ -261,11 +261,11 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
       if (frameKeyI) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
-        if (typeof(f.objects) !== 'undefined') {
+        if (f && f.objects && f.objects.objects) {
           this._prepareOverlay_auxFormat1Objects(context, f.objects
               .objects);
         }
-        if (typeof(f.attrs) !== 'undefined') {
+        if (f && f.attrs) {
           this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
       }
