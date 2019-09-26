@@ -274,6 +274,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   if (typeof(rawjson.frames) !== 'undefined') {
     const context = this.setupCanvasContext();
     const frameKeys = Object.keys(rawjson.frames);
+    /* eslint-disable-next-line no-unused-vars */
     for (const frameKeyI in frameKeys) {
       if (frameKeyI) {
         const frameKey = frameKeys[frameKeyI];
@@ -314,8 +315,8 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
   const o = new FrameAttributesOverlay(attributes, this);
   waitUntil(() => (typeof(this.canvasWidth) != 'undefined' &&
                    typeof(this.canvasHeight) != 'undefined'),
-    () => o.setup(context, this.canvasWidth, this.canvasHeight),
-    500);
+  () => o.setup(context, this.canvasWidth, this.canvasHeight),
+  500);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
