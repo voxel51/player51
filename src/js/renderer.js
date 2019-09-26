@@ -242,7 +242,7 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
  * @param {json} rawjson
  */
 Renderer.prototype.prepareOverlay = function(rawjson) {
-  if ((this._isOverlayPrepared) || (this._isPreparingOverlay)) {
+  if ((this._isOverlayPrepared) || (this._isPreparingOverlay) || !rawjson) {
     return;
   }
   this._isPreparingOverlay = true;
