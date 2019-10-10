@@ -501,7 +501,6 @@ VideoRenderer.prototype.customDraw = function(context) {
     context.fillText(hhmmss, x + pad, y + pad + fontheight - pad2, tw +
       8);
   }
-  this._frameNumber++;
 };
 
 
