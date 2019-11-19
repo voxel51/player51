@@ -521,7 +521,7 @@ VideoRenderer.prototype.timerCallback = function() {
     const self = this;
     setTimeout(function() {
       self.timerCallback();
-    }, this.frameDuration * 500); // `* 500` is `* 1000 / 2`
+    }, 1000 / 30);
   } else {
     /* eslint-disable-next-line no-console */
     console.log('NOT SETTING TIME CALLBACK');
