@@ -396,13 +396,11 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     attrs = this._attrs;
   }
 
-  for (let a = 0; a < attrs.length; a++) {
-    this.attrText = this.attrText + `${attrs[a].value}`;
-    if (a < attrs.length - 1) {
-      this.attrText = this.attrText + ', ';
-    }
-  }
-  this.attrText = this.attrText.replace(new RegExp('_', 'g'), ' ');
+  this.attrText = attrs.sort(function(attr1, attr2) {
+    return attr1.name.localeCompare(attr2.name);
+  }).map(function(attr) {
+    return attr.value.replace(/_/g, ' ');
+  }).join(', ');
 };
 
 
