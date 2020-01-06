@@ -640,8 +640,7 @@ Renderer.prototype.setupCanvasContext = function() {
   if (!this._isRendered) {
     /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: trying to set up canvas context but player not rendered'
-    );
+        'WARN: trying to set up canvas context but player not rendered');
     return;
   }
   const canvasContext = this.eleCanvas.getContext('2d');
@@ -713,8 +712,7 @@ Renderer.prototype.handleWidthAndHeight = function() {
   if (!this._isRendered) {
     /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: Player51 trying to update size, but it is not rendered.'
-    );
+        'WARN: Player51 trying to update size, but it is not rendered.');
     return;
   }
 
