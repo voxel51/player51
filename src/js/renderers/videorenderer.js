@@ -274,6 +274,13 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
+  this.parent.addEventListener('mousemove', function() {
+    if (!self.player._boolThumbnailMode) {
+      self._boolShowControls = true;
+    }
+    self.updateFromDynamicState();
+  });
+
   this.parent.addEventListener('mouseleave', function() {
     if (!self._isDataLoaded) {
       return;
