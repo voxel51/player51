@@ -254,6 +254,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
   });
 
+  const hideControls = function() {
+    self._boolShowControls = false;
+    self.updateFromDynamicState();
+  };
+
   this.parent.addEventListener('mouseenter', function() {
     // Two different behaviors.
     // 1.  Regular Mode: show controls.
@@ -270,6 +275,19 @@ VideoRenderer.prototype.initPlayerControls = function() {
       }
     } else {
       self._boolShowControls = true;
+      self.setTimeout('hideControls', hideControls, 2.5 * 1000);
+    }
+    self.updateFromDynamicState();
+  });
+
+  this.parent.addEventListener('mousemove', function(e) {
+    if (!self.player._boolThumbnailMode) {
+      self._boolShowControls = true;
+      if (!self.eleDivVideoControls.contains(e.target)) {
+        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
+      } else {
+        self.clearTimeout('hideControls');
+      }
     }
     self.updateFromDynamicState();
   });
@@ -285,7 +303,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
           .canvasWidth, self
           .canvasHeight);
     } else {
-      self._boolShowControls = false;
+      hideControls();
+      self.clearTimeout('hideControls');
     }
     self.updateFromDynamicState();
   });

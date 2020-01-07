@@ -134,20 +134,37 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
     self.timerCallback();
   });
 
-  this.parent.addEventListener('mouseenter', function() {
+  /**
+   * helper to toggle control visibility
+   * @param {bool} showControls new visibility of controls
+   */
+  function handleShowControls(showControls) {
     if (!self._isFrameInserted) {
       return;
     }
-    self._boolShowControls = true;
+    self._boolShowControls = showControls;
     self.updateFromDynamicState();
+  }
+
+  this.parent.addEventListener('mouseenter', function() {
+    handleShowControls(true);
+    self.setTimeout('hideControls', () => handleShowControls(false),
+        2.5 * 1000);
+  });
+
+  this.parent.addEventListener('mousemove', function(e) {
+    handleShowControls(true);
+    if (!self.eleDivVideoControls.contains(e.target)) {
+      self.setTimeout('hideControls', () => handleShowControls(false),
+          2.5 * 1000);
+    } else {
+      self.clearTimeout('hideControls');
+    }
   });
 
   this.parent.addEventListener('mouseleave', function() {
-    if (!self._isFrameInserted) {
-      return;
-    }
-    self._boolShowControls = false;
-    self.updateFromDynamicState();
+    handleShowControls(false);
+    self.clearTimeout('hideControls');
   });
 
   this.eleImage.addEventListener('load', function() {

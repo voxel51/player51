@@ -87,6 +87,7 @@ function Renderer(media, overlay) {
   this._overlayURL = null;
   this._boolBadZip = false;
   this._boolZipReady = false;
+  this._timeouts = {};
   this.handleOverlay(overlay);
 }
 
@@ -640,8 +641,7 @@ Renderer.prototype.setupCanvasContext = function() {
   if (!this._isRendered) {
     /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: trying to set up canvas context but player not rendered'
-    );
+        'WARN: trying to set up canvas context but player not rendered');
     return;
   }
   const canvasContext = this.eleCanvas.getContext('2d');
@@ -713,8 +713,7 @@ Renderer.prototype.handleWidthAndHeight = function() {
   if (!this._isRendered) {
     /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: Player51 trying to update size, but it is not rendered.'
-    );
+        'WARN: Player51 trying to update size, but it is not rendered.');
     return;
   }
 
@@ -876,4 +875,27 @@ Renderer.prototype.resizeCanvas = function() {
   }
 
   this.resizeControls();
+};
+
+
+/**
+ * Set a named timeout, cancelling any existing timeout of the same name.
+ * @param {string} name The name of the timeout
+ * @param {function} callback The function to call after the time has passed
+ * @param {number} delay The time to wait
+ */
+Renderer.prototype.setTimeout = function(name, callback, delay) {
+  this.clearTimeout(name);
+  this._timeouts[name] = setTimeout(callback, delay);
+};
+
+/**
+ * Clear a named timeout if it exists.
+ * @param {string} name The name of the timeout
+ */
+Renderer.prototype.clearTimeout = function(name) {
+  if (name in this._timeouts) {
+    clearTimeout(this._timeouts[name]);
+    delete this._timeouts[name];
+  }
 };
