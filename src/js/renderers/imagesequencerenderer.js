@@ -142,7 +142,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
     if (!self._isFrameInserted) {
       return;
     }
-    self._boolShowControls = true;
+    self._boolShowControls = showControls;
     self.updateFromDynamicState();
   }
 
