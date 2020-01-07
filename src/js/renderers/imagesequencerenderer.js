@@ -148,14 +148,23 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 
   this.parent.addEventListener('mouseenter', function() {
     handleShowControls(true);
+    self.setTimeout('hideControls', () => handleShowControls(false),
+        2.5 * 1000);
   });
 
-  this.parent.addEventListener('mousemove', function() {
+  this.parent.addEventListener('mousemove', function(e) {
     handleShowControls(true);
+    if (!self.eleDivVideoControls.contains(e.target)) {
+      self.setTimeout('hideControls', () => handleShowControls(false),
+          2.5 * 1000);
+    } else {
+      self.clearTimeout('hideControls');
+    }
   });
 
   this.parent.addEventListener('mouseleave', function() {
     handleShowControls(false);
+    self.clearTimeout('hideControls');
   });
 
   this.eleImage.addEventListener('load', function() {
