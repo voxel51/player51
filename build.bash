@@ -19,7 +19,6 @@ if [ ! -d "build" ]; then
     mkdir -p build/css
 fi
 
-${ROLLUP} -c rollup.iife.js
-${ROLLUP} -c rollup.cjs.js
+${ROLLUP} -c rollup.js
 
 ${POSTCSS} src/css/player51.css > build/css/player51.min.css
