@@ -1,6 +1,4 @@
-
 .DS_Store
-test/player51-test-data/**
 build/**
 node_modules/**
 package-lock.json

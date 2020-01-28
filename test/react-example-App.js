@@ -5,7 +5,7 @@ import './App.css';
 
 import { Player51 } from './player51.js';
 import './player51.css';
-import overlayData from './player51-test-data/8Xxvx8V-hnc-001.json';
+import overlayData from './player51-test-data/video-labels.json';
 
 
 // Integrating a non-react js module into a react one, requires poking some
@@ -20,7 +20,7 @@ class Player51Component extends Component {
     console.log('Player51Component constructor is being called.');
     this.player = new Player51(
       {
-        src: "http://0.0.0.0:8000/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+        src: "http://0.0.0.0:8000/test/player51-test-data/video.mp4",
         type: "video/mp4"
       },
       overlayData,

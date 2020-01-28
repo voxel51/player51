@@ -27,10 +27,10 @@
 
         let player = new Player51(
           {
-            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+            src: "url/to/video.mp4",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
+          "url/to/labels.json",
           25
         );
 

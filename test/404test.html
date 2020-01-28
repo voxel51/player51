@@ -39,10 +39,10 @@
 
         let player = new Player51(
           {
-            src: "/test/player51-test-data/8dasfsdafasf-001.mp4",
+            src: "/test/data/nonexistent-video.mp4",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
+          "/test/data/video-labels.json",
           25
         );
 
@@ -56,10 +56,10 @@
 
         let player2 = new Player51(
           {
-            src: "/test/player51-test-data/8dasfsdaf.png",
+            src: "/test/data/nonexistent-image.png",
             type: "image/png"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
+          "/test/data/video-labels.json",
         );
 
         player2.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");

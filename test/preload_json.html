@@ -39,7 +39,7 @@
 
               let player = new Player51(
                 {
-                  src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+                  src: "/test/data/video.mp4",
                   type: "video/mp4"
                 },
                 labelsObject,
@@ -53,7 +53,7 @@
               console.log("Player51 rendered and ready.");
             }
         };
-        xmlhttp.open("GET", "/test/player51-test-data/8Xxvx8V-hnc-001.json", true);
+        xmlhttp.open("GET", "/test/data/video-labels.json", true);
         xmlhttp.send();
         console.log("JSON retrieval sent");
 
