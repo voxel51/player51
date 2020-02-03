@@ -126,8 +126,8 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 
   this.eleSeekBar.addEventListener('change', function() {
     // Calculate new frame
-    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100)
-    * self._totalNumberOfFrames);
+    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100) *
+      self._totalNumberOfFrames);
     if (!self._boolPlaying) {
       self.updateStateFromTimeChange();
     }

@@ -186,8 +186,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleVideo.addEventListener('pause', function() {
     self.checkForFragmentReset(self.computeFrameNumber());
-    if (self._boolPlaying && !self._lockToMF && !self._boolManualSeek
-      && !self.eleVideo.ended) {
+    if (self._boolPlaying && !self._lockToMF && !self._boolManualSeek &&
+        !self.eleVideo.ended) {
       self.eleVideo.play();
     }
   });

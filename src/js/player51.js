@@ -92,19 +92,17 @@ export default Player51;
  * INHERITS:  None
  * F-MIXINS:  None
  * @constructor
- * @param {object} media is an object that has "src" and "type" attributes.
- * type must be specified as either image or video
- * @param {string} overlay is data that should be overlayed on
- * the video or image.
- * In the case of videos: Overlay can be empty (`null`),
- * a string pointing to a single URL or an object that is preloaded data.
- * In the case of images: Overlay can be a string pointing to a single URL.
- * @param {int} fps is the frame-rate of the media.  If it is not provided
- * then it will be guessed. Ignore in the case of images.
- * @param {bool} sequenceFlag tells the player to render the zip file as either
- * an image gallery or a video player.
+ * @param {object} options with the following keys:
+ *   media: an object that has "src" (URL) and "type" (mimetype) attributes.
+ *   overlay: data that should be overlayed on the video or image. In the case
+ *     of videos: can be null, a single URL or an object that is preloaded data.
+ *     In the case of images: can be a single URL.
+ *   fps: the frame-rate of the media. Only used for videos. If it is not
+ *     provided then it will be guessed.
+ *   isSequence: for rendering ZIP files - if true, the contents will be
+ *     rendered as a video; otherwise, as a gallery.
  */
-function Player51(options) {
+function Player51(options, ...args) {
   // maintain compatibility with code that passes these arguments positionally
   if (options.src && options.type) {
     options.media = {
@@ -114,20 +112,21 @@ function Player51(options) {
     delete options.src;
     delete options.type;
   }
+  /* eslint-disable-next-line no-unused-vars */
   for (let [index, name] of Object.entries(['overlay', 'fps', 'isSequence'])) {
-    index = Number(index) + 1;
-    if (arguments[index] !== undefined) {
+    index = Number(index);
+    if (args[index] !== undefined) {
       if (options[name] === undefined) {
-        options[name] = arguments[index];
+        options[name] = args[index];
       } else {
         throw new Error(
-          `Duplicate option and positional argument ${index}: ${name}`);
+            `Duplicate option and positional argument ${index + 1}: ${name}`);
       }
     }
   }
 
-  let {media, overlay, fps} = options;
-  let mimetype = options.media.type.toLowerCase();
+  const {media, overlay, fps} = options;
+  const mimetype = options.media.type.toLowerCase();
 
   // Load correct player
   if (mimetype.startsWith('video/')) {
@@ -137,10 +136,8 @@ function Player51(options) {
   } else if (mimetype === 'application/zip') {
     if (options.isSequence) {
       return new ImageSequence(media, overlay, fps);
-    } else {
-      return new GalleryViewer(media, overlay);
     }
-  } else {
-    throw new Error(`Unrecognized mime type: ${mimetype}`);
+    return new GalleryViewer(media, overlay);
   }
+  throw new Error(`Unrecognized mime type: ${mimetype}`);
 }
