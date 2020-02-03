@@ -131,148 +131,16 @@ function Player51(options) {
 
   // Load correct player
   if (mimetype.startsWith('video/')) {
-    this.player = new VideoPlayer(media, overlay, fps);
+    return new VideoPlayer(media, overlay, fps);
   } else if (mimetype.startsWith('image/')) {
-    this.player = new ImageViewer(media, overlay);
+    return new ImageViewer(media, overlay);
   } else if (mimetype === 'application/zip') {
-    if (!options.isSequence) {
-      this.player = new ImageSequence(media, overlay, fps);
+    if (options.isSequence) {
+      return new ImageSequence(media, overlay, fps);
     } else {
-      this.player = new GalleryViewer(media, overlay);
+      return new GalleryViewer(media, overlay);
     }
   } else {
-    /* eslint-disable-next-line no-console */
-    console.log('WARN: Player51 doesn\'t support this media type yet.');
+    throw new Error(`Unrecognized mime type: ${mimetype}`);
   }
 }
-
-
-/**
- * This function sets player.boolDrawTimestamp
- *
- * @member setBoolDrawTimeStamp
- * @param {bool} value true/false
- */
-Player51.prototype.setBoolDrawTimeStamp = function(value) {
-  this.player.boolDrawTimestamp = value;
-};
-
-
-/**
- * This function sets player.boolDrawFrameNumber
- *
- * @member setBoolDrawFrameNumber
- * @param {bool} value  true/false
- */
-Player51.prototype.setBoolDrawFrameNumber = function(value) {
-  this.player.boolDrawFrameNumber = value;
-};
-
-
-/**
- * This function sets player.renderer.reader.workerScriptsPath
- *
- * @member setZipLibraryParameters
- * @param {string} path relative to zip.js
- */
-Player51.prototype.setZipLibraryParameters = function(path) {
-  if (this.player.renderer) {
-    this.player.renderer.reader.workerScriptsPath = path;
-  }
-};
-
-
-/**
- * Calls poster on player
- *
- * @member poster
- * @param {string} url Image to be shown while loading
- * @param {string} option loading/404
- */
-Player51.prototype.poster = function(url, option='loading') {
-  if (option === 'loading') {
-    this.player.setLoadingPoster(url);
-  } else if (option === '404') {
-    this.player.setNotFoundPoster(url);
-  } else {
-    throw new Error('Invalid poster option.');
-  }
-};
-
-
-/**
- * Calls loop on player
- *
- * @member loop
- */
-Player51.prototype.loop = function() {
-  this.player.loop();
-};
-
-
-/**
- * Calls autoplay on player
- *
- *
- * @member autoplay
- */
-Player51.prototype.autoplay = function() {
-  this.player.autoplay();
-};
-
-
-/**
- * Calls resetToFragment on player
- *
- * @member resetToFragment
- */
-Player51.prototype.resetToFragment = function() {
-  this.player.resetToFragment();
-};
-
-
-/**
- * Calls thumbnailMode on player
- *
- * @member thumbnailMode
- * @param {function} action (optional) a callback function to associate with
- * a click event.
- */
-Player51.prototype.thumbnailMode = function(action) {
-  this.player.thumbnailMode(action);
-};
-
-
-/**
- * Render
- *
- * Renders a new player in the DOM element provided.
- *
- * @member render
- * @param {domElement} parentElement
- */
-Player51.prototype.render = function(parentElement) {
-  this.player.render(parentElement);
-};
-
-
-/**
- * Calls forceSize on player
- *
- * @member forceSize
- * @param {int} width
- * @param {int} height
- */
-Player51.prototype.forceSize = function(width, height) {
-  this.player.forceSize(width, height);
-};
-
-
-/**
- * Calls forceMax on player
- *
- * @member forceMax
- */
-Player51.prototype.forceMax = function() {
-  this.player.forceMax();
-};
