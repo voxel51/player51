@@ -104,15 +104,38 @@ export default Player51;
  * @param {bool} sequenceFlag tells the player to render the zip file as either
  * an image gallery or a video player.
  */
-function Player51(media, overlay, fps = 0, sequenceFlag = false) {
-  this.mediaType = this.determineMediaType(media);
+function Player51(options) {
+  // maintain compatibility with code that passes these arguments positionally
+  if (options.src && options.type) {
+    options.media = {
+      src: options.src,
+      type: options.type,
+    };
+    delete options.src;
+    delete options.type;
+  }
+  for (let [index, name] of Object.entries(['overlay', 'fps', 'isSequence'])) {
+    index = Number(index) + 1;
+    if (arguments[index] !== undefined) {
+      if (options[name] === undefined) {
+        options[name] = arguments[index];
+      } else {
+        throw new Error(
+          `Duplicate option and positional argument ${index}: ${name}`);
+      }
+    }
+  }
+
+  let {media, overlay, fps} = options;
+  let mimetype = options.media.type.toLowerCase();
+
   // Load correct player
-  if (this.mediaType === 'video') {
+  if (mimetype.startsWith('video/')) {
     this.player = new VideoPlayer(media, overlay, fps);
-  } else if (this.mediaType === 'image') {
+  } else if (mimetype.startsWith('image/')) {
     this.player = new ImageViewer(media, overlay);
-  } else if (this.mediaType === 'application' && this.mediaFormat === 'zip') {
-    if (sequenceFlag) {
+  } else if (mimetype === 'application/zip') {
+    if (!options.isSequence) {
       this.player = new ImageSequence(media, overlay, fps);
     } else {
       this.player = new GalleryViewer(media, overlay);
@@ -156,23 +179,6 @@ Player51.prototype.setZipLibraryParameters = function(path) {
   if (this.player.renderer) {
     this.player.renderer.reader.workerScriptsPath = path;
   }
-};
-
-
-/**
- * This function figures out the type of media to be rendered.
- *
- * @member determineMediaType
- * @param {object} media
- * @return {string} image/video/etc..
- */
-Player51.prototype.determineMediaType = function(media) {
-  const splitResults = media.type.split('/');
-  if (splitResults.length !== 2) {
-    throw new Error('Media type is incorrect.');
-  }
-  this.mediaFormat = splitResults[1];
-  return splitResults[0];
 };
 
 
