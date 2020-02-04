@@ -57,6 +57,8 @@ function VideoRenderer(media, overlay, fps) {
   this._mfEndF = null;
   this._lockToMF = false;
   this.setMediaFragment();
+
+  console.log(this);
 }
 VideoRenderer.prototype = Object.create(Renderer.prototype);
 VideoRenderer.prototype.constructor = VideoRenderer;
@@ -307,6 +309,20 @@ VideoRenderer.prototype.initPlayerControls = function() {
       self.clearTimeout('hideControls');
     }
     self.updateFromDynamicState();
+  });
+
+  window.addEventListener('keydown', function(e) {
+    if (self.eleVideo.ended) {
+      return;
+    }
+    if (self.eleVideo.paused) {
+      if (e.keyCode === 37) { // left arrow
+        self.eleVideo.currentTime = Math.max(0, self.eleVideo.currentTime - self.frameDuration);
+      } else if (e.keyCode === 39) { // right arrow
+        self.eleVideo.currentTime = Math.min(self.eleVideo.duration, self.eleVideo.currentTime + self.frameDuration);
+      }
+      self.updateStateFromTimeChange();
+    }
   });
 
   this.updateFromLoadingState();
