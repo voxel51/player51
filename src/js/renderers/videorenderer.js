@@ -57,8 +57,6 @@ function VideoRenderer(media, overlay, fps) {
   this._mfEndF = null;
   this._lockToMF = false;
   this.setMediaFragment();
-
-  console.log(this);
 }
 VideoRenderer.prototype = Object.create(Renderer.prototype);
 VideoRenderer.prototype.constructor = VideoRenderer;
