@@ -378,8 +378,5 @@ ImageSequenceRenderer.prototype.timerCallback = function() {
 
   this._frameNumber++;
   this.updateStateFromTimeChange();
-  const self = this;
-  setTimeout(function() {
-    self.timerCallback();
-  }, this.frameDuration * 1000);
+  requestAnimationFrame(this.timerCallback.bind(this));
 };

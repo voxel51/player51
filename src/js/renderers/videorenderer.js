@@ -555,10 +555,7 @@ VideoRenderer.prototype.timerCallback = function() {
   this.updateStateFromTimeChange();
   // if we are manually seeking right now, then do not set the manual callback
   if (!this._boolManualSeek) {
-    const self = this;
-    setTimeout(function() {
-      self.timerCallback();
-    }, 1000 / 30);
+    requestAnimationFrame(this.timerCallback.bind(this));
   } else {
     /* eslint-disable-next-line no-console */
     console.log('NOT SETTING TIME CALLBACK');
