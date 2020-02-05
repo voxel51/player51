@@ -309,6 +309,24 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
+  this.parent.addEventListener('keydown', function(e) {
+    if (self.eleVideo.ended) {
+      return;
+    }
+    if (self.eleVideo.paused) {
+      if (e.keyCode === 37) { // left arrow
+        self.eleVideo.currentTime = Math.max(
+            0, self.eleVideo.currentTime - self.frameDuration);
+      } else if (e.keyCode === 39) { // right arrow
+        self.eleVideo.currentTime = Math.min(
+            self.eleVideo.duration,
+            self.eleVideo.currentTime + self.frameDuration,
+        );
+      }
+      self.updateStateFromTimeChange();
+    }
+  });
+
   this.updateFromLoadingState();
 };
 
