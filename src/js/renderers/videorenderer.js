@@ -314,16 +314,13 @@ VideoRenderer.prototype.initPlayerControls = function() {
       return;
     }
     if (self.eleVideo.paused) {
-      let currentFrameStartTime = self.computeFrameNumber() +
-        (self.frameDuration / 100) - self.frameZeroOffset;
       if (e.keyCode === 37) { // left arrow
         self.eleVideo.currentTime = Math.max(
-            0, currentFrameStartTime - self.frameDuration);
+            0, self.computeFrameTime() - self.frameDuration);
       } else if (e.keyCode === 39) { // right arrow
         self.eleVideo.currentTime = Math.min(
             self.eleVideo.duration,
-            currentFrameStartTime + self.frameDuration,
-        );
+            self.computeFrameTime() + self.frameDuration);
       }
       self.updateStateFromTimeChange();
     }
@@ -628,12 +625,12 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
 
 
 /**
- * Uses information about the currentTime from the HTML5 video player and the
- * frameRate of the video to compute the current frame number.
+ * Computes the frame number corresponding to the given (or current) video time.
  *
  * @member computeFrameNumber
- * @param {time} time
- * @return {time}
+ * @param {number} time Time to compute frame number for (defaults to current
+ *   player time)
+ * @return {number} Frame number
  */
 VideoRenderer.prototype.computeFrameNumber = function(time) {
   if (typeof(time) === 'undefined') {
@@ -641,6 +638,25 @@ VideoRenderer.prototype.computeFrameNumber = function(time) {
   }
   const currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
   return Math.floor(currentFrameNumber);
+};
+
+
+/**
+ * Computes the video time corresponding to the given frame number.
+ *
+ * @member computeFrameTime
+ * @param {number} frameNumber frame number (1-indexed, as returned by
+ *   computeFrameNumber; defaults to current frame number)
+ * @return {number} Video time
+ */
+VideoRenderer.prototype.computeFrameTime = function(frameNumber) {
+  if (typeof(frameNumber) === 'undefined') {
+    frameNumber = this.computeFrameNumber();
+  }
+  frameNumber -= this.frameZeroOffset;
+  // offset by 1/100 of a frame to avoid browser issues where being *exactly*
+  // on a frame boundary sometimes renders the previous frame
+  return (frameNumber + 0.01) * this.frameDuration;
 };
 
 
