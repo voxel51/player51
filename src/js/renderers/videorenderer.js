@@ -314,13 +314,15 @@ VideoRenderer.prototype.initPlayerControls = function() {
       return;
     }
     if (self.eleVideo.paused) {
+      let currentFrameStartTime = self.computeFrameNumber() +
+        (self.frameDuration / 100) - self.frameZeroOffset;
       if (e.keyCode === 37) { // left arrow
         self.eleVideo.currentTime = Math.max(
-            0, self.eleVideo.currentTime - self.frameDuration);
+            0, currentFrameStartTime - self.frameDuration);
       } else if (e.keyCode === 39) { // right arrow
         self.eleVideo.currentTime = Math.min(
             self.eleVideo.duration,
-            self.eleVideo.currentTime + self.frameDuration,
+            currentFrameStartTime + self.frameDuration,
         );
       }
       self.updateStateFromTimeChange();
