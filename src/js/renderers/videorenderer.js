@@ -405,6 +405,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   } else {
     if (!this._boolSingleFrame && !this.eleVideo.paused) {
       this.eleVideo.pause();
+      this.eleVideo.currentTime = this.computeFrameTime();
     }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
