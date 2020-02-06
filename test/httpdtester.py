@@ -10,6 +10,7 @@
 
 # Standard library imports.
 from SocketServer import ThreadingMixIn
+import argparse
 import BaseHTTPServer
 import SimpleHTTPServer
 import sys
@@ -43,6 +44,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     """
 
     serve_path = DATA_DIR
+    video_path = None
+    video_labels_path = None
 
     def do_GET(self):
         """ Overridden to handle HTTP Range requests. """
@@ -189,6 +192,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         path = normpath(unquote(path))
         words = path.split('/')
         words = filter(None, words)
+        if words[-1] == "video.mp4":
+            return self.video_path
+        elif words[-1] == "video-labels.json":
+            return self.video_labels_path
         path = self.serve_path
         for word in words:
             drive, word = splitdrive(word)
@@ -222,35 +229,26 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return (None, None)
 
 
-def get_server(port=8000, next_attempts=0, serve_path=None):
-    Handler = RequestHandler
-    if serve_path:
-        Handler.serve_path = serve_path
-    while next_attempts >= 0:
-        try:
-            httpd = ThreadingHTTPServer(("", port), Handler)
-            return httpd
-        except socket.error as e:
-            if e.errno == errno.EADDRINUSE:
-                next_attempts -= 1
-                port += 1
-            else:
-                raise
-
 def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--port", type=int, default=8000)
+    parser.add_argument("-s", "--serve-path", default=DATA_DIR,
+        help="Path to serve static files from")
+    parser.add_argument("-v", "--video-path", "--video",
+        default=os.path.join(DATA_DIR, "test", "data", "video.mp4"),
+        help="Path to test video")
+    parser.add_argument("-l", "--video-labels-path", "--video-labels",
+        default=os.path.join(DATA_DIR, "test", "data", "video-labels.json"),
+        help="Path to test labels")
+    args = parser.parse_args()
 
-    PORT = 8000
-    if len(args)>0:
-        PORT = int(args[-1])
-    serve_path = DATA_DIR
-    if len(args) > 1:
-        serve_path = abspath(args[-2])
+    RequestHandler.serve_path = args.serve_path
+    RequestHandler.video_path = args.video_path
+    RequestHandler.video_labels_path = args.video_labels_path
 
-    httpd = get_server(port=PORT, serve_path=serve_path)
+    httpd = ThreadingHTTPServer(("", args.port), RequestHandler)
 
-    print "serving at port", PORT
+    print "serving at port", args.port
     httpd.serve_forever()
 
 if __name__ == "__main__" :
