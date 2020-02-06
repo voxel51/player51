@@ -48,7 +48,7 @@ function VideoRenderer(media, overlay, fps) {
   this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
-  this.frameDuration = 1.0 / this.frameRate;
+  this.frameDuration = 1 / this.frameRate;
   this.frameZeroOffset = 1;
   this._hasMediaFragment = false;
   this._mfBeginT = null; // Time
@@ -441,6 +441,11 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
+  }
+
+  if (isNaN(this.frameRate) && !isNaN(this.eleVideo.duration) && this.frameOverlay) {
+    this.frameRate = Object.keys(this.frameOverlay).length / this.eleVideo.duration;
+    this.frameDuration = 1 / this.frameRate;
   }
 };
 
