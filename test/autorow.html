@@ -44,6 +44,7 @@
     <div class="container" id="container">
     </div>
 
+    <script src="/test/data/config.js"></script>
     <script type="module">
       import Player51 from '/src/js/player51.js';
 
@@ -102,7 +103,7 @@
               type: "video/mp4"
             },
             "/test/data/video-labels.json",
-            25
+            CONFIG.video_fps
           );
 
           player.setBoolDrawTimeStamp(true);

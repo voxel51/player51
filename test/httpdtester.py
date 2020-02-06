@@ -237,6 +237,8 @@ def main(args=None):
     parser.add_argument("-v", "--video-path", "--video",
         default=os.path.join(DATA_DIR, "test", "data", "video.mp4"),
         help="Path to test video")
+    parser.add_argument("-f", "--video-fps", "--fps", type=float, default=None,
+        help="Framerate of video (default: auto-detected based on labels)")
     parser.add_argument("-l", "--video-labels-path", "--video-labels",
         default=os.path.join(DATA_DIR, "test", "data", "video-labels.json"),
         help="Path to test labels")
@@ -245,6 +247,10 @@ def main(args=None):
     RequestHandler.serve_path = args.serve_path
     RequestHandler.video_path = args.video_path
     RequestHandler.video_labels_path = args.video_labels_path
+    with open(os.path.join(DATA_DIR, "test", "data", "config.js"), "w") as f:
+        f.write('CONFIG = {};')
+        if args.video_fps is not None:
+            f.write('CONFIG.video_fps = %f;' % args.video_fps)
 
     httpd = ThreadingHTTPServer(("", args.port), RequestHandler)
 

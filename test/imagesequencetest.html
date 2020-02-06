@@ -24,6 +24,7 @@
 
     <div id="test-container" />
 
+    <script src="/test/data/config.js"></script>
     <script type="module">
       import Player51 from '/src/js/player51.js';
 
@@ -35,7 +36,7 @@
             type: "application/zip"
           },
           "/test/data/frames.json",
-          25,
+          CONFIG.video_fps,
           true
         );
 
