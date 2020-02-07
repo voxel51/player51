@@ -9,6 +9,7 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
+import {deserialize} from './numpy.js';
 
 export {
   ColorGenerator,
@@ -300,6 +301,10 @@ function ObjectOverlay(d, renderer) {
   this.attrTextWidth = -1;
   this.attrFontHeight = null;
 
+  if (typeof(d.mask) === 'string') {
+    this.mask = deserialize(atob(d.mask));
+  }
+
   this.x = null;
   this.y = null;
   this.w = null;
@@ -424,6 +429,21 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.strokeStyle = this.color;
   context.fillStyle = this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
+
+  if (this.mask) {
+    const [maskWidth, maskHeight] = this.mask.shape;
+    const cellWidth = this.w / maskWidth;
+    const cellHeight = this.h / maskHeight;
+    context.setTransform(cellWidth, 0, 0, cellHeight, this.x, this.y);
+    for (let x = 0; x < maskWidth; x++) {
+      for (let y = 0; y < maskHeight; y++) {
+        if (this.mask.data[(y * maskWidth) + x]) {
+          context.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    context.setTransform(1, 0, 0, 1, 0, 0);
+  }
 
   if (!this.renderer.player._boolThumbnailMode) {
     // fill and stroke to account for line thickness variation
