@@ -431,7 +431,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (this.mask) {
-    const [maskWidth, maskHeight] = this.mask.shape;
+    const [maskHeight, maskWidth] = this.mask.shape;
     const cellWidth = this.w / maskWidth;
     const cellHeight = this.h / maskHeight;
     context.setTransform(cellWidth, 0, 0, cellHeight, this.x, this.y);
