@@ -17,7 +17,7 @@
  * examples: image/jpg, video/mp4, application/zip
 
    ```
-    <div id="test-container" />
+    <div id="test-container"></div>
 
     <script type="module">
       import Player51 from "/src/js/player51.js";
