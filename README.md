@@ -1,6 +1,6 @@
 # Player51
 
-Copyright 2017-2019, Voxel51, Inc.
+Copyright 2017-2020, Voxel51, Inc.
 
 Player51 is a client-side media player based on javascript that can render metadata overlays.
 
@@ -30,7 +30,7 @@ sudo apt install node npm
 
 ### Packages
 
-We use rollup, babel, uglify and eslint packages for packaging Player51 javascript, and postcss and cssnano for handling the css files.  
+We use rollup, babel, uglify and eslint packages for packaging Player51 javascript, and postcss and cssnano for handling the css files.
 
 ```
 npm install --save-dev rollup
@@ -57,7 +57,7 @@ cd /path/to/player51
 bash build.bash
 ```
 
-This creates a folder `build` with the following contents.  
+This creates a folder `build` with the following contents.
 - cjs -- CommonJS build
 - css -- Minified CSS
 - iife -- Standard JS immediate execution build.
@@ -75,7 +75,7 @@ The container div must be set to `position: relative`.
 
 # Examples and Testing
 
-Assume you have a running python installation.  
+Assume you have a running python installation.
 
 ## Get the test data
 

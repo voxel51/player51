@@ -6,7 +6,7 @@
  * @desc MediaPlayer.js is an abstract class that defines the features
  * child players should be able to support.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
