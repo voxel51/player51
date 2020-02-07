@@ -406,6 +406,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     if (!this._boolSingleFrame && !this.eleVideo.paused) {
       this.eleVideo.pause();
       this.eleVideo.currentTime = this.computeFrameTime();
+      this._updateFrame();
     }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
@@ -461,11 +462,16 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  */
 VideoRenderer.prototype.updateStateFromTimeChange = function() {
+  this.updateFromDynamicState();
+  this._updateFrame();
+};
+
+
+VideoRenderer.prototype._updateFrame = function() {
   let cfn = this.computeFrameNumber();
   // check if we have a media fragment and should be looping
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
-  this.updateFromDynamicState();
   if (cfn !== this._frameNumber) {
     this._frameNumber = cfn;
     this.processFrame();
