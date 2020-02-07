@@ -311,7 +311,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.parent.addEventListener('keydown', function(e) {
     if (self.eleVideo.ended) {
-      return;
+      self.eleVideo.pause();
     }
     if (self.eleVideo.paused) {
       if (e.keyCode === 37) { // left arrow
