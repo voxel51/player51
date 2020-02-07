@@ -279,6 +279,10 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  * @param {renderer} renderer
  */
 function ObjectOverlay(d, renderer) {
+  if (!ObjectOverlay._tempMaskCanvas) {
+    ObjectOverlay._tempMaskCanvas = document.createElement('canvas');
+  }
+
   Overlay.call(this);
 
   this.renderer = renderer;
@@ -432,17 +436,22 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
   if (this.mask) {
     const [maskHeight, maskWidth] = this.mask.shape;
+    ObjectOverlay._tempMaskCanvas.width = maskWidth;
+    ObjectOverlay._tempMaskCanvas.height = maskHeight;
+
+    const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
+    maskContext.fillStyle = this.color;
+
     const cellWidth = this.w / maskWidth;
     const cellHeight = this.h / maskHeight;
-    context.setTransform(cellWidth, 0, 0, cellHeight, this.x, this.y);
     for (let x = 0; x < maskWidth; x++) {
       for (let y = 0; y < maskHeight; y++) {
         if (this.mask.data[(y * maskWidth) + x]) {
-          context.fillRect(x, y, 1, 1);
+          maskContext.fillRect(x, y, 1, 1);
         }
       }
     }
-    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.drawImage(ObjectOverlay._tempMaskCanvas, this.x, this.y, this.w, this.h);
   }
 
   if (!this.renderer.player._boolThumbnailMode) {
