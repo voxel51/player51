@@ -436,14 +436,17 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
   if (this.mask) {
     const [maskHeight, maskWidth] = this.mask.shape;
-    ObjectOverlay._tempMaskCanvas.width = maskWidth;
-    ObjectOverlay._tempMaskCanvas.height = maskHeight;
+    if (ObjectOverlay._tempMaskCanvas.width < maskWidth) {
+      ObjectOverlay._tempMaskCanvas.width = maskWidth;
+    }
+    if (ObjectOverlay._tempMaskCanvas.height < maskHeight) {
+      ObjectOverlay._tempMaskCanvas.height = maskHeight;
+    }
 
     const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
+    maskContext.clearRect(0, 0, maskWidth, maskHeight);
     maskContext.fillStyle = this.color;
 
-    const cellWidth = this.w / maskWidth;
-    const cellHeight = this.h / maskHeight;
     for (let x = 0; x < maskWidth; x++) {
       for (let y = 0; y < maskHeight; y++) {
         if (this.mask.data[(y * maskWidth) + x]) {
@@ -451,7 +454,9 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         }
       }
     }
-    context.drawImage(ObjectOverlay._tempMaskCanvas, this.x, this.y, this.w, this.h);
+    context.drawImage(ObjectOverlay._tempMaskCanvas,
+        0, 0, maskWidth, maskHeight,
+        this.x, this.y, this.w, this.h);
   }
 
   if (!this.renderer.player._boolThumbnailMode) {
