@@ -444,16 +444,21 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     }
 
     const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
-    maskContext.clearRect(0, 0, maskWidth, maskHeight);
-    maskContext.fillStyle = this.color;
+    const maskImage = maskContext.createImageData(maskWidth, maskHeight);
 
-    for (let x = 0; x < maskWidth; x++) {
-      for (let y = 0; y < maskHeight; y++) {
-        if (this.mask.data[(y * maskWidth) + x]) {
-          maskContext.fillRect(x, y, 1, 1);
-        }
+    // draw opaque pixels where mask=1
+    for (let i = 0; i < this.mask.data.length; i++) {
+      if (this.mask.data[i]) {
+        maskImage.data[(i * 4) + 3] = 255;
       }
     }
+    maskContext.putImageData(maskImage, 0, 0);
+
+    // fill where pixels are opaque
+    maskContext.globalCompositeOperation = 'source-in';
+    maskContext.fillStyle = this.color;
+    maskContext.fillRect(0, 0, maskWidth, maskHeight);
+
     context.drawImage(ObjectOverlay._tempMaskCanvas,
         0, 0, maskWidth, maskHeight,
         this.x, this.y, this.w, this.h);
