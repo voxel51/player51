@@ -5,7 +5,7 @@ Downloads example data from Google Drive.
 Usage:
     python download_data.py
 
-Copyright 2017-2019, Voxel51, LLC
+Copyright 2017-2020, Voxel51, LLC
 voxel51.com
 
 Brian Moore, brian@voxel51.com

@@ -17,7 +17,7 @@
  * examples: image/jpg, video/mp4, application/zip
 
    ```
-    <div id="test-container" />
+    <div id="test-container"></div>
 
     <script type="module">
       import Player51 from "/src/js/player51.js";
@@ -62,7 +62,7 @@
  * Default: render as an image gallery.
  * SequenceFlag = true: render as a psuedo videoplayer.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com

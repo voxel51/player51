@@ -6,7 +6,7 @@
  * @desc VideoRenderer is a class that controls the creation and viewing of
  * videoplayer.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
@@ -227,7 +227,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
     const time = self.eleVideo.duration * (self.eleSeekBar
         .valueAsNumber / 100.0);
     // Update the video time
-    self.eleVideo.currentTime = time;
+    self.eleVideo.currentTime = self.computeFrameTime(
+      self.computeFrameNumber(time));
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
     self._boolSingleFrame = false;
@@ -249,7 +250,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // Play the video when the seek handle is dropped
   this.eleSeekBar.addEventListener('mouseup', function() {
     self._boolManualSeek = false;
-    if (self._boolPlaying) {
+    if (self._boolPlaying && self.eleVideo.paused) {
+      self.eleVideo.currentTime = self.computeFrameTime();
       self.eleVideo.play();
     }
   });
@@ -398,12 +400,12 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
 
   if (this._boolPlaying) {
-    if (!this._boolSingleFrame && this.eleVideo.paused) {
+    if (this.eleVideo.paused && !this._boolSingleFrame && !this._boolManualSeek) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
-    if (!this._boolSingleFrame && !this.eleVideo.paused) {
+    if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
       this.eleVideo.currentTime = this.computeFrameTime();
       this._updateFrame();

@@ -6,7 +6,7 @@
  * @desc GalleryViewer is a javascript based image gallery that can render
  * available annotation and markup overlayed on top of the images.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
