@@ -398,12 +398,12 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
 
   if (this._boolPlaying) {
-    if (!this._boolSingleFrame && this.eleVideo.paused) {
+    if (this.eleVideo.paused && !this._boolSingleFrame && !this._boolManualSeek) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
-    if (!this._boolSingleFrame && !this.eleVideo.paused) {
+    if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
       this.eleVideo.currentTime = this.computeFrameTime();
     }
