@@ -565,6 +565,7 @@ VideoRenderer.prototype.customDraw = function(context) {
  */
 VideoRenderer.prototype.timerCallback = function() {
   if (this.eleVideo.paused || this.eleVideo.ended) {
+    this._updateFrame();
     return;
   }
   this.updateStateFromTimeChange();
