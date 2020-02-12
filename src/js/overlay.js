@@ -306,7 +306,7 @@ function ObjectOverlay(d, renderer) {
   this.attrFontHeight = null;
 
   if (typeof(d.mask) === 'string') {
-    this.mask = deserialize(atob(d.mask));
+    this.mask = deserialize(d.mask);
   }
 
   this.x = null;
