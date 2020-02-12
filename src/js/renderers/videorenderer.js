@@ -136,7 +136,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
-    self.updateFromLoadingState();
     self.setupCanvasContext();
     self.updateFromLoadingState();
   });
@@ -446,9 +445,12 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
     this.prepareOverlay(this._overlayData);
   }
 
-  const numFrames = Object.keys(this.frameOverlay).length;
-  if (isNaN(this.frameRate) && !isNaN(this.eleVideo.duration) &&
-      this.frameOverlay && numFrames) {
+  if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
+      isFinite(this.eleVideo.duration)) {
+    // FPS wasn't provided, so guess it from the labels. If we don't have labels
+    // either, we can't determine anything, so fall back to FPS = 30.
+    const numFrames = Object.keys(this.frameOverlay).length ||
+        this.eleVideo.duration * 30;
     this.frameRate = numFrames / this.eleVideo.duration;
     this.frameDuration = 1 / this.frameRate;
   }
@@ -523,7 +525,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.player.boolDrawFrameNumber) {
-    context.fillText(this._frameNumber, 15, 30, 70);
+    context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
   if (this.player.boolDrawTimestamp) {
