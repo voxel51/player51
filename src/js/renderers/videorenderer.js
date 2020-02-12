@@ -136,7 +136,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
-    self.updateFromLoadingState();
     self.setupCanvasContext();
     self.updateFromLoadingState();
   });
