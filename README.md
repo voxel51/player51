@@ -12,9 +12,11 @@ Kevin Qi, kevin@voxel51.com
 
 Player51 implements ES6 modules.  However, we do support older browsers through iife and CommonJS via [rollup.js](https://rollupjs.org).
 
+
 ## Installation and Setup
 
 ### Node and NPM
+
 You need Node and npm installed in order to run the build process with rollup.js.
 
 Installation on a Mac is easy with Homebrew
@@ -48,6 +50,7 @@ npm install --save-dev cssnano
 
 You may need to set your `$NODE_PATH` to include the appropriate node install locations, especially if you add the `--global` option to the commands above.  With homebrew on mac this is `export NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/npm/node_modules`.  However, without the `--global` option, the node_modules are stored locally.
 
+
 ## Building
 
 A `build.bash` script is included that executes the various scripts necessary for making the Player51 usable in various forms, such as iife and CommonJS.
@@ -64,18 +67,22 @@ This creates a folder `build` with the following contents.
 
 Note that the `build.bash` script sets a variable `NODE_ENV` to `prod` which forces the minimification of the code.  If you do not want to minify the code, then you should change that to `dev`.
 
+
 ## Reference
 
 Some background information on rollup.
 - <https://code.lengstorf.com/learn-rollup-js/>
 
+
 # Usage Notes
 
 The container div must be set to `position: relative`.
 
+
 # Examples and Testing
 
-Assume you have a running python installation.
+The test server requires a Python 2 installation.
+
 
 ## Get the test data
 
@@ -95,14 +102,14 @@ Example Test Data Google File ID: `1kdwJ3ZG8TURzUxNK-H9c909SnhE7YlYD` and [link]
 
 File: `simple.html`
 
-Start a simple web-server.
+Start a simple webserver.
 
 ```
 cd /path/to/player51
 python2 test/httpdtester.py
 ```
 
-Then point your browser at <http://0.0.0.0:8000/test/simple.html> (note that Google Chrome will not support scrubbing in this simple web-server setting).
+Then point your browser at <http://0.0.0.0:8000/test/simple.html>
 
 
 ## React Test
