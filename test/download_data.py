@@ -39,4 +39,4 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 logger.info("Downloading example data from Google Drive")
 path = "data.zip"
 etaw.download_google_drive_file(FILE_ID, path=path)
-etau.extract_zip(path, outdir="data", delete_zip=True)
+etau.extract_zip(path, delete_zip=True)

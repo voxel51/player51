@@ -81,12 +81,12 @@ The container div must be set to `position: relative`.
 
 # Examples and Testing
 
-The test server requires a Python 2 installation.
+The test server requires a Python installation.
 
 
 ## Get the test data
 
-In order to automatically download and unzip the test-data, you need to install [ETA](https://github.com/voxel51/eta).  Otherwise, you can download the file below and unzip it to a directory `player51/test/player51-test-data`.
+In order to automatically download and unzip the test-data, you need to install [ETA](https://github.com/voxel51/eta).  Otherwise, you can download the file below and unzip it to a directory `player51/test/data`.
 
 Automatic Data Download and Extraction:
 ```
@@ -106,7 +106,7 @@ Start a simple webserver.
 
 ```
 cd /path/to/player51
-python2 test/httpdtester.py
+python test/httpdtester.py
 ```
 
 Then point your browser at <http://0.0.0.0:8000/test/simple.html>
@@ -122,7 +122,7 @@ npx create-react-app /tmp/react-player51
 cp test/react-example-App.js /tmp/react-player51/src/App.js
 cp src/js/player51.js /tmp/react-player51/src/player51.js
 cp src/css/player51.css /tmp/react-player51/src/player51.css
-cp -r test/player51-test-data /tmp/react-player51/src/.
+cp -r test/data /tmp/react-player51/src/.
 python3 -m http.server
 
 cd /tmp/react-player51

@@ -7,38 +7,48 @@
 
 # Original Source: https://gist.github.com/pankajp/280596a5dabaeeceaaaa
 
+from __future__ import print_function
+
 # Standard library imports.
-from SocketServer import ThreadingMixIn
 import argparse
-import BaseHTTPServer
-import SimpleHTTPServer
 import sys
 import json
 import os
-from os.path import (join, exists, dirname, abspath, isabs, sep, walk, splitext,
+from os.path import (join, exists, dirname, abspath, isabs, sep, splitext,
     isdir, basename, expanduser, split, splitdrive)
 from os import makedirs, unlink, getcwd, chdir, curdir, pardir, rename, fstat
 from shutil import copyfileobj, copytree
 import glob
 from zipfile import ZipFile
-from urlparse import urlparse, parse_qs
-from urllib import urlopen, quote, unquote
 from posixpath import normpath
-from cStringIO import StringIO
 import re
-import ConfigParser
 import cgi
 import threading
 import socket
 import errno
+try:
+    # Python 3
+    from http.server import HTTPServer, SimpleHTTPRequestHandler
+    from io import StringIO
+    from socketserver import ThreadingMixIn
+    from urllib.parse import urlparse, parse_qs
+    from urllib.request import urlopen, quote, unquote
+except ImportError:
+    # Python 2
+    from BaseHTTPServer import HTTPServer
+    from cStringIO import StringIO
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from SocketServer import ThreadingMixIn
+    from urllib import urlopen, quote, unquote
+    from urlparse import urlparse, parse_qs
 
 DATA_DIR = getcwd() # join(expanduser('~'), APP_NAME)
 
-class ThreadingHTTPServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class RequestHandler(SimpleHTTPRequestHandler):
     """ Handler to handle POST requests for actions.
     """
 
@@ -51,8 +61,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.range_from, self.range_to = self._get_range_header()
         if self.range_from is None:
             # nothing to do here
-            return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
-        print 'range request', self.range_from, self.range_to
+            return SimpleHTTPRequestHandler.do_GET(self)
+        print('range request', self.range_from, self.range_to)
         f = self.send_range_head()
         if f:
             self.copy_file_range(f, self.wfile)
@@ -190,7 +200,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         path = path.split('#',1)[0]
         path = normpath(unquote(path))
         words = path.split('/')
-        words = filter(None, words)
+        words = list(filter(None, words))
         if words[-1] == "video.mp4":
             return self.video_path
         elif words[-1] == "video-labels.json":
@@ -209,11 +219,11 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """ Returns request Range start and end if specified.
         If Range header is not specified returns (None, None)
         """
-        range_header = self.headers.getheader("Range")
+        range_header = self.headers.get("Range")
         if range_header is None:
             return (None, None)
         if not range_header.startswith("bytes="):
-            print "Not implemented: parsing header Range: %s" % range_header
+            print("Not implemented: parsing header Range:", range_header)
             return (None, None)
         regex = re.compile(r"^bytes=(\d+)\-(\d+)?")
         rangething = regex.search(range_header)
@@ -224,7 +234,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 return (from_val, None)
         else:
-            print 'CANNOT PARSE RANGE HEADER:', range_header
+            print('CANNOT PARSE RANGE HEADER:', range_header)
             return (None, None)
 
 
@@ -253,7 +263,7 @@ def main(args=None):
 
     httpd = ThreadingHTTPServer(("", args.port), RequestHandler)
 
-    print "serving at port", args.port
+    print("serving at port", args.port)
     httpd.serve_forever()
 
 if __name__ == "__main__" :
