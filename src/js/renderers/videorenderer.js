@@ -445,9 +445,9 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
     this.prepareOverlay(this._overlayData);
   }
 
-  const numFrames = Object.keys(this.frameOverlay).length;
-  if (isNaN(this.frameRate) && !isNaN(this.eleVideo.duration) &&
-      this.frameOverlay && numFrames) {
+  const numFrames = Object.keys(this.frameOverlay).length || 30;
+  if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
+      !isNaN(this.eleVideo.duration) && this.frameOverlay) {
     this.frameRate = numFrames / this.eleVideo.duration;
     this.frameDuration = 1 / this.frameRate;
   }
