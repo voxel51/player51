@@ -519,7 +519,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.player.boolDrawFrameNumber) {
-    context.fillText(this._frameNumber, 15, 30, 70);
+    context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
   if (this.player.boolDrawTimestamp) {
