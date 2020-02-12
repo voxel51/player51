@@ -6,7 +6,7 @@
  * @desc GalleryRenderer is a class that controls the creation and viewing of
  * galleryviewer.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 

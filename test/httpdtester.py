@@ -1,56 +1,68 @@
 #! /usr/bin/env python
 
 # This is a simple http server that handles partial content.  The default
-# packaged python http server does not.  Chrome needs this for supporting
-# scrubbing and other aspects of Player51.
+# packaged python http server does not.  Browsers need this for scrubbing.
 #
 # Python2
 
 # Original Source: https://gist.github.com/pankajp/280596a5dabaeeceaaaa
 
+from __future__ import print_function
+
 # Standard library imports.
-from SocketServer import ThreadingMixIn
-import BaseHTTPServer
-import SimpleHTTPServer
+import argparse
 import sys
 import json
 import os
-from os.path import (join, exists, dirname, abspath, isabs, sep, walk, splitext,
+from os.path import (join, exists, dirname, abspath, isabs, sep, splitext,
     isdir, basename, expanduser, split, splitdrive)
 from os import makedirs, unlink, getcwd, chdir, curdir, pardir, rename, fstat
 from shutil import copyfileobj, copytree
 import glob
 from zipfile import ZipFile
-from urlparse import urlparse, parse_qs
-from urllib import urlopen, quote, unquote
 from posixpath import normpath
-from cStringIO import StringIO
 import re
-import ConfigParser
 import cgi
 import threading
 import socket
 import errno
+try:
+    # Python 3
+    from http.server import HTTPServer, SimpleHTTPRequestHandler
+    from io import StringIO
+    from socketserver import ThreadingMixIn
+    from urllib.parse import urlparse, parse_qs
+    from urllib.request import urlopen, quote, unquote
+except ImportError:
+    # Python 2
+    from BaseHTTPServer import HTTPServer
+    from cStringIO import StringIO
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from SocketServer import ThreadingMixIn
+    from urllib import urlopen, quote, unquote
+    from urlparse import urlparse, parse_qs
 
 DATA_DIR = getcwd() # join(expanduser('~'), APP_NAME)
 
-class ThreadingHTTPServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class RequestHandler(SimpleHTTPRequestHandler):
     """ Handler to handle POST requests for actions.
     """
 
     serve_path = DATA_DIR
+    video_path = None
+    video_labels_path = None
 
     def do_GET(self):
         """ Overridden to handle HTTP Range requests. """
         self.range_from, self.range_to = self._get_range_header()
         if self.range_from is None:
             # nothing to do here
-            return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
-        print 'range request', self.range_from, self.range_to
+            return SimpleHTTPRequestHandler.do_GET(self)
+        print('range request', self.range_from, self.range_to)
         f = self.send_range_head()
         if f:
             self.copy_file_range(f, self.wfile)
@@ -188,7 +200,11 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         path = path.split('#',1)[0]
         path = normpath(unquote(path))
         words = path.split('/')
-        words = filter(None, words)
+        words = list(filter(None, words))
+        if words[-1] == "video.mp4":
+            return self.video_path
+        elif words[-1] == "video-labels.json":
+            return self.video_labels_path
         path = self.serve_path
         for word in words:
             drive, word = splitdrive(word)
@@ -203,11 +219,11 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """ Returns request Range start and end if specified.
         If Range header is not specified returns (None, None)
         """
-        range_header = self.headers.getheader("Range")
+        range_header = self.headers.get("Range")
         if range_header is None:
             return (None, None)
         if not range_header.startswith("bytes="):
-            print "Not implemented: parsing header Range: %s" % range_header
+            print("Not implemented: parsing header Range:", range_header)
             return (None, None)
         regex = re.compile(r"^bytes=(\d+)\-(\d+)?")
         rangething = regex.search(range_header)
@@ -218,39 +234,36 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 return (from_val, None)
         else:
-            print 'CANNOT PARSE RANGE HEADER:', range_header
+            print('CANNOT PARSE RANGE HEADER:', range_header)
             return (None, None)
 
 
-def get_server(port=8000, next_attempts=0, serve_path=None):
-    Handler = RequestHandler
-    if serve_path:
-        Handler.serve_path = serve_path
-    while next_attempts >= 0:
-        try:
-            httpd = ThreadingHTTPServer(("", port), Handler)
-            return httpd
-        except socket.error as e:
-            if e.errno == errno.EADDRINUSE:
-                next_attempts -= 1
-                port += 1
-            else:
-                raise
-
 def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--port", type=int, default=8000)
+    parser.add_argument("-s", "--serve-path", default=DATA_DIR,
+        help="Path to serve static files from")
+    parser.add_argument("-v", "--video-path", "--video",
+        default=os.path.join(DATA_DIR, "test", "data", "video.mp4"),
+        help="Path to test video")
+    parser.add_argument("-f", "--video-fps", "--fps", type=float, default=None,
+        help="Framerate of video (default: auto-detected based on labels)")
+    parser.add_argument("-l", "--video-labels-path", "--video-labels",
+        default=os.path.join(DATA_DIR, "test", "data", "video-labels.json"),
+        help="Path to test labels")
+    args = parser.parse_args()
 
-    PORT = 8000
-    if len(args)>0:
-        PORT = int(args[-1])
-    serve_path = DATA_DIR
-    if len(args) > 1:
-        serve_path = abspath(args[-2])
+    RequestHandler.serve_path = args.serve_path
+    RequestHandler.video_path = args.video_path
+    RequestHandler.video_labels_path = args.video_labels_path
+    with open(os.path.join(DATA_DIR, "test", "data", "config.js"), "w") as f:
+        f.write('CONFIG = {};')
+        if args.video_fps is not None:
+            f.write('CONFIG.video_fps = %f;' % args.video_fps)
 
-    httpd = get_server(port=PORT, serve_path=serve_path)
+    httpd = ThreadingHTTPServer(("", args.port), RequestHandler)
 
-    print "serving at port", PORT
+    print("serving at port", args.port)
     httpd.serve_forever()
 
 if __name__ == "__main__" :

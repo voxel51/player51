@@ -21,19 +21,20 @@
 
     <h1> Player51: Simple ES6 Single Image Player Test </h1>
 
-    <div id="test-container" />
+    <div id="test-container"></div>
 
+    <script src="/test/data/config.js"></script>
     <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
 
-        let player = new Player51(
+        let player = window.player = new Player51(
           {
-            src: "/test/player51-test-data/test.png",
+            src: "/test/data/test.png",
             type: "image/png"
           },
-          "/test/player51-test-data/test.json",
+          "/test/data/test.json",
         );
 
         console.log("Player51 created.");

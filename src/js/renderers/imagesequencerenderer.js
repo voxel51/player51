@@ -5,8 +5,8 @@
  * @desc ImageSequenceRenderer is a class that controls the creation and
  * viewing of imagesequence.
  *
- * Copyright 2017-2019, Voxel51, Inc.
- * Kevin Qi, kevin@voxel51.com
+ * Copyright 2017-2020, Voxel51, Inc.
+ * Alan Stahl, alan@voxel51.com
  */
 
 import {
@@ -126,8 +126,8 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 
   this.eleSeekBar.addEventListener('change', function() {
     // Calculate new frame
-    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100)
-    * self._totalNumberOfFrames);
+    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100) *
+      self._totalNumberOfFrames);
     if (!self._boolPlaying) {
       self.updateStateFromTimeChange();
     }
@@ -378,8 +378,5 @@ ImageSequenceRenderer.prototype.timerCallback = function() {
 
   this._frameNumber++;
   this.updateStateFromTimeChange();
-  const self = this;
-  setTimeout(function() {
-    self.timerCallback();
-  }, this.frameDuration * 1000);
+  requestAnimationFrame(this.timerCallback.bind(this));
 };

@@ -6,7 +6,7 @@
  * @desc Renderer is an abstract class that defines the features child
  * renderers should be able to support.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 

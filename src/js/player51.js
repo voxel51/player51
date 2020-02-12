@@ -17,7 +17,7 @@
  * examples: image/jpg, video/mp4, application/zip
 
    ```
-    <div id="test-container" />
+    <div id="test-container"></div>
 
     <script type="module">
       import Player51 from "/src/js/player51.js";
@@ -27,10 +27,10 @@
 
         let player = new Player51(
           {
-            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+            src: "url/to/video.mp4",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
+          "url/to/labels.json",
           25
         );
 
@@ -62,10 +62,10 @@
  * Default: render as an image gallery.
  * SequenceFlag = true: render as a psuedo videoplayer.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
- * Kevin Qi, kevin@voxel51.com
+ * Alan Stahl, alan@voxel51.com
  */
 
 
@@ -92,181 +92,52 @@ export default Player51;
  * INHERITS:  None
  * F-MIXINS:  None
  * @constructor
- * @param {object} media is an object that has "src" and "type" attributes.
- * type must be specified as either image or video
- * @param {string} overlay is data that should be overlayed on
- * the video or image.
- * In the case of videos: Overlay can be empty (`null`),
- * a string pointing to a single URL or an object that is preloaded data.
- * In the case of images: Overlay can be a string pointing to a single URL.
- * @param {int} fps is the frame-rate of the media.  If it is not provided
- * then it will be guessed. Ignore in the case of images.
- * @param {bool} sequenceFlag tells the player to render the zip file as either
- * an image gallery or a video player.
+ * @param {object} options with the following keys:
+ *   media: an object that has "src" (URL) and "type" (mimetype) attributes.
+ *   overlay: data that should be overlayed on the video or image. In the case
+ *     of videos: can be null, a single URL or an object that is preloaded data.
+ *     In the case of images: can be a single URL.
+ *   fps: the frame-rate of the media. Only used for videos. If it is not
+ *     provided then it will be guessed.
+ *   isSequence: for rendering ZIP files - if true, the contents will be
+ *     rendered as a video; otherwise, as a gallery.
  */
-function Player51(media, overlay, fps = 0, sequenceFlag = false) {
-  this.mediaType = this.determineMediaType(media);
-  // Load correct player
-  if (this.mediaType === 'video') {
-    this.player = new VideoPlayer(media, overlay, fps);
-  } else if (this.mediaType === 'image') {
-    this.player = new ImageViewer(media, overlay);
-  } else if (this.mediaType === 'application' && this.mediaFormat === 'zip') {
-    if (sequenceFlag) {
-      this.player = new ImageSequence(media, overlay, fps);
-    } else {
-      this.player = new GalleryViewer(media, overlay);
+function Player51(options, ...args) {
+  // maintain compatibility with code that passes these arguments positionally
+  if (options.src && options.type) {
+    options.media = {
+      src: options.src,
+      type: options.type,
+    };
+    delete options.src;
+    delete options.type;
+  }
+  /* eslint-disable-next-line no-unused-vars */
+  for (let [index, name] of Object.entries(['overlay', 'fps', 'isSequence'])) {
+    index = Number(index);
+    if (args[index] !== undefined) {
+      if (options[name] === undefined) {
+        options[name] = args[index];
+      } else {
+        throw new Error(
+            `Duplicate option and positional argument ${index + 1}: ${name}`);
+      }
     }
-  } else {
-    /* eslint-disable-next-line no-console */
-    console.log('WARN: Player51 doesn\'t support this media type yet.');
   }
+
+  const {media, overlay, fps} = options;
+  const mimetype = options.media.type.toLowerCase();
+
+  // Load correct player
+  if (mimetype.startsWith('video/')) {
+    return new VideoPlayer(media, overlay, fps);
+  } else if (mimetype.startsWith('image/')) {
+    return new ImageViewer(media, overlay);
+  } else if (mimetype === 'application/zip') {
+    if (options.isSequence) {
+      return new ImageSequence(media, overlay, fps);
+    }
+    return new GalleryViewer(media, overlay);
+  }
+  throw new Error(`Unrecognized mime type: ${mimetype}`);
 }
-
-
-/**
- * This function sets player.boolDrawTimestamp
- *
- * @member setBoolDrawTimeStamp
- * @param {bool} value true/false
- */
-Player51.prototype.setBoolDrawTimeStamp = function(value) {
-  this.player.boolDrawTimestamp = value;
-};
-
-
-/**
- * This function sets player.boolDrawFrameNumber
- *
- * @member setBoolDrawFrameNumber
- * @param {bool} value  true/false
- */
-Player51.prototype.setBoolDrawFrameNumber = function(value) {
-  this.player.boolDrawFrameNumber = value;
-};
-
-
-/**
- * This function sets player.renderer.reader.workerScriptsPath
- *
- * @member setZipLibraryParameters
- * @param {string} path relative to zip.js
- */
-Player51.prototype.setZipLibraryParameters = function(path) {
-  if (this.player.renderer) {
-    this.player.renderer.reader.workerScriptsPath = path;
-  }
-};
-
-
-/**
- * This function figures out the type of media to be rendered.
- *
- * @member determineMediaType
- * @param {object} media
- * @return {string} image/video/etc..
- */
-Player51.prototype.determineMediaType = function(media) {
-  const splitResults = media.type.split('/');
-  if (splitResults.length !== 2) {
-    throw new Error('Media type is incorrect.');
-  }
-  this.mediaFormat = splitResults[1];
-  return splitResults[0];
-};
-
-
-/**
- * Calls poster on player
- *
- * @member poster
- * @param {string} url Image to be shown while loading
- * @param {string} option loading/404
- */
-Player51.prototype.poster = function(url, option='loading') {
-  if (option === 'loading') {
-    this.player.setLoadingPoster(url);
-  } else if (option === '404') {
-    this.player.setNotFoundPoster(url);
-  } else {
-    throw new Error('Invalid poster option.');
-  }
-};
-
-
-/**
- * Calls loop on player
- *
- * @member loop
- */
-Player51.prototype.loop = function() {
-  this.player.loop();
-};
-
-
-/**
- * Calls autoplay on player
- *
- *
- * @member autoplay
- */
-Player51.prototype.autoplay = function() {
-  this.player.autoplay();
-};
-
-
-/**
- * Calls resetToFragment on player
- *
- * @member resetToFragment
- */
-Player51.prototype.resetToFragment = function() {
-  this.player.resetToFragment();
-};
-
-
-/**
- * Calls thumbnailMode on player
- *
- * @member thumbnailMode
- * @param {function} action (optional) a callback function to associate with
- * a click event.
- */
-Player51.prototype.thumbnailMode = function(action) {
-  this.player.thumbnailMode(action);
-};
-
-
-/**
- * Render
- *
- * Renders a new player in the DOM element provided.
- *
- * @member render
- * @param {domElement} parentElement
- */
-Player51.prototype.render = function(parentElement) {
-  this.player.render(parentElement);
-};
-
-
-/**
- * Calls forceSize on player
- *
- * @member forceSize
- * @param {int} width
- * @param {int} height
- */
-Player51.prototype.forceSize = function(width, height) {
-  this.player.forceSize(width, height);
-};
-
-
-/**
- * Calls forceMax on player
- *
- * @member forceMax
- */
-Player51.prototype.forceMax = function() {
-  this.player.forceMax();
-};

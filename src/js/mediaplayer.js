@@ -6,7 +6,7 @@
  * @desc MediaPlayer.js is an abstract class that defines the features
  * child players should be able to support.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 
@@ -221,4 +221,57 @@ MediaPlayer.prototype.forceMax = function() {
 MediaPlayer.prototype.setNotFoundPoster = function(url) {
   this._boolNotFound = true;
   this._notFoundPosterURL = url;
+};
+
+
+/**
+ * Wrapper for setting a poster image
+ *
+ * @member poster
+ * @param {string} url Image to be shown while loading
+ * @param {string} option loading/404
+ */
+MediaPlayer.prototype.poster = function(url, option='loading') {
+  if (option === 'loading') {
+    this.setLoadingPoster(url);
+  } else if (option === '404') {
+    this.setNotFoundPoster(url);
+  } else {
+    throw new Error('Invalid poster option.');
+  }
+};
+
+
+/**
+ * Setter for boolDrawTimestamp
+ *
+ * @member setBoolDrawTimeStamp
+ * @param {boolean} value
+ */
+MediaPlayer.prototype.setBoolDrawTimeStamp = function(value) {
+  this.boolDrawTimestamp = value;
+};
+
+
+/**
+ * Setter for boolDrawFrameNumber
+ *
+ * @member setBoolDrawFrameNumber
+ * @param {boolean} value
+ */
+MediaPlayer.prototype.setBoolDrawFrameNumber = function(value) {
+  this.boolDrawFrameNumber = value;
+};
+
+
+/**
+ * Update the zip reader library configuration
+ *
+ * @member setZipLibraryParameters
+ * @param {string} path to worker scripts, relative to zip.js
+ */
+MediaPlayer.prototype.setZipLibraryParameters = function(path) {
+  if (this.renderer && this.renderer.reader) {
+    this.renderer.reader.workerScriptsPath = path;
+  }
 };

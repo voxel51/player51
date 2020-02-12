@@ -5,7 +5,7 @@ Downloads example data from Google Drive.
 Usage:
     python download_data.py
 
-Copyright 2017-2019, Voxel51, LLC
+Copyright 2017-2020, Voxel51, LLC
 voxel51.com
 
 Brian Moore, brian@voxel51.com
@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
 FILE_ID = "1kdwJ3ZG8TURzUxNK-H9c909SnhE7YlYD"
 
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 logger.info("Downloading example data from Google Drive")
-path = os.path.join(os.path.dirname(__file__), "data.zip")
+path = "data.zip"
 etaw.download_google_drive_file(FILE_ID, path=path)
 etau.extract_zip(path, delete_zip=True)

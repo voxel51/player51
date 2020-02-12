@@ -6,8 +6,8 @@
  * @desc VideoRenderer is a class that controls the creation and viewing of
  * videoplayer.
  *
- * Copyright 2017-2019, Voxel51, Inc.
- * Kevin Qi, kevin@voxel51.com
+ * Copyright 2017-2020, Voxel51, Inc.
+ * Alan Stahl, alan@voxel51.com
  */
 
 import {
@@ -48,7 +48,7 @@ function VideoRenderer(media, overlay, fps) {
   this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
-  this.frameDuration = 1.0 / this.frameRate;
+  this.frameDuration = 1 / this.frameRate;
   this.frameZeroOffset = 1;
   this._hasMediaFragment = false;
   this._mfBeginT = null; // Time
@@ -136,7 +136,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
-    self.updateFromLoadingState();
     self.setupCanvasContext();
     self.updateFromLoadingState();
   });
@@ -186,8 +185,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleVideo.addEventListener('pause', function() {
     self.checkForFragmentReset(self.computeFrameNumber());
-    if (self._boolPlaying && !self._lockToMF && !self._boolManualSeek
-      && !self.eleVideo.ended) {
+    if (self._boolPlaying && !self._lockToMF && !self._boolManualSeek &&
+        !self.eleVideo.ended) {
       self.eleVideo.play();
     }
   });
@@ -227,7 +226,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
     const time = self.eleVideo.duration * (self.eleSeekBar
         .valueAsNumber / 100.0);
     // Update the video time
-    self.eleVideo.currentTime = time;
+    self.eleVideo.currentTime = self.computeFrameTime(
+      self.computeFrameNumber(time));
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
     self._boolSingleFrame = false;
@@ -249,7 +249,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // Play the video when the seek handle is dropped
   this.eleSeekBar.addEventListener('mouseup', function() {
     self._boolManualSeek = false;
-    if (self._boolPlaying) {
+    if (self._boolPlaying && self.eleVideo.paused) {
+      self.eleVideo.currentTime = self.computeFrameTime();
       self.eleVideo.play();
     }
   });
@@ -307,6 +308,23 @@ VideoRenderer.prototype.initPlayerControls = function() {
       self.clearTimeout('hideControls');
     }
     self.updateFromDynamicState();
+  });
+
+  this.parent.addEventListener('keydown', function(e) {
+    if (self.eleVideo.ended) {
+      return;
+    }
+    if (self.eleVideo.paused) {
+      if (e.keyCode === 37) { // left arrow
+        self.eleVideo.currentTime = Math.max(
+            0, self.computeFrameTime() - self.frameDuration);
+      } else if (e.keyCode === 39) { // right arrow
+        self.eleVideo.currentTime = Math.min(
+            self.eleVideo.duration,
+            self.computeFrameTime() + self.frameDuration);
+      }
+      self.updateStateFromTimeChange();
+    }
   });
 
   this.updateFromLoadingState();
@@ -381,13 +399,14 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
 
   if (this._boolPlaying) {
-    if (!this._boolSingleFrame) {
+    if (this.eleVideo.paused && !this._boolSingleFrame && !this._boolManualSeek) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
-    if (!this._boolSingleFrame) {
+    if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
+      this.eleVideo.currentTime = this.computeFrameTime();
     }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
@@ -423,6 +442,16 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
+  }
+
+  if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
+      isFinite(this.eleVideo.duration)) {
+    // FPS wasn't provided, so guess it from the labels. If we don't have labels
+    // either, we can't determine anything, so fall back to FPS = 30.
+    const numFrames = Object.keys(this.frameOverlay).length ||
+        this.eleVideo.duration * 30;
+    this.frameRate = numFrames / this.eleVideo.duration;
+    this.frameDuration = 1 / this.frameRate;
   }
 };
 
@@ -490,7 +519,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.player.boolDrawFrameNumber) {
-    context.fillText(this._frameNumber, 15, 30, 70);
+    context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
   if (this.player.boolDrawTimestamp) {
@@ -537,10 +566,7 @@ VideoRenderer.prototype.timerCallback = function() {
   this.updateStateFromTimeChange();
   // if we are manually seeking right now, then do not set the manual callback
   if (!this._boolManualSeek) {
-    const self = this;
-    setTimeout(function() {
-      self.timerCallback();
-    }, 1000 / 30);
+    requestAnimationFrame(this.timerCallback.bind(this));
   } else {
     /* eslint-disable-next-line no-console */
     console.log('NOT SETTING TIME CALLBACK');
@@ -606,12 +632,12 @@ VideoRenderer.prototype.checkForFragmentReset = function(fn) {
 
 
 /**
- * Uses information about the currentTime from the HTML5 video player and the
- * frameRate of the video to compute the current frame number.
+ * Computes the frame number corresponding to the given (or current) video time.
  *
  * @member computeFrameNumber
- * @param {time} time
- * @return {time}
+ * @param {number} time Time to compute frame number for (defaults to current
+ *   player time)
+ * @return {number} Frame number
  */
 VideoRenderer.prototype.computeFrameNumber = function(time) {
   if (typeof(time) === 'undefined') {
@@ -619,6 +645,25 @@ VideoRenderer.prototype.computeFrameNumber = function(time) {
   }
   const currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
   return Math.floor(currentFrameNumber);
+};
+
+
+/**
+ * Computes the video time corresponding to the given frame number.
+ *
+ * @member computeFrameTime
+ * @param {number} frameNumber frame number (1-indexed, as returned by
+ *   computeFrameNumber; defaults to current frame number)
+ * @return {number} Video time
+ */
+VideoRenderer.prototype.computeFrameTime = function(frameNumber) {
+  if (typeof(frameNumber) === 'undefined') {
+    frameNumber = this.computeFrameNumber();
+  }
+  frameNumber -= this.frameZeroOffset;
+  // offset by 1/100 of a frame to avoid browser issues where being *exactly*
+  // on a frame boundary sometimes renders the previous frame
+  return (frameNumber + 0.01) * this.frameDuration;
 };
 
 

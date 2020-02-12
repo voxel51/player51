@@ -21,21 +21,22 @@
 
     <h1> Player51: End of Clip Test </h1>
 
-    <div id="test-container" />
+    <div id="test-container"></div>
 
+    <script src="/test/data/config.js"></script>
     <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
         console.log("Player51 Simple: Example code running.");
 
-        let player = new Player51(
+        let player = window.player = new Player51(
           {
-            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4#t=58,61.5",
+            src: "/test/data/video.mp4#t=58,61.5",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
-          25
+          "/test/data/video-labels.json",
+          CONFIG.video_fps
         );
 
         console.log("Player51 created.");

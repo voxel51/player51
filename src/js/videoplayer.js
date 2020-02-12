@@ -7,7 +7,7 @@
  * render available annotations and markup overlayed on top of the
  * video.
  *
- * Copyright 2017-2019, Voxel51, Inc.
+ * Copyright 2017-2020, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com

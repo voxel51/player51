@@ -33,19 +33,20 @@
 
     <div id="test-container2"></div>
 
+    <script src="/test/data/config.js"></script>
     <script type="module">
       import Player51 from '/src/js/player51.js';
 
       document.addEventListener("DOMContentLoaded", () => {
         console.log("Player51 Simple: Example code running.");
 
-        let player1 = new Player51(
+        let player1 = window.player1 = new Player51(
           {
-            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+            src: "/test/data/video.mp4",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
-          25
+          "/test/data/video-labels.json",
+          CONFIG.video_fps
         );
 
         console.log("First Player51 created.");
@@ -54,13 +55,13 @@
 
         console.log("First Player51 rendered and ready.");
 
-        let player2 = new Player51(
+        let player2 = window.player2 = new Player51(
           {
-            src: "/test/player51-test-data/8Xxvx8V-hnc-001.mp4",
+            src: "/test/data/video.mp4",
             type: "video/mp4"
           },
-          "/test/player51-test-data/8Xxvx8V-hnc-001.json",
-          25
+          "/test/data/video-labels.json",
+          CONFIG.video_fps
         );
 
         console.log("Second Player51 created.");

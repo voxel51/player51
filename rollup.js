@@ -3,15 +3,22 @@ import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
-import {uglify} from 'rollup-plugin-uglify';
+import {terser} from 'rollup-plugin-terser';
 
-export default {
+export default [{
   input: 'src/js/player51.js',
-  output: {
-    file: 'build/iife/player51.min.js',
-    format: 'iife',
-    name: 'Player51',
-  },
+  output: [
+    {
+      file: 'build/cjs/player51.min.js',
+      format: 'cjs',
+      name: 'Player51',
+    },
+    {
+      file: 'build/iife/player51.min.js',
+      format: 'iife',
+      name: 'Player51',
+    },
+  ],
   plugins: [
     resolve(),
     commonjs(),
@@ -29,6 +36,6 @@ export default {
       ENV: JSON.stringify(process.env.NODE_ENV || 'dev'),
     }),
     ((process.env.NODE_ENV === 'prod' || process.env.NODE_ENV === 'production')
-     && uglify()),
+     && terser()),
   ],
-};
+}];
