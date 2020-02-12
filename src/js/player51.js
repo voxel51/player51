@@ -65,7 +65,7 @@
  * Copyright 2017-2020, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
  * Brandon Paris, brandon@voxel51.com
- * Kevin Qi, kevin@voxel51.com
+ * Alan Stahl, alan@voxel51.com
  */
 
 

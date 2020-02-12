@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
 # This is a simple http server that handles partial content.  The default
-# packaged python http server does not.  Chrome needs this for supporting
-# scrubbing and other aspects of Player51.
+# packaged python http server does not.  Browsers need this for scrubbing.
 #
 # Python2
 
