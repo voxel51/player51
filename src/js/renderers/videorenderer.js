@@ -45,6 +45,7 @@ function VideoRenderer(media, overlay, fps) {
   this._boolPlaying = false;
   this._boolManualSeek = false;
   this._boolShowControls = false;
+  this._boolShowVideoOptions = false;
   this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
@@ -87,6 +88,15 @@ VideoRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivVideo);
 
   // Video controls
+  this.initPlayerControlHTML(this.parent);
+  this.initVideoOptionsPanelHTML(this.parent);
+  this.mediaElement = this.eleVideo;
+  this.mediaDiv = this.eleDivVideo;
+  this.initCanvas();
+};
+
+
+VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
   this.eleDivVideoControls = document.createElement('div');
   this.eleDivVideoControls.className = 'p51-video-controls';
   this.elePlayPauseButton = document.createElement('button');
@@ -97,12 +107,21 @@ VideoRenderer.prototype.initPlayer = function() {
   this.eleSeekBar.setAttribute('type', 'range');
   this.eleSeekBar.setAttribute('value', '0');
   this.eleSeekBar.className = 'p51-seek-bar';
+  this.eleOptionsButton = document.createElement('button');
+  this.eleOptionsButton.className = 'p51-video-options';
+  this.eleOptionsButton.innerHTML = 'Options';
   this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  this.eleDivVideoControls.appendChild(this.eleOptionsButton);
   this.parent.appendChild(this.eleDivVideoControls);
-  this.mediaElement = this.eleVideo;
-  this.mediaDiv = this.eleDivVideo;
-  this.initCanvas();
+};
+
+
+VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
+  this.eleDivVideoOpts = document.createElement('div');
+  this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  this.eleDivVideoOpts.innerHTML = 'SECRET CONTROL PANEL WOWOWOW';
+  this.parent.appendChild(this.eleDivVideoOpts);
 };
 
 
@@ -133,6 +152,10 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
   const self = this;
+
+  this.eleOptionsButton.addEventListener('click', function() {
+    self._boolShowVideoOptions = !self._boolShowVideoOptions;
+  });
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
@@ -257,6 +280,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   const hideControls = function() {
     self._boolShowControls = false;
+    self._boolShowVideoOptions = false;
     self.updateFromDynamicState();
   };
 
@@ -409,6 +433,15 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
       this.eleVideo.currentTime = this.computeFrameTime();
     }
     this.elePlayPauseButton.innerHTML = 'Play';
+  }
+
+  if (this._boolShowVideoOptions) {
+    this.eleDivVideoOpts.style.opacity = '0.9';
+  } else {
+    this.eleDivVideoOpts.style.opacity = '0.0';
+    if (this.player._boolThumbnailMode) {
+      this.eleDivVideoOpts.remove();
+    }
   }
 
   if (this._boolShowControls) {
