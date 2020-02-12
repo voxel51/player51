@@ -37,7 +37,7 @@
       document.addEventListener("DOMContentLoaded", () => {
         console.log("Player51 Simple: Example code running.");
 
-        let player = new Player51(
+        let player = window.player = new Player51(
           {
             src: "/test/data/nonexistent-video.mp4",
             type: "video/mp4"
@@ -54,7 +54,7 @@
 
         console.log("Player51 rendered and ready.");
 
-        let player2 = new Player51(
+        let player2 = window.player2 = new Player51(
           {
             src: "/test/data/nonexistent-image.png",
             type: "image/png"
