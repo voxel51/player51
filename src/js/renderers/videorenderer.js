@@ -407,7 +407,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
       this.eleVideo.paused &&
       !this._boolSingleFrame &&
       !this._boolManualSeek &&
-      this._isOverlayPrepared) {
+      (this._isOverlayPrepared && this._overlayCanBePrepared)) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
