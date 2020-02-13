@@ -82,9 +82,10 @@ function Renderer(media, overlay) {
   this.overlayOptions = {
     labelsOnlyOnHover: true,
     attrsOnlyOnHover: true,
+    showAttrs: true,
     attrRenderMode: 'value',
   };
-  this._attrRenderModeOptions = ['none', 'value', 'attr-value'];
+  this._attrRenderModeOptions = ['value', 'attr-value'];
   this._focusIndex = -1;
   // Loading state attributes
   this._frameNumber = undefined;

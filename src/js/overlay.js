@@ -417,18 +417,21 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     return attr1.name.localeCompare(attr2.name);
   });
 
+  if (!this.options.showAttrs) {
+    this.attrText = '';
+    return;
+  }
+
   if (this.options.attrRenderMode === 'attr-value') {
     this.attrText = sortedAttrs.map(function(attr) {
       const attrVal = attr.value.replace(/_/g, ' ');
       const attrName = attr.name.replace(/_/g, ' ');
       return `${attrName}: ${attrVal}`;
     }).join('\n');
-  } else if (this.options.attrRenderMode === 'value') {
+  } else {
     this.attrText = sortedAttrs.map(function(attr) {
       return attr.value.replace(/_/g, ' ');
     }).join(', ');
-  } else {
-    this.attrText = '';
   }
 };
 
@@ -446,8 +449,10 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (this._cache_options.attrRenderMode !== this.options.attrRenderMode) {
+  if (this._cache_options.attrRenderMode !== this.options.attrRenderMode ||
+    this._cache_options.showAttrs !== this.options.showAttrs) {
     this._cache_options.attrRenderMode = this.options.attrRenderMode;
+    this._cache_options = Object.assign({}, this.options);
     this._parseAttrs(this._attrs);
   }
 

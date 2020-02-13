@@ -122,7 +122,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
   this.eleDivVideoOpts.innerHTML = 'Display options';
 
-  // Checkbox for show label on hover only
+  // Checkbox for show label on click only
   this.eleOptHoverCtlShowLabelWrapper = document.createElement('div');
   this.eleOptHoverCtlShowLabelWrapper.className = 'p51-video-opt-input';
   this.eleOptHoverCtlShowLabel = document.createElement('input');
@@ -130,12 +130,12 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowLabel.setAttribute('type', 'checkbox');
   this.eleOptHoverCtlShowLabel.checked = this.overlayOptions.labelsOnlyOnHover;
   this.eleOptHoverCtlShowLabelLabel = document.createElement('label');
-  this.eleOptHoverCtlShowLabelLabel.innerHTML = 'Show label on hover';
+  this.eleOptHoverCtlShowLabelLabel.innerHTML = 'Only show clicked Object';
   this.eleOptHoverCtlShowLabelLabel.setAttribute('for', this.eleOptHoverCtlShowLabel.id);
   this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabelLabel);
   this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabel);
 
-  // Checkbox for show attrs on hover only
+  // Checkbox for show attrs
   this.eleOptHoverCtlShowAttrWrapper = document.createElement('div');
   this.eleOptHoverCtlShowAttrWrapper.className = 'p51-video-opt-input';
   this.eleOptHoverCtlShowAttr = document.createElement('input');
@@ -143,14 +143,31 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowAttr.setAttribute('type', 'checkbox');
   this.eleOptHoverCtlShowAttr.checked = this.overlayOptions.attrsOnlyOnHover;
   this.eleOptHoverCtlShowAttrLabel = document.createElement('label');
-  this.eleOptHoverCtlShowAttrLabel.innerHTML = 'Show attributes on hover';
+  this.eleOptHoverCtlShowAttrLabel.innerHTML = 'Show Attributes';
   this.eleOptHoverCtlShowAttrLabel.setAttribute('for', this.eleOptHoverCtlShowAttr.id);
   this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttrLabel);
   this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttr);
 
+  // Checkbox for show attrs on click only
+  this.eleOptHoverCtlShowAttrClickWrapper = document.createElement('div');
+  this.eleOptHoverCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
+  this.eleOptHoverCtlShowAttrClick = document.createElement('input');
+  this.eleOptHoverCtlShowAttrClick.id = 'eleOptHoverCtlShowAttrClick';
+  this.eleOptHoverCtlShowAttrClick.setAttribute('type', 'checkbox');
+  this.eleOptHoverCtlShowAttrClick.checked = this.overlayOptions.attrsOnlyOnHover;
+  this.eleOptHoverCtlShowAttrClickLabel = document.createElement('label');
+  this.eleOptHoverCtlShowAttrClickLabel.innerHTML = 'Only show clicked attributes';
+  this.eleOptHoverCtlShowAttrClickLabel.setAttribute('for', this.eleOptHoverCtlShowAttrClick.id);
+  this.eleOptHoverCtlShowAttrClickWrapper.append(this.eleOptHoverCtlShowAttrClickLabel);
+  this.eleOptHoverCtlShowAttrClickWrapper.append(this.eleOptHoverCtlShowAttrClick);
+
   // Radio for how to show attrs
   this.eleOptHoverCtlAttrOptForm = document.createElement('form');
   this.eleOptHoverCtlAttrOptForm.className = 'p51-video-opt-input';
+  const formTitle = document.createElement('div');
+  formTitle.innerHTML = 'Attribute rendering mode:';
+  this.eleOptHoverCtlAttrOptForm.appendChild(formTitle);
+  this.eleOptHoverCtlAttrOptForm.appendChild(document.createElement('div'));
   for (const val of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
     radio.id = `radio-${val}`;
@@ -167,6 +184,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
 
   this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowAttrWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowAttrClickWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlAttrOptForm);
   this.parent.appendChild(this.eleDivVideoOpts);
 };
@@ -211,7 +229,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.eleOptHoverCtlShowAttr.addEventListener('change', function() {
-    self.overlayOptions.attrsOnlyOnHover = self.eleOptHoverCtlShowAttr.checked;
+    self.overlayOptions.showAttrs = self.eleOptHoverCtlShowAttr.checked;
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptHoverCtlShowAttrClick.addEventListener('change', function() {
+    self.overlayOptions.attrsOnlyOnHover = self.eleOptHoverCtlShowAttrClick.checked;
     self.updateFromDynamicState();
   });
 
@@ -518,7 +541,32 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
       this.eleDivVideoControls.remove();
     }
   }
+
+  this.setAttributeControlsDisplay();
 };
+
+VideoRenderer.prototype.setAttributeControlsDisplay = function() {
+  let func = (node) => node.hidden = false;
+  this.eleOptHoverCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
+  this.eleOptHoverCtlAttrOptForm.className = 'p51-video-opt-input';
+  if (!this.overlayOptions.showAttrs) {
+    this.eleOptHoverCtlShowAttrClickWrapper.className = '';
+    this.eleOptHoverCtlAttrOptForm.className = '';
+    func = (node) => node.hidden = true;
+  }
+  recursiveMap(this.eleOptHoverCtlShowAttrClickWrapper, func);
+  recursiveMap(this.eleOptHoverCtlAttrOptForm, func);
+};
+
+/**
+ * Recursively map a function to all nodes in a tree
+ * @param {Object} node - an object with children accessed by .childNodes
+ * @param {Function} func - function that takes node as an argument
+ */
+function recursiveMap(node, func) {
+  node.childNodes.forEach((n) => recursiveMap(n, func));
+  func(node);
+}
 
 
 /**
