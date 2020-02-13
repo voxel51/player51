@@ -69,6 +69,7 @@ VideoRenderer.prototype.constructor = VideoRenderer;
  * @required setParentandMedia called beforehand
  */
 VideoRenderer.prototype.initPlayer = function() {
+  console.log('Init player');
   this.checkParentandMedia();
   this.checkBorderBox();
   this.eleDivVideo = document.createElement('div');
@@ -444,6 +445,8 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
+    this._isOverlayPrepared = true;
+    this._isPreparingOverlay = false;
   }
 
   if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
@@ -487,21 +490,21 @@ VideoRenderer.prototype.updateStateFromTimeChange = function() {
  */
 VideoRenderer.prototype.state = function() {
   return `
-VideoPlayer State Information:
-frame number: ${this._frameNumber}
-playing: ${this._boolPlaying}
-autoplay:  ${this._boolAutoplay}
-looping:  ${this._boolLoop}
-single frame: ${this._boolSingleFrame}
-isReadyProcessFrames: ${this._isReadyProcessFrames}
-isRendered:   ${this._isRendered}
-isSizePrepared:  ${this._isSizePrepared}
-isDataLoaded:  ${this._isDataLoaded}
-overlayCanBePrepared: ${this._overlayCanBePrepared}
-isOverlayPrepared: ${this._isOverlayPrepared}
-isPreparingOverlay: ${this._isPreparingOverlay}
-hasMediaFragment: ${this._hasMediaFragment}
-`;
+    VideoPlayer State Information:
+    frame number: ${this._frameNumber}
+    playing: ${this._boolPlaying}
+    autoplay:  ${this._boolAutoplay}
+    looping:  ${this._boolLoop}
+    single frame: ${this._boolSingleFrame}
+    isReadyProcessFrames: ${this._isReadyProcessFrames}
+    isRendered:   ${this._isRendered}
+    isSizePrepared:  ${this._isSizePrepared}
+    isDataLoaded:  ${this._isDataLoaded}
+    overlayCanBePrepared: ${this._overlayCanBePrepared}
+    isOverlayPrepared: ${this._isOverlayPrepared}
+    isPreparingOverlay: ${this._isPreparingOverlay}
+    hasMediaFragment: ${this._hasMediaFragment}
+  `;
 };
 
 

@@ -296,9 +296,6 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
-
-  this._isOverlayPrepared = true;
-  this._isPreparingOverlay = false;
   this.updateFromLoadingState();
 };
 
