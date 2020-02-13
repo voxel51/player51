@@ -202,6 +202,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleOptionsButton.addEventListener('click', function() {
     self._boolShowVideoOptions = !self._boolShowVideoOptions;
+    self.updateFromDynamicState();
   });
 
   this.eleOptHoverCtlShowLabel.addEventListener('change', function() {
