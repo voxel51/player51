@@ -307,7 +307,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
-  this.eleCanvas.addEventListener('mousemove',
+  this.eleCanvas.addEventListener('click',
       this._handleMouseEvent.bind(this));
 
   this._isOverlayPrepared = true;
@@ -462,7 +462,11 @@ Renderer.prototype.isFocus = function(object) {
 Renderer.prototype.setFocus = function(object) {
   if (this._focusedObject !== object) {
     this._focusedObject = object;
-    this._focusIndex = object.index !==undefined ? object.index : this._focusIndex;
+    if (object === undefined) {
+      this._focusIndex = -1;
+    } else {
+      this._focusIndex = object.index !== undefined ? object.index : this._focusIndex;
+    }
     return true;
   }
   return false;
