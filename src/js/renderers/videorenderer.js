@@ -401,12 +401,10 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
-
-  const overlayIsReady =
-    ((this._isOverlayPrepared && this._overlayCanBePrepared) ||
-    !this._overlayCanBePrepared);
-
   if (this._boolPlaying) {
+    const overlayIsReady =
+      ((this._isOverlayPrepared && this._overlayCanBePrepared) ||
+      !this._overlayCanBePrepared);
     if (
       this.eleVideo.paused &&
       !this._boolSingleFrame &&
