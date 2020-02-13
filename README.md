@@ -81,7 +81,7 @@ The container div must be set to `position: relative`.
 
 # Examples and Testing
 
-The test server requires a Python 2 installation.
+The test server requires a Python installation.
 
 
 ## Get the test data
@@ -106,7 +106,7 @@ Start a simple webserver.
 
 ```
 cd /path/to/player51
-python2 test/httpdtester.py
+python test/httpdtester.py
 ```
 
 Then point your browser at <http://0.0.0.0:8000/test/simple.html>
