@@ -79,6 +79,9 @@ function Renderer(media, overlay) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+  this.overlayOptions = {
+    labelsOnlyOnHover: false,
+  };
   // Loading state attributes
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;

@@ -103,6 +103,7 @@ const colorGenerator = new ColorGenerator();
  */
 function Overlay(d, renderer) {
   this.renderer = renderer;
+  this.options = renderer.overlayOptions;
   this.hasFocus = false;
 }
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
@@ -437,8 +438,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
 
-  context.strokeStyle = this.hasFocus ? 'red' : this.color;
-  context.fillStyle = this.hasFocus ? 'red' : this.color;
+  context.strokeStyle = this.color;
+  context.fillStyle = this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (!this.renderer.player._boolThumbnailMode) {
@@ -454,19 +455,21 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.x + this.textPadder, this.y - this.textPadder);
 
     context.fillText(this.indexStr,
-        this.x + this.headerWidth - 4 * this.textPadder - this
-            .indexTextWidth,
+        this.x + this.headerWidth -
+            4 * this.textPadder - this.indexTextWidth,
         this.y - this.textPadder);
 
-    context.font = `${this.attrFontHeight}px sans-serif`;
-    if ((typeof(this.attrFontWidth) === 'undefined') ||
-      (this.attrFontWidth === null)) {
-      this.attrFontWidth = context.measureText(this.attrText).width;
-    }
+    if (!this.options.labelsOnlyOnHover || this.hasFocus) {
+      context.font = `${this.attrFontHeight}px sans-serif`;
+      if ((typeof(this.attrFontWidth) === 'undefined') ||
+        (this.attrFontWidth === null)) {
+        this.attrFontWidth = context.measureText(this.attrText).width;
+      }
 
-    context.fillText(this.attrText,
-        this.x + this.textPadder,
-        this.y + this.attrFontHeight + 3 * this.textPadder);
+      context.fillText(this.attrText,
+          this.x + this.textPadder,
+          this.y + this.attrFontHeight + 3 * this.textPadder);
+    }
   }
 };
 
