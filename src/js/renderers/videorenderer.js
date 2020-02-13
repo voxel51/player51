@@ -191,6 +191,14 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self._boolShowVideoOptions = !self._boolShowVideoOptions;
   });
 
+  this.eleOptHoverCtlShowLabel.addEventListener('change', function() {
+    self._boolShowLabelOnHover = self.eleOptHoverCtlShowLabel.checked;
+  });
+
+  this.eleOptHoverCtlShowAttr.addEventListener('change', function() {
+    self._boolShowAttributesOnHover = self.eleOptHoverCtlShowAttr.checked;
+  });
+
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
     self.setupCanvasContext();
