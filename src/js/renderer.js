@@ -296,7 +296,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 Renderer.prototype._prepareOverlay_auxAttributes = function(context,
     attributes, frameKey = null) {
   const o = new FrameAttributesOverlay(attributes, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight)
+  o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
