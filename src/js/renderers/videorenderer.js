@@ -69,7 +69,6 @@ VideoRenderer.prototype.constructor = VideoRenderer;
  * @required setParentandMedia called beforehand
  */
 VideoRenderer.prototype.initPlayer = function() {
-  console.log('Init player');
   this.checkParentandMedia();
   this.checkBorderBox();
   this.eleDivVideo = document.createElement('div');
