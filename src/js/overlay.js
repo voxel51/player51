@@ -481,7 +481,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
             4 * this.textPadder - this.indexTextWidth,
         this.y - this.textPadder);
 
-    if (!this.options.attrsOnlyOnHover || this.hasFocus()) {
+    if (!this.options.attrsOnlyOnClick || this.hasFocus()) {
       context.font = `${this.attrFontHeight}px sans-serif`;
       if ((typeof(this.attrFontWidth) === 'undefined') ||
         (this.attrFontWidth === null)) {

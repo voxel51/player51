@@ -128,7 +128,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowLabel = document.createElement('input');
   this.eleOptHoverCtlShowLabel.id = 'eleOptHoverCtlShowLabel';
   this.eleOptHoverCtlShowLabel.setAttribute('type', 'checkbox');
-  this.eleOptHoverCtlShowLabel.checked = this.overlayOptions.labelsOnlyOnHover;
+  this.eleOptHoverCtlShowLabel.checked = this.overlayOptions.labelsOnlyOnClick;
   this.eleOptHoverCtlShowLabelLabel = document.createElement('label');
   this.eleOptHoverCtlShowLabelLabel.innerHTML = 'Only show clicked Object';
   this.eleOptHoverCtlShowLabelLabel.setAttribute('for', this.eleOptHoverCtlShowLabel.id);
@@ -141,7 +141,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowAttr = document.createElement('input');
   this.eleOptHoverCtlShowAttr.id = 'eleOptHoverCtlShowAttr';
   this.eleOptHoverCtlShowAttr.setAttribute('type', 'checkbox');
-  this.eleOptHoverCtlShowAttr.checked = this.overlayOptions.attrsOnlyOnHover;
+  this.eleOptHoverCtlShowAttr.checked = this.overlayOptions.showAttrs;
   this.eleOptHoverCtlShowAttrLabel = document.createElement('label');
   this.eleOptHoverCtlShowAttrLabel.innerHTML = 'Show Attributes';
   this.eleOptHoverCtlShowAttrLabel.setAttribute('for', this.eleOptHoverCtlShowAttr.id);
@@ -154,7 +154,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowAttrClick = document.createElement('input');
   this.eleOptHoverCtlShowAttrClick.id = 'eleOptHoverCtlShowAttrClick';
   this.eleOptHoverCtlShowAttrClick.setAttribute('type', 'checkbox');
-  this.eleOptHoverCtlShowAttrClick.checked = this.overlayOptions.attrsOnlyOnHover;
+  this.eleOptHoverCtlShowAttrClick.checked = this.overlayOptions.attrsOnlyOnClick;
   this.eleOptHoverCtlShowAttrClickLabel = document.createElement('label');
   this.eleOptHoverCtlShowAttrClickLabel.innerHTML = 'Only show clicked attributes';
   this.eleOptHoverCtlShowAttrClickLabel.setAttribute('for', this.eleOptHoverCtlShowAttrClick.id);
@@ -224,7 +224,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.eleOptHoverCtlShowLabel.addEventListener('change', function() {
-    self.overlayOptions.labelsOnlyOnHover = self.eleOptHoverCtlShowLabel.checked;
+    self.overlayOptions.labelsOnlyOnClick = self.eleOptHoverCtlShowLabel.checked;
     self.updateFromDynamicState();
   });
 
@@ -234,7 +234,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.eleOptHoverCtlShowAttrClick.addEventListener('change', function() {
-    self.overlayOptions.attrsOnlyOnHover = self.eleOptHoverCtlShowAttrClick.checked;
+    self.overlayOptions.attrsOnlyOnClick = self.eleOptHoverCtlShowAttrClick.checked;
     self.updateFromDynamicState();
   });
 
