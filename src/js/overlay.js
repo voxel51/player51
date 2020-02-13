@@ -466,8 +466,12 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
       this.attrFontWidth = context.measureText(this.attrText).width;
     }
 
-    context.fillText(this.attrText,
-        this.x + this.textPadder,
-        this.y + this.attrFontHeight + 3 * this.textPadder);
+    const lines = this.attrText.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      context.fillText(
+        line, this.x + this.textPadder,
+        this.y + 3 + this.attrFontHeight + this.textPadder + this.attrFontHeight * i);
+    }
   }
 };

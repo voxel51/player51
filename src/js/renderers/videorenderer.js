@@ -228,7 +228,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
     });
   }
 
-
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
     self.setupCanvasContext();
