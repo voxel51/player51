@@ -7,7 +7,7 @@
  * renderers should be able to support.
  *
  * Copyright 2017-2020, Voxel51, Inc.
- * Kevin Qi, kevin@voxel51.com
+ * Alan Stahl, alan@voxel51.com
  */
 
 import {
@@ -15,6 +15,9 @@ import {
   FrameAttributesOverlay,
   ObjectOverlay,
 } from './overlay.js';
+import {
+  rescale,
+} from './util.js';
 import {
   ZipLibrary,
 } from './zipreader/zip.js';
@@ -76,6 +79,12 @@ function Renderer(media, overlay) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+  this.overlayOptions = {
+    labelsOnlyOnHover: true,
+    attrsOnlyOnHover: true,
+    attrRenderMode: 'value',
+  };
+  this._attrRenderModeOptions = ['none', 'value', 'attr-value'];
   // Loading state attributes
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
@@ -297,6 +306,9 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
+  this.eleCanvas.addEventListener('click',
+      this._handleMouseEvent.bind(this));
+
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
@@ -408,13 +420,57 @@ Renderer.prototype.processFrame = function() {
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
       const fm = this.frameOverlay[this._frameNumber];
-      for (let len = fm.length, i = 0; i < len; i++) {
-        fm[i].draw(
-            context, this.canvasWidth, this.canvasHeight);
+      const len = fm.length;
+      // draw items without focus first
+      for (let i = 0; i < len; i++) {
+        if (!fm[i].hasFocus) {
+          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        }
+      }
+      for (let i = 0; i < len; i++) {
+        if (fm[i].hasFocus) {
+          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        }
       }
     }
   }
   return;
+};
+
+
+Renderer.prototype._findOverlayAt = function(x, y) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return;
+  }
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
+    if (object.containsPoint(x, y)) {
+      return object;
+    }
+  }
+};
+
+
+Renderer.prototype._handleMouseEvent = function(e) {
+  const rect = e.target.getBoundingClientRect();
+  // calculate relative to top left of canvas
+  let x = e.clientX - rect.left;
+  let y = e.clientY - rect.top;
+  // rescale to canvas width/height
+  x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
+  y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
+  const object = this._findOverlayAt(x, y);
+  if (this._focusedObject && this._focusedObject !== object) {
+    this._focusedObject.setFocus(false);
+  }
+  if (object) {
+    object.setFocus(true);
+  }
+  if (this._focusedObject !== object) {
+    this.processFrame();
+  }
+  this._focusedObject = object;
 };
 
 

@@ -9,6 +9,9 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
+import {
+  inRect,
+} from './util.js';
 
 export {
   ColorGenerator,
@@ -94,8 +97,15 @@ const colorGenerator = new ColorGenerator();
  * video.
  *
  * Each sub-class must overload the setup and the draw functions.
+ *
+ * @param {object} d overlay data
+ * @param {Renderer} renderer Associated renderer
  */
-function Overlay() {}
+function Overlay(d, renderer) {
+  this.renderer = renderer;
+  this.options = renderer.overlayOptions;
+  this.hasFocus = false;
+}
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
   console.log('ERROR: draw called on abstract type');
@@ -103,6 +113,16 @@ Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
   console.log('ERROR: setup called on abstract type');
+};
+
+
+Overlay.prototype.setFocus = function(hasFocus) {
+  this.hasFocus = hasFocus;
+};
+
+
+Overlay.prototype.containsPoint = function(x, y) {
+  return false;
 };
 
 
@@ -115,12 +135,11 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
  *      "value": "value for the attribute",
  *      "confidence": confidence of the attribute
  *    ]
- * @param {renderer} renderer
+ * @param {Renderer} renderer Associated renderer
  *
  */
 function FrameAttributesOverlay(d, renderer) {
-  Overlay.call(this);
-  this.renderer = renderer;
+  Overlay.call(this, d, renderer);
 
   this.attrs = d.attrs;
   this.attrText =
@@ -275,11 +294,11 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  *           "y": 0.2, // floating number in relative 0:1 coordinates
  *         }
  *       }
- * @param {renderer} renderer
+ * @param {Renderer} renderer Associated renderer
  */
 function ObjectOverlay(d, renderer) {
-  Overlay.call(this);
-  this._cache_attrRenderMode = renderer._attrRenderMode;
+  Overlay.call(this, d, renderer);
+  this._cache_options = Object.assign({}, this.options);
 
   this.renderer = renderer;
 
@@ -401,13 +420,13 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     return attr1.name.localeCompare(attr2.name);
   });
 
-  if (this.renderer._attrRenderMode === 'attr-value') {
+  if (this.options.attrRenderMode === 'attr-value') {
     this.attrText = sortedAttrs.map(function(attr) {
       const attrVal = attr.value.replace(/_/g, ' ');
       const attrName = attr.name.replace(/_/g, ' ');
       return `${attrName}: ${attrVal}`;
     }).join('\n');
-  } else if (this.renderer._attrRenderMode === 'value') {
+  } else if (this.options.attrRenderMode === 'value') {
     this.attrText = sortedAttrs.map(function(attr) {
       return attr.value.replace(/_/g, ' ');
     }).join(', ');
@@ -430,8 +449,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (this._cache_attrRenderMode !== this.renderer._attrRenderMode) {
-    this._cache_attrRenderMode = this.renderer._attrRenderMode;
+  if (this._cache_options.attrRenderMode !== this.options.attrRenderMode) {
+    this._cache_options.attrRenderMode = this.options.attrRenderMode;
     this._parseAttrs(this._attrs);
   }
 
@@ -456,15 +475,18 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.x + this.textPadder, this.y - this.textPadder);
 
     context.fillText(this.indexStr,
-        this.x + this.headerWidth - 4 * this.textPadder - this
-            .indexTextWidth,
+        this.x + this.headerWidth -
+            4 * this.textPadder - this.indexTextWidth,
         this.y - this.textPadder);
 
-    context.font = `${this.attrFontHeight}px sans-serif`;
-    if ((typeof(this.attrFontWidth) === 'undefined') ||
-      (this.attrFontWidth === null)) {
-      this.attrFontWidth = context.measureText(this.attrText).width;
+    if (!this.options.labelsOnlyOnHover || this.hasFocus) {
+      context.font = `${this.attrFontHeight}px sans-serif`;
+      if ((typeof(this.attrFontWidth) === 'undefined') ||
+        (this.attrFontWidth === null)) {
+        this.attrFontWidth = context.measureText(this.attrText).width;
+      }
     }
+
 
     const lines = this.attrText.split('\n');
     for (let i = 0; i < lines.length; i++) {
@@ -474,4 +496,11 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.y + 3 + this.attrFontHeight + this.textPadder + this.attrFontHeight * i);
     }
   }
+};
+
+
+ObjectOverlay.prototype.containsPoint = function(x, y) {
+  return inRect(x, y, this.x, this.y, this.w, this.h) ||
+      inRect(x, y, this.x, this.y - this.headerHeight,
+          this.headerWidth, this.headerHeight);
 };
