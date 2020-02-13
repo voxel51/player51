@@ -429,7 +429,8 @@ Renderer.prototype._findOverlayAt = function(x, y) {
   if (!objects) {
     return;
   }
-  for (const object of objects) { // eslint-disable-line no-unused-vars
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
     if (x >= object.x && y >= object.y &&
         x <= object.x + object.w && y <= object.y + object.h) {
       return object;
