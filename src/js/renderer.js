@@ -7,7 +7,7 @@
  * renderers should be able to support.
  *
  * Copyright 2017-2020, Voxel51, Inc.
- * Kevin Qi, kevin@voxel51.com
+ * Alan Stahl, alan@voxel51.com
  */
 
 import {
@@ -15,6 +15,9 @@ import {
   FrameAttributesOverlay,
   ObjectOverlay,
 } from './overlay.js';
+import {
+  rescale,
+} from './util.js';
 import {
   ZipLibrary,
 } from './zipreader/zip.js';
@@ -297,6 +300,9 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
+  this.eleCanvas.addEventListener('mousemove',
+      this._handleMouseEvent.bind(this));
+
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
@@ -415,6 +421,42 @@ Renderer.prototype.processFrame = function() {
     }
   }
   return;
+};
+
+
+Renderer.prototype._findOverlayAt = function(x, y) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return;
+  }
+  for (const object of objects) { // eslint-disable-line no-unused-vars
+    if (x >= object.x && y >= object.y &&
+        x <= object.x + object.w && y <= object.y + object.h) {
+      return object;
+    }
+  }
+};
+
+
+Renderer.prototype._handleMouseEvent = function(e) {
+  const rect = e.target.getBoundingClientRect();
+  // calculate relative to top left of canvas
+  let x = e.clientX - rect.left;
+  let y = e.clientY - rect.top;
+  // rescale to canvas width/height
+  x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
+  y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
+  const object = this._findOverlayAt(x, y);
+  if (this._focusedObject && this._focusedObject !== object) {
+    this._focusedObject.setFocus(false);
+  }
+  if (object) {
+    object.setFocus(true);
+  }
+  if (this._focusedObject !== object) {
+    this.processFrame();
+  }
+  this._focusedObject = object;
 };
 
 

@@ -95,7 +95,9 @@ const colorGenerator = new ColorGenerator();
  *
  * Each sub-class must overload the setup and the draw functions.
  */
-function Overlay() {}
+function Overlay() {
+  this.hasFocus = false;
+}
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
   console.log('ERROR: draw called on abstract type');
@@ -103,6 +105,11 @@ Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
   console.log('ERROR: setup called on abstract type');
+};
+
+
+Overlay.prototype.setFocus = function(hasFocus) {
+  this.hasFocus = hasFocus;
 };
 
 
@@ -421,8 +428,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
 
-  context.strokeStyle = this.color;
-  context.fillStyle = this.color;
+  context.strokeStyle = this.hasFocus ? 'red' : this.color;
+  context.fillStyle = this.hasFocus ? 'red' : this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (!this.renderer.player._boolThumbnailMode) {
