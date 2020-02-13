@@ -455,17 +455,17 @@ Renderer.prototype._findOverlayAt = function(x, y) {
 };
 
 
-Renderer.prototype.isFocus = function(object) {
-  return this._focusedObject === object || object.index === this._focusIndex;
+Renderer.prototype.isFocus = function(overlayObj) {
+  return this._focusedObject === overlayObj || overlayObj.index === this._focusIndex;
 };
 
-Renderer.prototype.setFocus = function(object) {
-  if (this._focusedObject !== object) {
-    this._focusedObject = object;
-    if (object === undefined) {
+Renderer.prototype.setFocus = function(overlayObj) {
+  if (this._focusedObject !== overlayObj) {
+    this._focusedObject = overlayObj;
+    if (overlayObj === undefined) {
       this._focusIndex = -1;
     } else {
-      this._focusIndex = object.index !== undefined ? object.index : this._focusIndex;
+      this._focusIndex = overlayObj.index !== undefined ? overlayObj.index : this._focusIndex;
     }
     return true;
   }
@@ -481,9 +481,9 @@ Renderer.prototype._handleMouseEvent = function(e) {
   // rescale to canvas width/height
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
-  const object = this._findOverlayAt(x, y);
+  const overlayObj = this._findOverlayAt(x, y);
 
-  if (this.setFocus(object)) {
+  if (this.setFocus(overlayObj)) {
     this.processFrame();
   }
 };
