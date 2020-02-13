@@ -351,7 +351,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   const hideControls = function() {
     self._boolShowControls = false;
-    self._boolShowVideoOptions = false;
     self.updateFromDynamicState();
   };
 
@@ -506,7 +505,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     this.elePlayPauseButton.innerHTML = 'Play';
   }
 
-  if (this._boolShowVideoOptions) {
+  if (this._boolShowVideoOptions && this._boolShowControls) {
     this.eleDivVideoOpts.style.opacity = '0.9';
   } else {
     this.eleDivVideoOpts.style.opacity = '0.0';
