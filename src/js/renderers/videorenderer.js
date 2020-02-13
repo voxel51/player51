@@ -47,6 +47,11 @@ function VideoRenderer(media, overlay, fps) {
   this._boolShowControls = false;
   this._boolShowVideoOptions = false;
   this._boolSingleFrame = false;
+  // Label preview options
+  this._boolShowLabelOnHover = false;
+  this._boolShowAttributesOnHover = false;
+  this._attrRenderMode = 'none'; // of keys 'none', 'value', 'attr:value'
+
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1 / this.frameRate;
