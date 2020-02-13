@@ -479,21 +479,19 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
             4 * this.textPadder - this.indexTextWidth,
         this.y - this.textPadder);
 
-    if (!this.options.labelsOnlyOnHover || this.hasFocus) {
+    if (!this.options.attrsOnlyOnHover || this.hasFocus) {
       context.font = `${this.attrFontHeight}px sans-serif`;
       if ((typeof(this.attrFontWidth) === 'undefined') ||
         (this.attrFontWidth === null)) {
         this.attrFontWidth = context.measureText(this.attrText).width;
       }
-    }
-
-
-    const lines = this.attrText.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      context.fillText(
-        line, this.x + this.textPadder,
-        this.y + 3 + this.attrFontHeight + this.textPadder + this.attrFontHeight * i);
+      const lines = this.attrText.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        context.fillText(
+          line, this.x + this.textPadder,
+          this.y + 3 + this.attrFontHeight + this.textPadder + this.attrFontHeight * i);
+      }
     }
   }
 };
