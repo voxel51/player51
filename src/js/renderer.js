@@ -282,6 +282,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
+  this.updateFromDynamicState();
 };
 
 
