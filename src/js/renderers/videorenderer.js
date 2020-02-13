@@ -125,7 +125,7 @@ VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
 VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.innerHTML = 'SECRET CONTROL PANEL WOWOWOW';
+  this.eleDivVideoOpts.innerHTML = 'Display options';
 
   // Checkbox for show label on hover only
   this.eleOptHoverCtlShowLabelWrapper = document.createElement('div');

@@ -405,7 +405,7 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     this.attrText = sortedAttrs.map(function(attr) {
       const attrVal = attr.value.replace(/_/g, ' ');
       const attrName = attr.name.replace(/_/g, ' ');
-      return `${attrName}:${attrVal}`;
+      return `${attrName}: ${attrVal}`;
     }).join('\n');
   } else if (this.renderer._attrRenderMode === 'value') {
     this.attrText = sortedAttrs.map(function(attr) {
