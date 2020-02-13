@@ -414,9 +414,17 @@ Renderer.prototype.processFrame = function() {
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
       const fm = this.frameOverlay[this._frameNumber];
-      for (let len = fm.length, i = 0; i < len; i++) {
-        fm[i].draw(
-            context, this.canvasWidth, this.canvasHeight);
+      const len = fm.length;
+      // draw items without focus first
+      for (let i = 0; i < len; i++) {
+        if (!fm[i].hasFocus) {
+          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        }
+      }
+      for (let i = 0; i < len; i++) {
+        if (fm[i].hasFocus) {
+          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        }
       }
     }
   }
