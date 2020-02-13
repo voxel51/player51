@@ -85,6 +85,7 @@ function Renderer(media, overlay) {
     attrRenderMode: 'value',
   };
   this._attrRenderModeOptions = ['none', 'value', 'attr-value'];
+  this._focusIndex = -1;
   // Loading state attributes
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
@@ -424,13 +425,13 @@ Renderer.prototype.processFrame = function() {
       // draw items without focus first, if settings allow
       if (!this.overlayOptions.labelsOnlyOnHover || !this._focusedObject) {
         for (let i = 0; i < len; i++) {
-          if (!fm[i].hasFocus) {
+          if (!this.isFocus(fm[i])) {
             fm[i].draw(context, this.canvasWidth, this.canvasHeight);
           }
         }
       }
       for (let i = 0; i < len; i++) {
-        if (fm[i].hasFocus) {
+        if (this.isFocus(fm[i])) {
           fm[i].draw(context, this.canvasWidth, this.canvasHeight);
         }
       }
@@ -454,6 +455,20 @@ Renderer.prototype._findOverlayAt = function(x, y) {
 };
 
 
+Renderer.prototype.isFocus = function(object) {
+  return this._focusedObject === object || object.index === this._focusIndex;
+};
+
+Renderer.prototype.setFocus = function(object) {
+  if (this._focusedObject !== object) {
+    this._focusedObject = object;
+    this._focusIndex = object.index !==undefined ? object.index : this._focusIndex;
+    return true;
+  }
+  return false;
+};
+
+
 Renderer.prototype._handleMouseEvent = function(e) {
   const rect = e.target.getBoundingClientRect();
   // calculate relative to top left of canvas
@@ -463,14 +478,8 @@ Renderer.prototype._handleMouseEvent = function(e) {
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
   const object = this._findOverlayAt(x, y);
-  if (this._focusedObject && this._focusedObject !== object) {
-    this._focusedObject.setFocus(false);
-  }
-  if (object) {
-    object.setFocus(true);
-  }
-  if (this._focusedObject !== object) {
-    this._focusedObject = object;
+
+  if (this.setFocus(object)) {
     this.processFrame();
   }
 };

@@ -104,7 +104,6 @@ const colorGenerator = new ColorGenerator();
 function Overlay(d, renderer) {
   this.renderer = renderer;
   this.options = renderer.overlayOptions;
-  this.hasFocus = false;
 }
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
@@ -115,11 +114,9 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   console.log('ERROR: setup called on abstract type');
 };
 
-
-Overlay.prototype.setFocus = function(hasFocus) {
-  this.hasFocus = hasFocus;
+Overlay.prototype.hasFocus = function() {
+  return this.renderer.isFocus(this);
 };
-
 
 Overlay.prototype.containsPoint = function(x, y) {
   return false;
@@ -479,7 +476,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
             4 * this.textPadder - this.indexTextWidth,
         this.y - this.textPadder);
 
-    if (!this.options.attrsOnlyOnHover || this.hasFocus) {
+    if (!this.options.attrsOnlyOnHover || this.hasFocus()) {
       context.font = `${this.attrFontHeight}px sans-serif`;
       if ((typeof(this.attrFontWidth) === 'undefined') ||
         (this.attrFontWidth === null)) {
