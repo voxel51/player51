@@ -9,6 +9,9 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
+import {
+  inRect,
+} from './util.js';
 
 export {
   ColorGenerator,
@@ -110,6 +113,11 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 
 Overlay.prototype.setFocus = function(hasFocus) {
   this.hasFocus = hasFocus;
+};
+
+
+Overlay.prototype.containsPoint = function(x, y) {
+  return false;
 };
 
 
@@ -459,4 +467,11 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.x + this.textPadder,
         this.y + this.attrFontHeight + 3 * this.textPadder);
   }
+};
+
+
+ObjectOverlay.prototype.containsPoint = function(x, y) {
+  return inRect(x, y, this.x, this.y, this.w, this.h) ||
+      inRect(x, y, this.x, this.y - this.headerHeight,
+          this.headerWidth, this.headerHeight);
 };

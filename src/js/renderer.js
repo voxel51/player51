@@ -17,7 +17,6 @@ import {
 } from './overlay.js';
 import {
   rescale,
-  inRect,
 } from './util.js';
 import {
   ZipLibrary,
@@ -440,7 +439,7 @@ Renderer.prototype._findOverlayAt = function(x, y) {
   }
   for (let i = objects.length - 1; i >= 0; i--) {
     const object = objects[i];
-    if (inRect(x, y, object.x, object.y, object.w, object.h)) {
+    if (object.containsPoint(x, y)) {
       return object;
     }
   }
