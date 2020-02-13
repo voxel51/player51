@@ -50,6 +50,9 @@ function VideoRenderer(media, overlay, fps) {
   this.frameRate = fps;
   this.frameDuration = 1 / this.frameRate;
   this.frameZeroOffset = 1;
+
+  this._overlayCanBePrepared = false; // need to wait for video metadata
+  this._isVideoMetadataLoaded = false;
   this._hasMediaFragment = false;
   this._mfBeginT = null; // Time
   this._mfEndT = null;
@@ -135,6 +138,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   const self = this;
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
+    self._isVideoMetadataLoaded = true;
     self.updateSizeAndPadding();
     self.setupCanvasContext();
     self.updateFromLoadingState();
@@ -434,8 +438,8 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }
-    // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this._overlayURL !== null)) {
+    // prepare overlay once video and labels are loaded
+    if (this._overlayData !== null && this._isVideoMetadataLoaded) {
       this._overlayCanBePrepared = true;
     }
   }
