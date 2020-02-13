@@ -126,6 +126,35 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
   this.eleDivVideoOpts.innerHTML = 'SECRET CONTROL PANEL WOWOWOW';
+
+  // Checkbox for show label on hover only
+  this.eleOptHoverCtlShowLabelWrapper = document.createElement('div');
+  this.eleOptHoverCtlShowLabelWrapper.className = 'p51-video-opt-input';
+  this.eleOptHoverCtlShowLabel = document.createElement('input');
+  this.eleOptHoverCtlShowLabel.id = 'eleOptHoverCtlShowLabel';
+  this.eleOptHoverCtlShowLabel.setAttribute('type', 'checkbox');
+  this.eleOptHoverCtlShowLabel.checked = this._boolShowLabelOnHover;
+  this.eleOptHoverCtlShowLabelLabel = document.createElement('label');
+  this.eleOptHoverCtlShowLabelLabel.innerHTML = 'Show label on hover';
+  this.eleOptHoverCtlShowLabelLabel.setAttribute('for', 'eleOptHoverCtlShowLabel');
+  this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabelLabel);
+  this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabel);
+
+  // Checkbox for show attrs on hover only
+  this.eleOptHoverCtlShowAttrWrapper = document.createElement('div');
+  this.eleOptHoverCtlShowAttrWrapper.className = 'p51-video-opt-input';
+  this.eleOptHoverCtlShowAttr = document.createElement('input');
+  this.eleOptHoverCtlShowAttr.id = 'eleOptHoverCtlShowAttr';
+  this.eleOptHoverCtlShowAttr.setAttribute('type', 'checkbox');
+  this.eleOptHoverCtlShowAttr.checked = this._boolShowAttributesOnHover;
+  this.eleOptHoverCtlShowAttrLabel = document.createElement('label');
+  this.eleOptHoverCtlShowAttrLabel.innerHTML = 'Show attributes on hover';
+  this.eleOptHoverCtlShowAttrLabel.setAttribute('for', 'eleOptHoverCtlShowAttr');
+  this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttrLabel);
+  this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttr);
+
+  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowLabelWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowAttrWrapper);
   this.parent.appendChild(this.eleDivVideoOpts);
 };
 
