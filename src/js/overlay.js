@@ -97,8 +97,12 @@ const colorGenerator = new ColorGenerator();
  * video.
  *
  * Each sub-class must overload the setup and the draw functions.
+ *
+ * @param {object} d overlay data
+ * @param {Renderer} renderer Associated renderer
  */
-function Overlay() {
+function Overlay(d, renderer) {
+  this.renderer = renderer;
   this.hasFocus = false;
 }
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
@@ -130,12 +134,11 @@ Overlay.prototype.containsPoint = function(x, y) {
  *      "value": "value for the attribute",
  *      "confidence": confidence of the attribute
  *    ]
- * @param {renderer} renderer
+ * @param {Renderer} renderer Associated renderer
  *
  */
 function FrameAttributesOverlay(d, renderer) {
-  Overlay.call(this);
-  this.renderer = renderer;
+  Overlay.call(this, d, renderer);
 
   this.attrs = d.attrs;
   this.attrText =
@@ -290,12 +293,10 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  *           "y": 0.2, // floating number in relative 0:1 coordinates
  *         }
  *       }
- * @param {renderer} renderer
+ * @param {Renderer} renderer Associated renderer
  */
 function ObjectOverlay(d, renderer) {
-  Overlay.call(this);
-
-  this.renderer = renderer;
+  Overlay.call(this, d, renderer);
 
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
