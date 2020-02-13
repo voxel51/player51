@@ -402,12 +402,16 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     return;
   }
 
+  const overlayIsReady =
+    ((this._isOverlayPrepared && this._overlayCanBePrepared) ||
+    !this._overlayCanBePrepared);
+
   if (this._boolPlaying) {
     if (
       this.eleVideo.paused &&
       !this._boolSingleFrame &&
       !this._boolManualSeek &&
-      (this._isOverlayPrepared && this._overlayCanBePrepared)) {
+      overlayIsReady) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
