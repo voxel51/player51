@@ -50,8 +50,8 @@ function VideoRenderer(media, overlay, fps) {
   // Label preview options
   this._boolShowLabelOnHover = false;
   this._boolShowAttributesOnHover = false;
-  this._attrRenderMode = 'none'; // of keys 'none', 'value', 'attr:value'
-
+  this._attrRenderMode = 'value';
+  this._attrRenderModeOptions = ['none', 'value', 'attr-value'];
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1 / this.frameRate;
@@ -136,7 +136,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowLabel.checked = this._boolShowLabelOnHover;
   this.eleOptHoverCtlShowLabelLabel = document.createElement('label');
   this.eleOptHoverCtlShowLabelLabel.innerHTML = 'Show label on hover';
-  this.eleOptHoverCtlShowLabelLabel.setAttribute('for', 'eleOptHoverCtlShowLabel');
+  this.eleOptHoverCtlShowLabelLabel.setAttribute('for', this.eleOptHoverCtlShowLabel.id);
   this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabelLabel);
   this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabel);
 
@@ -149,12 +149,30 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleOptHoverCtlShowAttr.checked = this._boolShowAttributesOnHover;
   this.eleOptHoverCtlShowAttrLabel = document.createElement('label');
   this.eleOptHoverCtlShowAttrLabel.innerHTML = 'Show attributes on hover';
-  this.eleOptHoverCtlShowAttrLabel.setAttribute('for', 'eleOptHoverCtlShowAttr');
+  this.eleOptHoverCtlShowAttrLabel.setAttribute('for', this.eleOptHoverCtlShowAttr.id);
   this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttrLabel);
   this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttr);
 
+  // Radio for how to show attrs
+  this.eleOptHoverCtlAttrOptForm = document.createElement('form');
+  this.eleOptHoverCtlAttrOptForm.className = 'p51-video-opt-input';
+  for (const val of this._attrRenderModeOptions) {
+    const radio = document.createElement('input');
+    radio.id = `radio-${val}`;
+    radio.setAttribute('type', 'radio');
+    radio.name = 'attrRenderOpt';
+    radio.value = val;
+    radio.checked = false;
+    const label = document.createElement('label');
+    label.setAttribute('for', radio.id);
+    label.innerHTML = val;
+    this.eleOptHoverCtlAttrOptForm.appendChild(label);
+    this.eleOptHoverCtlAttrOptForm.appendChild(radio);
+  }
+
   this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowAttrWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlAttrOptForm);
   this.parent.appendChild(this.eleDivVideoOpts);
 };
 
@@ -193,11 +211,23 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.eleOptHoverCtlShowLabel.addEventListener('change', function() {
     self._boolShowLabelOnHover = self.eleOptHoverCtlShowLabel.checked;
+    self.updateFromDynamicState();
   });
 
   this.eleOptHoverCtlShowAttr.addEventListener('change', function() {
     self._boolShowAttributesOnHover = self.eleOptHoverCtlShowAttr.checked;
+    self.updateFromDynamicState();
   });
+
+  for (const radio of this.eleOptHoverCtlAttrOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this._attrRenderMode) {
+        this._attrRenderMode = radio.value;
+        this.updateFromDynamicState();
+      }
+    });
+  }
+
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();

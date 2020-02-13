@@ -279,6 +279,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  */
 function ObjectOverlay(d, renderer) {
   Overlay.call(this);
+  this._cache_attrRenderMode = renderer._attrRenderMode;
 
   this.renderer = renderer;
 
@@ -396,11 +397,23 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     attrs = this._attrs;
   }
 
-  this.attrText = attrs.sort(function(attr1, attr2) {
+  const sortedAttrs = attrs.sort(function(attr1, attr2) {
     return attr1.name.localeCompare(attr2.name);
-  }).map(function(attr) {
-    return attr.value.replace(/_/g, ' ');
-  }).join(', ');
+  });
+
+  if (this.renderer._attrRenderMode === 'attr-value') {
+    this.attrText = sortedAttrs.map(function(attr) {
+      const attrVal = attr.value.replace(/_/g, ' ');
+      const attrName = attr.name.replace(/_/g, ' ');
+      return `${attrName}:${attrVal}`;
+    }).join('\n');
+  } else if (this.renderer._attrRenderMode === 'value') {
+    this.attrText = sortedAttrs.map(function(attr) {
+      return attr.value.replace(/_/g, ' ');
+    }).join(', ');
+  } else {
+    this.attrText = '';
+  }
 };
 
 
@@ -415,6 +428,11 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   if (typeof(context) === 'undefined') {
     return;
+  }
+
+  if (this._cache_attrRenderMode !== this.renderer._attrRenderMode) {
+    this._cache_attrRenderMode = this.renderer._attrRenderMode;
+    this._parseAttrs(this._attrs);
   }
 
   if (this.labelTextWidth === null) {
