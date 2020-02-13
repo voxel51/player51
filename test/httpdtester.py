@@ -71,6 +71,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.copy_file_range(f, self.wfile)
             f.close()
 
+    def copyfile(self, source, outputfile):
+        """ Overridden to handle encoding issues in Python 3. """
+        print('copyfile')
+        while True:
+            buf = source.read(16 * 1024)
+            if not buf:
+                break
+            if sys.version_info[0] >= 3 and not isinstance(buf, bytes):
+                buf = buf.encode()
+            outputfile.write(buf)
+
     def copy_file_range(self, in_file, out_file):
         """ Copy only the range in self.range_from/to. """
         in_file.seek(self.range_from)
