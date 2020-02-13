@@ -80,6 +80,7 @@ function Renderer(media, overlay) {
   // Rendering options
   this._boolBorderBox = false;
   this.overlayOptions = {
+    hideOthersOnHover: false,
     labelsOnlyOnHover: false,
   };
   // Loading state attributes
@@ -418,10 +419,12 @@ Renderer.prototype.processFrame = function() {
     if (this._frameNumber in this.frameOverlay) {
       const fm = this.frameOverlay[this._frameNumber];
       const len = fm.length;
-      // draw items without focus first
-      for (let i = 0; i < len; i++) {
-        if (!fm[i].hasFocus) {
-          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+      // draw items without focus first, if settings allow
+      if (!this.overlayOptions.hideOthersOnHover || !this._focusedObject) {
+        for (let i = 0; i < len; i++) {
+          if (!fm[i].hasFocus) {
+            fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+          }
         }
       }
       for (let i = 0; i < len; i++) {
@@ -465,9 +468,9 @@ Renderer.prototype._handleMouseEvent = function(e) {
     object.setFocus(true);
   }
   if (this._focusedObject !== object) {
+    this._focusedObject = object;
     this.processFrame();
   }
-  this._focusedObject = object;
 };
 
 
