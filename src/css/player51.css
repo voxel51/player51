@@ -86,16 +86,18 @@
   border: 0;
   color: #EEE;
 
-  display: grid;
-  justify-items: end;
-  grid-template-columns: max-content 1fr;
-
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   -o-border-radius: 3px;
   border-radius: 3px;
   padding: 3px;
   margin: 3px;
+}
+
+.p51-video-opt-input label {
+  display: grid;
+  justify-items: end;
+  grid-template-columns: max-content 1fr;
 }
 
 .p51-video-controls button {

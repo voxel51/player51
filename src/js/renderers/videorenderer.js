@@ -189,8 +189,8 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
     const label = document.createElement('label');
     label.setAttribute('for', radio.id);
     label.innerHTML = val;
+    label.appendChild(radio);
     this.eleOptHoverCtlAttrOptForm.appendChild(label);
-    this.eleOptHoverCtlAttrOptForm.appendChild(radio);
   }
 
   this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowLabelWrapper);
