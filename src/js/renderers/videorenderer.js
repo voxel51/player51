@@ -131,49 +131,44 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
     return wrapper;
   };
 
-  const makeCheckbox = function(id, checked) {
-    const checkbox = document.createElement('input');
-    checkbox.id = id;
-    checkbox.setAttribute('type', 'checkbox');
-    checkbox.checked = checked;
-    return checkbox;
-  };
-
-  const makeLabel = function(inputId, text) {
+  const makeCheckboxRow = function(text, checked) {
     const label = document.createElement('label');
     label.innerHTML = text;
-    label.setAttribute('for', inputId);
+
+    const checkbox = document.createElement('input');
+    checkbox.setAttribute('type', 'checkbox');
+    checkbox.checked = checked;
+    label.appendChild(checkbox);
+
     return label;
   };
 
+
   // Checkbox for show label on click only
-  this.eleOptHoverCtlShowLabel = makeCheckbox(
-      'eleOptHoverCtlShowLabel', this.overlayOptions.labelsOnlyOnClick);
-  this.eleOptHoverCtlShowLabelLabel = makeLabel(
-      this.eleOptHoverCtlShowLabel.id, 'Only show clicked object');
+  const eleOptHoverCtlShowLabelRow = makeCheckboxRow(
+      'Only show clicked object', this.overlayOptions.labelsOnlyOnClick);
+  this.eleOptHoverCtlShowLabel =
+      eleOptHoverCtlShowLabelRow.querySelector('input[type=checkbox]');
   this.eleOptHoverCtlShowLabelWrapper = makeWrapper([
-    this.eleOptHoverCtlShowLabelLabel,
-    this.eleOptHoverCtlShowLabel,
+    eleOptHoverCtlShowLabelRow,
   ]);
 
   // Checkbox for show attrs
-  this.eleOptHoverCtlShowAttr = makeCheckbox(
-      'eleOptHoverCtlShowAttr', this.overlayOptions.showAttrs);
-  this.eleOptHoverCtlShowAttrLabel = makeLabel(
-      this.eleOptHoverCtlShowAttr.id, 'Show attributes');
+  const eleOptHoverCtlShowAttrRow = makeCheckboxRow(
+      'Show attributes', this.overlayOptions.showAttrs);
+  this.eleOptHoverCtlShowAttr =
+      eleOptHoverCtlShowAttrRow.querySelector('input[type=checkbox]');
   this.eleOptHoverCtlShowAttrWrapper = makeWrapper([
-    this.eleOptHoverCtlShowAttrLabel,
-    this.eleOptHoverCtlShowAttr,
+    eleOptHoverCtlShowAttrRow,
   ]);
 
   // Checkbox for show attrs on click only
-  this.eleOptHoverCtlShowAttrClick = makeCheckbox(
-      'eleOptHoverCtlShowAttrClick', this.overlayOptions.attrsOnlyOnClick);
-  this.eleOptHoverCtlShowAttrClickLabel = makeLabel(
-      this.eleOptHoverCtlShowAttrClick.id, 'Only show clicked attributes');
+  const eleOptHoverCtlShowAttrClickRow = makeCheckboxRow(
+      'Only show clicked attributes', this.overlayOptions.attrsOnlyOnClick);
+  this.eleOptHoverCtlShowAttrClick =
+      eleOptHoverCtlShowAttrClickRow.querySelector('input[type=checkbox]');
   this.eleOptHoverCtlShowAttrClickWrapper = makeWrapper([
-    this.eleOptHoverCtlShowAttrClickLabel,
-    this.eleOptHoverCtlShowAttrClick,
+    eleOptHoverCtlShowAttrClickRow,
   ]);
 
   // Radio for how to show attrs
@@ -183,7 +178,8 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   formTitle.innerHTML = 'Attribute rendering mode:';
   this.eleOptHoverCtlAttrOptForm.appendChild(formTitle);
   this.eleOptHoverCtlAttrOptForm.appendChild(document.createElement('div'));
-  for (const val of this._attrRenderModeOptions) { // eslint-disable-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  for (const val of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
     radio.id = `radio-${val}`;
     radio.setAttribute('type', 'radio');
