@@ -26,6 +26,7 @@ import cgi
 import threading
 import socket
 import errno
+import time
 try:
     # Python 3
     from http.server import HTTPServer, SimpleHTTPRequestHandler
@@ -55,6 +56,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
     serve_path = DATA_DIR
     video_path = None
     video_labels_path = None
+    default_delay = 0
+    delays = {}
 
     def do_GET(self):
         """ Overridden to handle HTTP Range requests. """
@@ -67,6 +70,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if f:
             self.copy_file_range(f, self.wfile)
             f.close()
+
+    def copyfile(self, source, outputfile):
+        """ Overridden to handle encoding issues in Python 3. """
+        while True:
+            buf = source.read(16 * 1024)
+            if not buf:
+                break
+            if sys.version_info[0] >= 3 and not isinstance(buf, bytes):
+                buf = buf.encode()
+            outputfile.write(buf)
 
     def copy_file_range(self, in_file, out_file):
         """ Copy only the range in self.range_from/to. """
@@ -201,9 +214,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
         path = normpath(unquote(path))
         words = path.split('/')
         words = list(filter(None, words))
-        if words[-1] == "video.mp4":
+        filename = words[-1] if words else ""
+        time.sleep(self.delays.get(filename, self.default_delay))
+        if filename == "video.mp4":
             return self.video_path
-        elif words[-1] == "video-labels.json":
+        elif filename == "video-labels.json":
             return self.video_labels_path
         path = self.serve_path
         for word in words:
@@ -251,11 +266,23 @@ def main(args=None):
     parser.add_argument("-l", "--video-labels-path", "--video-labels",
         default=os.path.join(DATA_DIR, "test", "data", "video-labels.json"),
         help="Path to test labels")
+    delay_group = parser.add_argument_group("delays")
+    delay_group.add_argument("-d", "--delay", type=float, default=0,
+        help="Time to wait before serving any request")
+    delay_group.add_argument("--video-delay", type=float, default=None,
+        help="Time to wait before serving a video request")
+    delay_group.add_argument("--video-labels-delay", type=float, default=None,
+        help="Time to wait before serving a video labels request")
     args = parser.parse_args()
 
     RequestHandler.serve_path = args.serve_path
     RequestHandler.video_path = args.video_path
     RequestHandler.video_labels_path = args.video_labels_path
+    RequestHandler.default_delay = args.delay
+    if args.video_delay:
+        RequestHandler.delays["video.mp4"] = args.video_delay
+    if args.video_labels_delay:
+        RequestHandler.delays["video-labels.json"] = args.video_labels_delay
     with open(os.path.join(DATA_DIR, "test", "data", "config.js"), "w") as f:
         f.write('CONFIG = {};')
         if args.video_fps is not None:
