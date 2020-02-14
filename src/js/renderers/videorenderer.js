@@ -122,44 +122,59 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
   this.eleDivVideoOpts.innerHTML = 'Display options';
 
+  const makeWrapper = function(children) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'p51-video-opt-input';
+    for (const child of children) { // eslint-disable-line no-unused-vars
+      wrapper.appendChild(child);
+    }
+    return wrapper;
+  };
+
+  const makeCheckbox = function(id, checked) {
+    const checkbox = document.createElement('input');
+    checkbox.id = id;
+    checkbox.setAttribute('type', 'checkbox');
+    checkbox.checked = checked;
+    return checkbox;
+  };
+
+  const makeLabel = function(inputId, text) {
+    const label = document.createElement('label');
+    label.innerHTML = text;
+    label.setAttribute('for', inputId);
+    return label;
+  };
+
   // Checkbox for show label on click only
-  this.eleOptHoverCtlShowLabelWrapper = document.createElement('div');
-  this.eleOptHoverCtlShowLabelWrapper.className = 'p51-video-opt-input';
-  this.eleOptHoverCtlShowLabel = document.createElement('input');
-  this.eleOptHoverCtlShowLabel.id = 'eleOptHoverCtlShowLabel';
-  this.eleOptHoverCtlShowLabel.setAttribute('type', 'checkbox');
-  this.eleOptHoverCtlShowLabel.checked = this.overlayOptions.labelsOnlyOnClick;
-  this.eleOptHoverCtlShowLabelLabel = document.createElement('label');
-  this.eleOptHoverCtlShowLabelLabel.innerHTML = 'Only show clicked Object';
-  this.eleOptHoverCtlShowLabelLabel.setAttribute('for', this.eleOptHoverCtlShowLabel.id);
-  this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabelLabel);
-  this.eleOptHoverCtlShowLabelWrapper.append(this.eleOptHoverCtlShowLabel);
+  this.eleOptHoverCtlShowLabel = makeCheckbox(
+      'eleOptHoverCtlShowLabel', this.overlayOptions.labelsOnlyOnClick);
+  this.eleOptHoverCtlShowLabelLabel = makeLabel(
+      this.eleOptHoverCtlShowLabel.id, 'Only show clicked object');
+  this.eleOptHoverCtlShowLabelWrapper = makeWrapper([
+    this.eleOptHoverCtlShowLabelLabel,
+    this.eleOptHoverCtlShowLabel,
+  ]);
 
   // Checkbox for show attrs
-  this.eleOptHoverCtlShowAttrWrapper = document.createElement('div');
-  this.eleOptHoverCtlShowAttrWrapper.className = 'p51-video-opt-input';
-  this.eleOptHoverCtlShowAttr = document.createElement('input');
-  this.eleOptHoverCtlShowAttr.id = 'eleOptHoverCtlShowAttr';
-  this.eleOptHoverCtlShowAttr.setAttribute('type', 'checkbox');
-  this.eleOptHoverCtlShowAttr.checked = this.overlayOptions.showAttrs;
-  this.eleOptHoverCtlShowAttrLabel = document.createElement('label');
-  this.eleOptHoverCtlShowAttrLabel.innerHTML = 'Show Attributes';
-  this.eleOptHoverCtlShowAttrLabel.setAttribute('for', this.eleOptHoverCtlShowAttr.id);
-  this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttrLabel);
-  this.eleOptHoverCtlShowAttrWrapper.append(this.eleOptHoverCtlShowAttr);
+  this.eleOptHoverCtlShowAttr = makeCheckbox(
+      'eleOptHoverCtlShowAttr', this.overlayOptions.showAttrs);
+  this.eleOptHoverCtlShowAttrLabel = makeLabel(
+      this.eleOptHoverCtlShowAttr.id, 'Show attributes');
+  this.eleOptHoverCtlShowAttrWrapper = makeWrapper([
+    this.eleOptHoverCtlShowAttrLabel,
+    this.eleOptHoverCtlShowAttr,
+  ]);
 
   // Checkbox for show attrs on click only
-  this.eleOptHoverCtlShowAttrClickWrapper = document.createElement('div');
-  this.eleOptHoverCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
-  this.eleOptHoverCtlShowAttrClick = document.createElement('input');
-  this.eleOptHoverCtlShowAttrClick.id = 'eleOptHoverCtlShowAttrClick';
-  this.eleOptHoverCtlShowAttrClick.setAttribute('type', 'checkbox');
-  this.eleOptHoverCtlShowAttrClick.checked = this.overlayOptions.attrsOnlyOnClick;
-  this.eleOptHoverCtlShowAttrClickLabel = document.createElement('label');
-  this.eleOptHoverCtlShowAttrClickLabel.innerHTML = 'Only show clicked attributes';
-  this.eleOptHoverCtlShowAttrClickLabel.setAttribute('for', this.eleOptHoverCtlShowAttrClick.id);
-  this.eleOptHoverCtlShowAttrClickWrapper.append(this.eleOptHoverCtlShowAttrClickLabel);
-  this.eleOptHoverCtlShowAttrClickWrapper.append(this.eleOptHoverCtlShowAttrClick);
+  this.eleOptHoverCtlShowAttrClick = makeCheckbox(
+      'eleOptHoverCtlShowAttrClick', this.overlayOptions.attrsOnlyOnClick);
+  this.eleOptHoverCtlShowAttrClickLabel = makeLabel(
+      this.eleOptHoverCtlShowAttrClick.id, 'Only show clicked attributes');
+  this.eleOptHoverCtlShowAttrClickWrapper = makeWrapper([
+    this.eleOptHoverCtlShowAttrClickLabel,
+    this.eleOptHoverCtlShowAttrClick,
+  ]);
 
   // Radio for how to show attrs
   this.eleOptHoverCtlAttrOptForm = document.createElement('form');
@@ -168,7 +183,7 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
   formTitle.innerHTML = 'Attribute rendering mode:';
   this.eleOptHoverCtlAttrOptForm.appendChild(formTitle);
   this.eleOptHoverCtlAttrOptForm.appendChild(document.createElement('div'));
-  for (const val of this._attrRenderModeOptions) {
+  for (const val of this._attrRenderModeOptions) { // eslint-disable-line no-unused-vars
     const radio = document.createElement('input');
     radio.id = `radio-${val}`;
     radio.setAttribute('type', 'radio');
@@ -238,7 +253,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
-  for (const radio of this.eleOptHoverCtlAttrOptForm) {
+  for (const radio of this.eleOptHoverCtlAttrOptForm) { // eslint-disable-line no-unused-vars
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
