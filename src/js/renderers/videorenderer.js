@@ -118,10 +118,6 @@ VideoRenderer.prototype.initPlayer = function() {
 VideoRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
 
-  if (this._boolAutoplay) {
-    this.eleVideo.toggleAttribute('autoplay', true);
-  }
-
   if (this.player._boolHasPoster) {
     this.eleVideo.setAttribute('poster', this.player._loadingPosterURL);
     if (this.player._boolForcedSize) {
