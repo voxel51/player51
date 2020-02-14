@@ -397,6 +397,10 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
+  if (this._boolAutoplay) {
+    this._boolAutoplay = false;
+    this._boolPlaying = true;
+  }
   if (this._boolPlaying) {
     const overlayIsReady =
       this._isOverlayPrepared && this._overlayCanBePrepared;
