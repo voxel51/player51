@@ -73,7 +73,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def copyfile(self, source, outputfile):
         """ Overridden to handle encoding issues in Python 3. """
-        print('copyfile')
         while True:
             buf = source.read(16 * 1024)
             if not buf:
