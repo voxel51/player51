@@ -235,7 +235,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.eleOptHoverCtlShowLabel.addEventListener('change', function() {
-    self.overlayOptions.labelsOnlyOnClick = self.eleOptHoverCtlShowLabel.checked;
+    self.overlayOptions.labelsOnlyOnClick =
+        self.eleOptHoverCtlShowLabel.checked;
     self.updateFromDynamicState();
   });
 
@@ -245,11 +246,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.eleOptHoverCtlShowAttrClick.addEventListener('change', function() {
-    self.overlayOptions.attrsOnlyOnClick = self.eleOptHoverCtlShowAttrClick.checked;
+    self.overlayOptions.attrsOnlyOnClick =
+        self.eleOptHoverCtlShowAttrClick.checked;
     self.updateFromDynamicState();
   });
 
-  for (const radio of this.eleOptHoverCtlAttrOptForm) { // eslint-disable-line no-unused-vars
+  for (const radio of this.eleOptHoverCtlAttrOptForm) {
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
@@ -351,7 +353,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
         .valueAsNumber / 100.0);
     // Update the video time
     self.eleVideo.currentTime = self.computeFrameTime(
-      self.computeFrameNumber(time));
+        self.computeFrameNumber(time));
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
     self._boolSingleFrame = false;
@@ -523,7 +525,8 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
 
   if (this._boolPlaying) {
-    if (this.eleVideo.paused && !this._boolSingleFrame && !this._boolManualSeek) {
+    if (this.eleVideo.paused && !this._boolSingleFrame &&
+        !this._boolManualSeek) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
