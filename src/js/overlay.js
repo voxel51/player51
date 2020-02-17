@@ -49,9 +49,29 @@ function ColorGenerator() {
  */
 ColorGenerator.prototype.color = function(index) {
   if (!(index in this.colors)) {
-    this.colors[index] = this.generateNewColor();
+    if (typeof(this._colorSet) === 'undefined') {
+      this._generateColorSet();
+    }
+    const rawIndex = Math.floor(Math.random() * this._colorSet.length);
+    this.colors[index] = this._colorSet[rawIndex];
+    this._colorRGBA[index] = this._colorRGBA[rawIndex];
   }
   return this.colors[index];
+};
+
+
+/**
+ * Provide raw RGBA values for a color based on an index.
+ *
+ * @member color
+ * @param {int} index
+ * @return {color} color
+ */
+ColorGenerator.prototype.rawColor = function(index) {
+  if (!(index in this._colorRGBA)) {
+    this.color(index);
+  }
+  return this._colorRGBA[index];
 };
 
 
@@ -77,21 +97,6 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
     context.fillRect(0, 0, 1, 1);
     this._colorRGBA[i] = context.getImageData(0, 0, 1, 1).data;
   }
-};
-
-
-/**
- * Called to generate a random bounding box color to use in rendering.
- *
- * @member generateNewColor
- * @return {color} color
- */
-ColorGenerator.prototype.generateNewColor = function() {
-  if (typeof(this._colorSet) === 'undefined') {
-    this._generateColorSet();
-  }
-  return this._colorSet[Math.floor(Math.random() * this._colorSet
-      .length)];
 };
 
 
