@@ -16,6 +16,9 @@ import {
 import {
   parseMediaFragmentsUri,
 } from '../mediafragments.js';
+import {
+  recursiveMap,
+} from '../util.js';
 
 export {
   VideoRenderer,
@@ -201,6 +204,46 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
 };
 
 
+VideoRenderer.prototype.initPlayerOptionsControls = function() {
+  const self = this;
+
+  this.eleOptionsButton.addEventListener('click', function() {
+    self._boolShowVideoOptions = !self._boolShowVideoOptions;
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowLabel.addEventListener('change', function() {
+    self.overlayOptions.labelsOnlyOnClick =
+        self.eleOptCtlShowLabel.checked;
+    self.processFrame();
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttr.addEventListener('change', function() {
+    self.overlayOptions.showAttrs = self.eleOptCtlShowAttr.checked;
+    self.processFrame();
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttrClick.addEventListener('change', function() {
+    self.overlayOptions.attrsOnlyOnClick =
+        self.eleOptCtlShowAttrClick.checked;
+    self.processFrame();
+    self.updateFromDynamicState();
+  });
+
+  for (const radio of this.eleOptCtlAttrOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this.overlayOptions.attrRenderMode) {
+        this.overlayOptions.attrRenderMode = radio.value;
+        self.processFrame();
+        this.updateFromDynamicState();
+      }
+    });
+  }
+};
+
+
 /**
  * This loads controls for videoplayer51
  *
@@ -229,36 +272,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // will be needed during playback
   const self = this;
 
-  this.eleOptionsButton.addEventListener('click', function() {
-    self._boolShowVideoOptions = !self._boolShowVideoOptions;
-    self.updateFromDynamicState();
-  });
-
-  this.eleOptCtlShowLabel.addEventListener('change', function() {
-    self.overlayOptions.labelsOnlyOnClick =
-        self.eleOptCtlShowLabel.checked;
-    self.updateFromDynamicState();
-  });
-
-  this.eleOptCtlShowAttr.addEventListener('change', function() {
-    self.overlayOptions.showAttrs = self.eleOptCtlShowAttr.checked;
-    self.updateFromDynamicState();
-  });
-
-  this.eleOptCtlShowAttrClick.addEventListener('change', function() {
-    self.overlayOptions.attrsOnlyOnClick =
-        self.eleOptCtlShowAttrClick.checked;
-    self.updateFromDynamicState();
-  });
-
-  for (const radio of this.eleOptCtlAttrOptForm) {
-    radio.addEventListener('change', () => {
-      if (radio.value !== this.overlayOptions.attrRenderMode) {
-        this.overlayOptions.attrRenderMode = radio.value;
-        this.updateFromDynamicState();
-      }
-    });
-  }
+  this.initPlayerOptionsControls();
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
@@ -571,17 +585,6 @@ VideoRenderer.prototype.setAttributeControlsDisplay = function() {
   recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
   recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
-
-/**
- * Recursively map a function to all nodes in a tree
- * @param {Object} node - an object with children accessed by .childNodes
- * @param {Function} func - function that takes node as an argument
- */
-function recursiveMap(node, func) {
-  node.childNodes.forEach((n) => recursiveMap(n, func));
-  func(node);
-}
-
 
 /**
  * This function is a controller

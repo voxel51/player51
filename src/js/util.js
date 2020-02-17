@@ -37,3 +37,14 @@ export function inRect(x, y, rectX, rectY, rectW, rectH) {
   return x >= rectX && x <= rectX + rectW &&
          y >= rectY && y <= rectY + rectH;
 }
+
+
+/**
+ * Recursively map a function to all nodes in a tree
+ * @param {Object} node - an object with children accessed by .childNodes
+ * @param {Function} func - function that takes node as an argument
+ */
+export function recursiveMap(node, func) {
+  node.childNodes.forEach((n) => recursiveMap(n, func));
+  func(node);
+}
