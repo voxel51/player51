@@ -94,6 +94,7 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
       `hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`
     );
     context.fillStyle = this._colorSet[i];
+    context.clearRect(0, 0, 1, 1);
     context.fillRect(0, 0, 1, 1);
     this._colorRGBA[i] = context.getImageData(0, 0, 1, 1).data;
   }
