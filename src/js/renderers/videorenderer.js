@@ -50,6 +50,9 @@ function VideoRenderer(media, overlay, fps) {
   this.frameRate = fps;
   this.frameDuration = 1 / this.frameRate;
   this.frameZeroOffset = 1;
+
+  this._overlayCanBePrepared = false; // need to wait for video metadata
+  this._isVideoMetadataLoaded = false;
   this._hasMediaFragment = false;
   this._mfBeginT = null; // Time
   this._mfEndT = null;
@@ -135,6 +138,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   const self = this;
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
+    self._isVideoMetadataLoaded = true;
     self.updateSizeAndPadding();
     self.setupCanvasContext();
     self.updateFromLoadingState();
@@ -203,6 +207,10 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.eleVideo.addEventListener('play', function() {
     self.timerCallback();
   }, false);
+
+  this.eleVideo.addEventListener('seeked', function() {
+    self.updateStateFromTimeChange();
+  });
 
   this.eleVideoSource.addEventListener('error', function() {
     if (self.player._boolNotFound) {
@@ -435,24 +443,24 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }
-    // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this._overlayURL !== null)) {
+    // prepare overlay once video and labels are loaded
+    if (this._overlayData !== null && this._isVideoMetadataLoaded) {
       this._overlayCanBePrepared = true;
     }
   }
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
-  }
 
-  if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
-      isFinite(this.eleVideo.duration)) {
-    // FPS wasn't provided, so guess it from the labels. If we don't have labels
-    // either, we can't determine anything, so fall back to FPS = 30.
-    const numFrames = Object.keys(this.frameOverlay).length ||
-        this.eleVideo.duration * 30;
-    this.frameRate = numFrames / this.eleVideo.duration;
-    this.frameDuration = 1 / this.frameRate;
+    if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
+        isFinite(this.eleVideo.duration)) {
+      // FPS wasn't provided, so guess it from the labels. If we don't have
+      // labels either, we can't determine anything, so fall back to FPS = 30.
+      const numFrames = Object.keys(this.frameOverlay).length ||
+          this.eleVideo.duration * 30;
+      this.frameRate = numFrames / this.eleVideo.duration;
+      this.frameDuration = 1 / this.frameRate;
+    }
   }
 };
 
@@ -476,7 +484,7 @@ VideoRenderer.prototype._updateFrame = function() {
   // check if we have a media fragment and should be looping
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
-  if (cfn !== this._frameNumber) {
+  if (cfn !== this._frameNumber && !this.eleVideo.seeking) {
     this._frameNumber = cfn;
     this.processFrame();
   }
