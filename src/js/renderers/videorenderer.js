@@ -110,12 +110,9 @@ VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
   this.eleSeekBar.setAttribute('type', 'range');
   this.eleSeekBar.setAttribute('value', '0');
   this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleOptionsButton = document.createElement('button');
-  this.eleOptionsButton.className = 'p51-video-options';
-  this.eleOptionsButton.innerHTML = 'Options';
   this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
-  this.eleDivVideoControls.appendChild(this.eleOptionsButton);
+  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
   this.parent.appendChild(this.eleDivVideoControls);
 };
 
@@ -147,8 +144,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // after the DOM elements are created then we initialize other variables that
   // will be needed during playback
   const self = this;
-
-  this.initPlayerOptionsControls();
 
   this.eleVideo.addEventListener('loadedmetadata', function() {
     self.updateSizeAndPadding();
@@ -447,19 +442,6 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
 
   this.setAttributeControlsDisplay();
-};
-
-VideoRenderer.prototype.setAttributeControlsDisplay = function() {
-  let func = (node) => node.hidden = false;
-  this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
-  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
-  if (!this.overlayOptions.showAttrs) {
-    this.eleOptCtlShowAttrClickWrapper.className = '';
-    this.eleOptCtlAttrOptForm.className = '';
-    func = (node) => node.hidden = true;
-  }
-  recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
-  recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
 
 /**

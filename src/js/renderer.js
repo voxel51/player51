@@ -17,6 +17,7 @@ import {
 } from './overlay.js';
 import {
   rescale,
+  recursiveMap,
 } from './util.js';
 import {
   ZipLibrary,
@@ -416,7 +417,6 @@ Renderer.prototype.processFrame = function() {
   if (!this._isReadyProcessFrames) {
     return;
   }
-
   const context = this.setupCanvasContext();
   this.customDraw(context);
   if (this._isOverlayPrepared) {
@@ -457,7 +457,8 @@ Renderer.prototype._findOverlayAt = function(x, y) {
 
 
 Renderer.prototype.isFocus = function(overlayObj) {
-  return this._focusedObject === overlayObj || overlayObj.index === this._focusIndex;
+  return this._focusedObject === overlayObj ||
+    overlayObj.index === this._focusIndex;
 };
 
 Renderer.prototype.setFocus = function(overlayObj) {
@@ -466,7 +467,7 @@ Renderer.prototype.setFocus = function(overlayObj) {
     if (overlayObj === undefined) {
       this._focusIndex = -1;
     } else {
-      this._focusIndex = overlayObj.index !== undefined ? overlayObj.index : this._focusIndex;
+      this._focusIndex = overlayObj.index !== undefined ? overlayObj.index : -1;
     }
     return true;
   }
@@ -738,6 +739,16 @@ Renderer.prototype.initSharedControls = function() {
   if (typeof(this.player._thumbnailClickAction) !== 'undefined') {
     this.parent.addEventListener('click', this.player._thumbnailClickAction);
   }
+  if (this.eleOptionsButton) {
+    this.initPlayerOptionsControls();
+  }
+};
+
+Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
+  this.eleOptionsButton = document.createElement('button');
+  this.eleOptionsButton.className = 'p51-video-options';
+  this.eleOptionsButton.innerHTML = 'Options';
+  parent.appendChild(this.eleOptionsButton);
 };
 
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
@@ -861,6 +872,20 @@ Renderer.prototype.initPlayerOptionsControls = function() {
       }
     });
   }
+};
+
+
+Renderer.prototype.setAttributeControlsDisplay = function() {
+  let func = (node) => node.hidden = false;
+  this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
+  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
+  if (!this.overlayOptions.showAttrs) {
+    this.eleOptCtlShowAttrClickWrapper.className = '';
+    this.eleOptCtlAttrOptForm.className = '';
+    func = (node) => node.hidden = true;
+  }
+  recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
+  recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
 
 
