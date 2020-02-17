@@ -306,14 +306,11 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
   const maskImage = context.createImageData(canvasWidth, canvasHeight);
   for (let i = 0; i < this.mask.data.length; i++) {
     if (this.mask.data[i]) {
-      const color = colorGenerator.color(this.mask.data[i]);
+      const color = colorGenerator._colorRGBA[this.mask.data[i]];
       maskImage.data[(i * 4) + 0] = color[0];
       maskImage.data[(i * 4) + 1] = color[1];
       maskImage.data[(i * 4) + 2] = color[2];
       maskImage.data[(i * 4) + 3] = color[3];
-    } else {
-      maskImage.data[i * 4] = 255;
-      maskImage.data[i * 4 + 3] = 128;
     }
   }
   this.maskImage = maskImage;
