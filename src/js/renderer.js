@@ -263,28 +263,27 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
       if (frameKeyI) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
+        if (f && f.mask) {
+          this._prepareOverlay_auxMask(context, f.mask, frameKey);
+        }
         if (f && f.objects && f.objects.objects) {
-          this._prepareOverlay_auxFormat1Objects(context, f.objects
-              .objects);
+          this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
         }
         if (f && f.attrs) {
           this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
-        }
-        if (f && f.mask) {
-          this._prepareOverlay_auxMask(context, f.mask, frameKey);
         }
       }
     }
   }
 
-  // Attributes for images
-  if (typeof(rawjson.attrs) !== 'undefined') {
-    const context = this.setupCanvasContext();
-    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
-  }
+  // Attributes and masks for images
   if (typeof(rawjson.mask) !== 'undefined') {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxMask(context, rawjson.mask);
+  }
+  if (typeof(rawjson.attrs) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
   this._isOverlayPrepared = true;
