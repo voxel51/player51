@@ -13,6 +13,7 @@
 import {
   ColorGenerator,
   FrameAttributesOverlay,
+  FrameMaskOverlay,
   ObjectOverlay,
 } from './overlay.js';
 import {
@@ -269,6 +270,9 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         if (f && f.attrs) {
           this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
+        if (f && f.mask) {
+          this._prepareOverlay_auxMask(context, f.mask, frameKey);
+        }
       }
     }
   }
@@ -277,6 +281,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   if (typeof(rawjson.attrs) !== 'undefined') {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
+  }
+  if (typeof(rawjson.mask) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    this._prepareOverlay_auxMask(context, rawjson.mask);
   }
 
   this._isOverlayPrepared = true;
@@ -291,12 +299,33 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
  *
  * @param {context} context
  * @param {array} attributes is an Array of attributes
- * @param {key} frameKey forces the usage of _prepareOverlay_auxCheckAdd
+ * @param {key} frameKey the frame number of the attributes (defaults to current
+ *   frame)
  */
 Renderer.prototype._prepareOverlay_auxAttributes = function(context,
     attributes, frameKey = null) {
   const o = new FrameAttributesOverlay(attributes, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight)
+  o.setup(context, this.canvasWidth, this.canvasHeight);
+  if (frameKey) {
+    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+  } else {
+    this.frameOverlay[this._frameNumber].push(o);
+  }
+};
+
+/**
+ * Helper function to parse attributes of an overlay and add it to the overlay
+ * representation.
+ *
+ * @param {context} context
+ * @param {string} mask a base64-encoded mask
+ * @param {key} frameKey the frame number of the mask (defaults to current
+ *   frame)
+ */
+Renderer.prototype._prepareOverlay_auxMask = function(context,
+    mask, frameKey = null) {
+  const o = new FrameMaskOverlay(mask, this);
+  o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {

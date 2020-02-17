@@ -15,6 +15,7 @@ export {
   ColorGenerator,
   Overlay,
   FrameAttributesOverlay,
+  FrameMaskOverlay,
   ObjectOverlay,
 };
 
@@ -26,6 +27,7 @@ export {
 function ColorGenerator() {
   // member will store all colors created
   this.colors = {};
+  this._colorRGBA = {};
 
   // standard colors
   this.white = '#ffffff';
@@ -61,12 +63,19 @@ ColorGenerator.prototype.color = function(index) {
  * @param {int} n
  */
 ColorGenerator.prototype._generateColorSet = function(n = 36) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext('2d');
   const delta = 360 / n;
   this._colorSet = new Array(n);
   for (let i = 0; i < n; i++) {
     this._colorSet[i] = (
       `hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`
     );
+    context.fillStyle = this._colorSet[i];
+    context.fillRect(0, 0, 1, 1);
+    this._colorRGBA[i] = context.getImageData(0, 0, 1, 1).data;
   }
 };
 
@@ -108,7 +117,7 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 
 
 /**
- * A Class for rendering an FrameAttributesOverlay on the Video
+ * An overlay that renders frame-level attributes
  *
  * @param {array} d is an array with the following structure
  *    [
@@ -255,6 +264,73 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
               .textPadder));
     }
   }
+};
+
+
+/**
+ * An overlay that renders frame-level masks
+ *
+ * @param {array} mask a base64-encoded mask
+ * @param {Renderer} renderer Associated renderer
+ *
+ */
+function FrameMaskOverlay(mask, renderer) {
+  Overlay.call(this);
+  this.renderer = renderer;
+
+  this.mask = deserialize(mask);
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+}
+FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
+FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
+
+
+/**
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @method setup
+ * @constructor
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
+    canvasHeight) {
+  this.x = 0;
+  this.y = 0;
+  this.w = canvasWidth;
+  this.h = canvasHeight;
+};
+
+
+/**
+ * Basic rendering function for drawing the overlay instance.
+ *
+ * @method draw
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
+    canvasHeight) {
+  const maskImage = context.createImageData(canvasWidth, canvasHeight);
+  for (let i = 0; i < this.mask.data.length; i++) {
+    if (this.mask.data[i]) {
+      const color = colorGenerator.color(this.mask.data[i]);
+      maskImage.data[(i * 4) + 0] = color[0];
+      maskImage.data[(i * 4) + 1] = color[1];
+      maskImage.data[(i * 4) + 2] = color[2];
+      maskImage.data[(i * 4) + 3] = color[3];
+    }
+    else {
+      maskImage.data[i * 4] = 255;
+      maskImage.data[i * 4 + 3] = 128;
+    }
+  }
+  context.putImageData(maskImage, 0, 0)
 };
 
 
