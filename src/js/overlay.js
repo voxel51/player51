@@ -27,7 +27,7 @@ export {
 function ColorGenerator() {
   // member will store all colors created
   this.colors = {};
-  this._colorRGBA = {};
+  this._rawColors = {};
 
   // standard colors
   this.white = '#ffffff';
@@ -37,6 +37,12 @@ function ColorGenerator() {
   this._colorS = '70%';
   this._colorL = '40%';
   this._colorA = '0.875';
+
+  const maskOffset = Math.floor(Math.random() * 256);
+  this.rawMaskColors = new Uint32Array(256);
+  for (let i = 0; i < this.rawMaskColors.length; i++) {
+    this.rawMaskColors[i] = this.rawColor((i + maskOffset) % 256);
+  }
 }
 
 
@@ -54,7 +60,7 @@ ColorGenerator.prototype.color = function(index) {
     }
     const rawIndex = Math.floor(Math.random() * this._colorSet.length);
     this.colors[index] = this._colorSet[rawIndex];
-    this._colorRGBA[index] = this._colorRGBA[rawIndex];
+    this._rawColors[index] = this._rawColors[rawIndex];
   }
   return this.colors[index];
 };
@@ -68,10 +74,10 @@ ColorGenerator.prototype.color = function(index) {
  * @return {color} color
  */
 ColorGenerator.prototype.rawColor = function(index) {
-  if (!(index in this._colorRGBA)) {
+  if (!(index in this._rawColors)) {
     this.color(index);
   }
-  return this._colorRGBA[index];
+  return this._rawColors[index];
 };
 
 
@@ -96,7 +102,8 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
     context.fillStyle = this._colorSet[i];
     context.clearRect(0, 0, 1, 1);
     context.fillRect(0, 0, 1, 1);
-    this._colorRGBA[i] = context.getImageData(0, 0, 1, 1).data;
+    this._rawColors[i] = new Uint32Array(
+        context.getImageData(0, 0, 1, 1).data.buffer)[0];
   }
 };
 
@@ -324,13 +331,9 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
   const maskImage = context.createImageData(canvasWidth, canvasHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
-  const colorMap = new Uint32Array(256);
-  for (let i = 0; i < colorMap.length; i++) {
-    colorMap[i] = new Uint32Array(colorGenerator.rawColor(i).buffer)[0];
-  }
   for (let i = 0; i < this.mask.data.length; i++) {
     if (this.mask.data[i]) {
-      imageColors[i] = colorMap[this.mask.data[i]];
+      imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
     }
   }
   context.putImageData(maskImage, 0, 0);
