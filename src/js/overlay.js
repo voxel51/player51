@@ -308,17 +308,6 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
   this.y = 0;
   this.w = canvasWidth;
   this.h = canvasHeight;
-  const maskImage = context.createImageData(canvasWidth, canvasHeight);
-  for (let i = 0; i < this.mask.data.length; i++) {
-    if (this.mask.data[i]) {
-      const color = colorGenerator._colorRGBA[this.mask.data[i]];
-      maskImage.data[(i * 4) + 0] = color[0];
-      maskImage.data[(i * 4) + 1] = color[1];
-      maskImage.data[(i * 4) + 2] = color[2];
-      maskImage.data[(i * 4) + 3] = color[3];
-    }
-  }
-  this.maskImage = maskImage;
 };
 
 
@@ -332,7 +321,18 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
-  context.putImageData(this.maskImage, 0, 0);
+  const maskImage = context.createImageData(canvasWidth, canvasHeight);
+  const imageColors = new Uint32Array(maskImage.data.buffer);
+  const colorMap = new Uint32Array(256);
+  for (let i = 0; i < colorMap.length; i++) {
+    colorMap[i] = new Uint32Array(colorGenerator.rawColor(i).buffer)[0];
+  }
+  for (let i = 0; i < this.mask.data.length; i++) {
+    if (this.mask.data[i]) {
+      imageColors[i] = colorMap[this.mask.data[i]];
+    }
+  }
+  context.putImageData(maskImage, 0, 0);
 };
 
 
