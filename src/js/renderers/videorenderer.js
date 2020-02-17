@@ -145,39 +145,39 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
 
 
   // Checkbox for show label on click only
-  const eleOptHoverCtlShowLabelRow = makeCheckboxRow(
+  const eleOptCtlShowLabelRow = makeCheckboxRow(
       'Only show clicked object', this.overlayOptions.labelsOnlyOnClick);
-  this.eleOptHoverCtlShowLabel =
-      eleOptHoverCtlShowLabelRow.querySelector('input[type=checkbox]');
-  this.eleOptHoverCtlShowLabelWrapper = makeWrapper([
-    eleOptHoverCtlShowLabelRow,
+  this.eleOptCtlShowLabel =
+      eleOptCtlShowLabelRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowLabelWrapper = makeWrapper([
+    eleOptCtlShowLabelRow,
   ]);
 
   // Checkbox for show attrs
-  const eleOptHoverCtlShowAttrRow = makeCheckboxRow(
+  const eleOptCtlShowAttrRow = makeCheckboxRow(
       'Show attributes', this.overlayOptions.showAttrs);
-  this.eleOptHoverCtlShowAttr =
-      eleOptHoverCtlShowAttrRow.querySelector('input[type=checkbox]');
-  this.eleOptHoverCtlShowAttrWrapper = makeWrapper([
-    eleOptHoverCtlShowAttrRow,
+  this.eleOptCtlShowAttr =
+      eleOptCtlShowAttrRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowAttrWrapper = makeWrapper([
+    eleOptCtlShowAttrRow,
   ]);
 
   // Checkbox for show attrs on click only
-  const eleOptHoverCtlShowAttrClickRow = makeCheckboxRow(
+  const eleOptCtlShowAttrClickRow = makeCheckboxRow(
       'Only show clicked attributes', this.overlayOptions.attrsOnlyOnClick);
-  this.eleOptHoverCtlShowAttrClick =
-      eleOptHoverCtlShowAttrClickRow.querySelector('input[type=checkbox]');
-  this.eleOptHoverCtlShowAttrClickWrapper = makeWrapper([
-    eleOptHoverCtlShowAttrClickRow,
+  this.eleOptCtlShowAttrClick =
+      eleOptCtlShowAttrClickRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowAttrClickWrapper = makeWrapper([
+    eleOptCtlShowAttrClickRow,
   ]);
 
   // Radio for how to show attrs
-  this.eleOptHoverCtlAttrOptForm = document.createElement('form');
-  this.eleOptHoverCtlAttrOptForm.className = 'p51-video-opt-input';
+  this.eleOptCtlAttrOptForm = document.createElement('form');
+  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   const formTitle = document.createElement('div');
   formTitle.innerHTML = 'Attribute rendering mode:';
-  this.eleOptHoverCtlAttrOptForm.appendChild(formTitle);
-  this.eleOptHoverCtlAttrOptForm.appendChild(document.createElement('div'));
+  this.eleOptCtlAttrOptForm.appendChild(formTitle);
+  this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
   // eslint-disable-next-line no-unused-vars
   for (const val of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
@@ -190,13 +190,13 @@ VideoRenderer.prototype.initVideoOptionsPanelHTML = function(parent) {
     label.setAttribute('for', radio.id);
     label.innerHTML = val;
     label.appendChild(radio);
-    this.eleOptHoverCtlAttrOptForm.appendChild(label);
+    this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
-  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowLabelWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowAttrWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlShowAttrClickWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptHoverCtlAttrOptForm);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
   this.parent.appendChild(this.eleDivVideoOpts);
 };
 
@@ -234,24 +234,24 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
-  this.eleOptHoverCtlShowLabel.addEventListener('change', function() {
+  this.eleOptCtlShowLabel.addEventListener('change', function() {
     self.overlayOptions.labelsOnlyOnClick =
-        self.eleOptHoverCtlShowLabel.checked;
+        self.eleOptCtlShowLabel.checked;
     self.updateFromDynamicState();
   });
 
-  this.eleOptHoverCtlShowAttr.addEventListener('change', function() {
-    self.overlayOptions.showAttrs = self.eleOptHoverCtlShowAttr.checked;
+  this.eleOptCtlShowAttr.addEventListener('change', function() {
+    self.overlayOptions.showAttrs = self.eleOptCtlShowAttr.checked;
     self.updateFromDynamicState();
   });
 
-  this.eleOptHoverCtlShowAttrClick.addEventListener('change', function() {
+  this.eleOptCtlShowAttrClick.addEventListener('change', function() {
     self.overlayOptions.attrsOnlyOnClick =
-        self.eleOptHoverCtlShowAttrClick.checked;
+        self.eleOptCtlShowAttrClick.checked;
     self.updateFromDynamicState();
   });
 
-  for (const radio of this.eleOptHoverCtlAttrOptForm) {
+  for (const radio of this.eleOptCtlAttrOptForm) {
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
@@ -561,15 +561,15 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
 
 VideoRenderer.prototype.setAttributeControlsDisplay = function() {
   let func = (node) => node.hidden = false;
-  this.eleOptHoverCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
-  this.eleOptHoverCtlAttrOptForm.className = 'p51-video-opt-input';
+  this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
+  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   if (!this.overlayOptions.showAttrs) {
-    this.eleOptHoverCtlShowAttrClickWrapper.className = '';
-    this.eleOptHoverCtlAttrOptForm.className = '';
+    this.eleOptCtlShowAttrClickWrapper.className = '';
+    this.eleOptCtlAttrOptForm.className = '';
     func = (node) => node.hidden = true;
   }
-  recursiveMap(this.eleOptHoverCtlShowAttrClickWrapper, func);
-  recursiveMap(this.eleOptHoverCtlAttrOptForm, func);
+  recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
+  recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
 
 /**
