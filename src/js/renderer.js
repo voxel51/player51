@@ -740,6 +740,129 @@ Renderer.prototype.initSharedControls = function() {
   }
 };
 
+Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
+  this.eleDivVideoOpts = document.createElement('div');
+  this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  this.eleDivVideoOpts.innerHTML = 'Display options';
+
+  const makeWrapper = function(children) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'p51-video-opt-input';
+    for (const child of children) { // eslint-disable-line no-unused-vars
+      wrapper.appendChild(child);
+    }
+    return wrapper;
+  };
+
+  const makeCheckboxRow = function(text, checked) {
+    const label = document.createElement('label');
+    label.innerHTML = text;
+
+    const checkbox = document.createElement('input');
+    checkbox.setAttribute('type', 'checkbox');
+    checkbox.checked = checked;
+    label.appendChild(checkbox);
+
+    return label;
+  };
+
+
+  // Checkbox for show label on click only
+  const eleOptCtlShowLabelRow = makeCheckboxRow(
+      'Only show clicked object', this.overlayOptions.labelsOnlyOnClick);
+  this.eleOptCtlShowLabel =
+      eleOptCtlShowLabelRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowLabelWrapper = makeWrapper([
+    eleOptCtlShowLabelRow,
+  ]);
+
+  // Checkbox for show attrs
+  const eleOptCtlShowAttrRow = makeCheckboxRow(
+      'Show attributes', this.overlayOptions.showAttrs);
+  this.eleOptCtlShowAttr =
+      eleOptCtlShowAttrRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowAttrWrapper = makeWrapper([
+    eleOptCtlShowAttrRow,
+  ]);
+
+  // Checkbox for show attrs on click only
+  const eleOptCtlShowAttrClickRow = makeCheckboxRow(
+      'Only show clicked attributes', this.overlayOptions.attrsOnlyOnClick);
+  this.eleOptCtlShowAttrClick =
+      eleOptCtlShowAttrClickRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowAttrClickWrapper = makeWrapper([
+    eleOptCtlShowAttrClickRow,
+  ]);
+
+  // Radio for how to show attrs
+  this.eleOptCtlAttrOptForm = document.createElement('form');
+  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
+  const formTitle = document.createElement('div');
+  formTitle.innerHTML = 'Attribute rendering mode:';
+  this.eleOptCtlAttrOptForm.appendChild(formTitle);
+  this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
+  // eslint-disable-next-line no-unused-vars
+  for (const val of this._attrRenderModeOptions) {
+    const radio = document.createElement('input');
+    radio.id = `radio-${val}`;
+    radio.setAttribute('type', 'radio');
+    radio.name = 'attrRenderOpt';
+    radio.value = val;
+    radio.checked = this.overlayOptions.attrRenderMode === val;
+    const label = document.createElement('label');
+    label.setAttribute('for', radio.id);
+    label.innerHTML = val;
+    label.appendChild(radio);
+    this.eleOptCtlAttrOptForm.appendChild(label);
+  }
+
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
+  this.parent.appendChild(this.eleDivVideoOpts);
+};
+
+
+Renderer.prototype.initPlayerOptionsControls = function() {
+  const self = this;
+
+  this.eleOptionsButton.addEventListener('click', function() {
+    self._boolShowVideoOptions = !self._boolShowVideoOptions;
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowLabel.addEventListener('change', function() {
+    self.overlayOptions.labelsOnlyOnClick =
+        self.eleOptCtlShowLabel.checked;
+    self.processFrame();
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttr.addEventListener('change', function() {
+    self.overlayOptions.showAttrs = self.eleOptCtlShowAttr.checked;
+    self.processFrame();
+    self.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttrClick.addEventListener('change', function() {
+    self.overlayOptions.attrsOnlyOnClick =
+        self.eleOptCtlShowAttrClick.checked;
+    self.processFrame();
+    self.updateFromDynamicState();
+  });
+
+  for (const radio of this.eleOptCtlAttrOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this.overlayOptions.attrRenderMode) {
+        this.overlayOptions.attrRenderMode = radio.value;
+        self.processFrame();
+        this.updateFromDynamicState();
+      }
+    });
+  }
+};
+
 
 /**
  * This function updates the size and padding based on the configuration
