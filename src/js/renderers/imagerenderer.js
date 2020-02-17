@@ -57,7 +57,7 @@ ImageRenderer.prototype.initPlayer = function() {
   this.eleImage.setAttribute('src', this.media.src);
   this.eleImage.setAttribute('type', this.media.type);
   this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls';
+  this.eleDivVideoControls.className = 'p51-image-controls';
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
   this.parent.appendChild(this.eleDivVideoControls);
