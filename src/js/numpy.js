@@ -6,7 +6,7 @@
  * Alan Stahl, alan@voxel51.com
  */
 
-import './pako_inflate.js';
+import pako from './pako_inflate.js';
 
 export {
   deserialize,
