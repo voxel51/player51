@@ -282,6 +282,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
+  this.updateFromDynamicState();
 };
 
 
@@ -296,7 +297,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 Renderer.prototype._prepareOverlay_auxAttributes = function(context,
     attributes, frameKey = null) {
   const o = new FrameAttributesOverlay(attributes, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight)
+  o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {

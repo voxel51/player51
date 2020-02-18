@@ -118,10 +118,6 @@ VideoRenderer.prototype.initPlayer = function() {
 VideoRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
 
-  if (this._boolAutoplay) {
-    this.eleVideo.toggleAttribute('autoplay', true);
-  }
-
   if (this.player._boolHasPoster) {
     this.eleVideo.setAttribute('poster', this.player._loadingPosterURL);
     if (this.player._boolForcedSize) {
@@ -235,7 +231,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
         .valueAsNumber / 100.0);
     // Update the video time
     self.eleVideo.currentTime = self.computeFrameTime(
-      self.computeFrameNumber(time));
+        self.computeFrameNumber(time));
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
     self._boolSingleFrame = false;
@@ -405,9 +401,18 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
-
+  if (this._boolAutoplay) {
+    this._boolAutoplay = false;
+    this._boolPlaying = true;
+  }
   if (this._boolPlaying) {
-    if (this.eleVideo.paused && !this._boolSingleFrame && !this._boolManualSeek) {
+    const overlayIsReady =
+      this._isOverlayPrepared && this._overlayCanBePrepared;
+    if (
+      this.eleVideo.paused &&
+      !this._boolSingleFrame &&
+      !this._boolManualSeek &&
+      overlayIsReady) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
