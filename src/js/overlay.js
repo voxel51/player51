@@ -431,6 +431,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
       .y) * canvasHeight;
   this.color = colorGenerator.color(this.index);
+  this.rawColor = colorGenerator.rawColor(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
@@ -527,20 +528,14 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
     const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
     const maskImage = maskContext.createImageData(maskWidth, maskHeight);
+    const maskImageRaw = new Uint32Array(maskImage.data.buffer);
 
-    // draw opaque pixels where mask=1
     for (let i = 0; i < this.mask.data.length; i++) {
       if (this.mask.data[i]) {
-        maskImage.data[(i * 4) + 3] = 255;
+        maskImageRaw[i] = this.rawColor;
       }
     }
     maskContext.putImageData(maskImage, 0, 0);
-
-    // fill where pixels are opaque
-    maskContext.globalCompositeOperation = 'source-in';
-    maskContext.fillStyle = this.color;
-    maskContext.fillRect(0, 0, maskWidth, maskHeight);
-
     context.drawImage(ObjectOverlay._tempMaskCanvas,
         0, 0, maskWidth, maskHeight,
         this.x, this.y, this.w, this.h);
