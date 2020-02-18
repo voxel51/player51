@@ -204,6 +204,10 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.timerCallback();
   }, false);
 
+  this.eleVideo.addEventListener('seeked', function() {
+    self.updateStateFromTimeChange();
+  });
+
   this.eleVideoSource.addEventListener('error', function() {
     if (self.player._boolNotFound) {
       self.eleVideo.setAttribute('poster', self.player._notFoundPosterURL);
@@ -451,16 +455,16 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
-  }
 
-  if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
-      isFinite(this.eleVideo.duration)) {
-    // FPS wasn't provided, so guess it from the labels. If we don't have labels
-    // either, we can't determine anything, so fall back to FPS = 30.
-    const numFrames = Object.keys(this.frameOverlay).length ||
-        this.eleVideo.duration * 30;
-    this.frameRate = numFrames / this.eleVideo.duration;
-    this.frameDuration = 1 / this.frameRate;
+    if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
+        isFinite(this.eleVideo.duration)) {
+      // FPS wasn't provided, so guess it from the labels. If we don't have
+      // labels either, we can't determine anything, so fall back to FPS = 30.
+      const numFrames = Object.keys(this.frameOverlay).length ||
+          this.eleVideo.duration * 30;
+      this.frameRate = numFrames / this.eleVideo.duration;
+      this.frameDuration = 1 / this.frameRate;
+    }
   }
 };
 
@@ -479,7 +483,7 @@ VideoRenderer.prototype.updateStateFromTimeChange = function() {
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
   this.updateFromDynamicState();
-  if (cfn !== this._frameNumber) {
+  if (cfn !== this._frameNumber && !this.eleVideo.seeking) {
     this._frameNumber = cfn;
     this.processFrame();
   }
