@@ -9,6 +9,7 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
+import {deserialize} from './numpy.js';
 
 export {
   ColorGenerator,
@@ -278,6 +279,10 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  * @param {renderer} renderer
  */
 function ObjectOverlay(d, renderer) {
+  if (!ObjectOverlay._tempMaskCanvas) {
+    ObjectOverlay._tempMaskCanvas = document.createElement('canvas');
+  }
+
   Overlay.call(this);
 
   this.renderer = renderer;
@@ -299,6 +304,10 @@ function ObjectOverlay(d, renderer) {
   this.attrText = null;
   this.attrTextWidth = -1;
   this.attrFontHeight = null;
+
+  if (typeof(d.mask) === 'string') {
+    this.mask = deserialize(atob(d.mask));
+  }
 
   this.x = null;
   this.y = null;
@@ -424,6 +433,36 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.strokeStyle = this.color;
   context.fillStyle = this.color;
   context.strokeRect(this.x, this.y, this.w, this.h);
+
+  if (this.mask) {
+    const [maskHeight, maskWidth] = this.mask.shape;
+    if (ObjectOverlay._tempMaskCanvas.width < maskWidth) {
+      ObjectOverlay._tempMaskCanvas.width = maskWidth;
+    }
+    if (ObjectOverlay._tempMaskCanvas.height < maskHeight) {
+      ObjectOverlay._tempMaskCanvas.height = maskHeight;
+    }
+
+    const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
+    const maskImage = maskContext.createImageData(maskWidth, maskHeight);
+
+    // draw opaque pixels where mask=1
+    for (let i = 0; i < this.mask.data.length; i++) {
+      if (this.mask.data[i]) {
+        maskImage.data[(i * 4) + 3] = 255;
+      }
+    }
+    maskContext.putImageData(maskImage, 0, 0);
+
+    // fill where pixels are opaque
+    maskContext.globalCompositeOperation = 'source-in';
+    maskContext.fillStyle = this.color;
+    maskContext.fillRect(0, 0, maskWidth, maskHeight);
+
+    context.drawImage(ObjectOverlay._tempMaskCanvas,
+        0, 0, maskWidth, maskHeight,
+        this.x, this.y, this.w, this.h);
+  }
 
   if (!this.renderer.player._boolThumbnailMode) {
     // fill and stroke to account for line thickness variation

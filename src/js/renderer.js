@@ -200,6 +200,7 @@ Renderer.prototype.handleOverlay = function(overlay) {
   if ((overlay === null) || (typeof(overlay) === 'undefined')) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
+    this._isOverlayPrepared = true;
   } else if (typeof(overlay) === 'string') {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
