@@ -661,7 +661,7 @@ VideoRenderer.prototype.computeFrameNumber = function(time) {
     time = this.eleVideo.currentTime;
   }
   // account for exact end of video
-  if (time === this.eleVideo.duration) {
+  if (this.eleVideo && time === this.eleVideo.duration) {
     time -= this.frameDuration / 2;
   }
   const frameNumber = time * this.frameRate + this.frameZeroOffset;
