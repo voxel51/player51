@@ -16,9 +16,6 @@ import {
 import {
   parseMediaFragmentsUri,
 } from '../mediafragments.js';
-import {
-  recursiveMap,
-} from '../util.js';
 
 export {
   VideoRenderer,

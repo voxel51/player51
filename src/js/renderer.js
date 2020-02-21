@@ -69,7 +69,9 @@ function Renderer(media, overlay) {
     attrsOnlyOnClick: false,
     showAttrs: true,
     attrRenderMode: 'value',
+    action: 'click',
   };
+  this._actionOptions = ['click', 'mousemove'];
   this._attrRenderModeOptions = ['value', 'attr-value'];
   this._focusIndex = -1;
   // Loading state attributes
@@ -85,6 +87,7 @@ function Renderer(media, overlay) {
   this._boolZipReady = false;
   this._timeouts = {};
   this.handleOverlay(overlay);
+  this._mouseEventHandler = this._handleMouseEvent.bind(this);
 }
 
 
@@ -299,8 +302,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
-  this.eleCanvas.addEventListener('click',
-      this._handleMouseEvent.bind(this));
+  this._reBindMouseHandler();
 
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
@@ -308,6 +310,15 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this.updateFromDynamicState();
 };
 
+
+Renderer.prototype._reBindMouseHandler = function() {
+  for (const action of this._actionOptions) {
+    this.eleCanvas.removeEventListener(
+        action, this._mouseEventHandler);
+  }
+  this.eleCanvas.addEventListener(
+      this.overlayOptions.action, this._mouseEventHandler);
+};
 
 /**
  * Helper function to parse attributes of an overlay and add it to the overlay
@@ -791,6 +802,28 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     eleOptCtlShowLabelRow,
   ]);
 
+  // Selection for action type
+  this.eleActionCtlOptForm = document.createElement('form');
+  this.eleActionCtlOptForm.className = 'p51-video-opt-input';
+  const actionFormTitle = document.createElement('div');
+  actionFormTitle.innerHTML = 'Select mode:';
+  this.eleActionCtlOptForm.appendChild(actionFormTitle);
+  this.eleActionCtlOptForm.appendChild(document.createElement('div'));
+  // eslint-disable-next-line no-unused-vars
+  for (const val of this._actionOptions) {
+    const radio = document.createElement('input');
+    radio.id = `radio-${val}`;
+    radio.setAttribute('type', 'radio');
+    radio.name = 'selectActionOpt';
+    radio.value = val;
+    radio.checked = this.overlayOptions.action === val;
+    const label = document.createElement('label');
+    label.setAttribute('for', radio.id);
+    label.innerHTML = val;
+    label.appendChild(radio);
+    this.eleActionCtlOptForm.appendChild(label);
+  }
+
   // Checkbox for show attrs
   const eleOptCtlShowAttrRow = makeCheckboxRow(
       'Show attributes', this.overlayOptions.showAttrs);
@@ -831,6 +864,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
+  this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
@@ -840,38 +874,47 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
 
 Renderer.prototype.initPlayerOptionsControls = function() {
-  const self = this;
-
-  this.eleOptionsButton.addEventListener('click', function() {
-    self._boolShowVideoOptions = !self._boolShowVideoOptions;
-    self.updateFromDynamicState();
+  this.eleOptionsButton.addEventListener('click', () => {
+    this._boolShowVideoOptions = !this._boolShowVideoOptions;
+    this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowLabel.addEventListener('change', function() {
-    self.overlayOptions.labelsOnlyOnClick =
-        self.eleOptCtlShowLabel.checked;
-    self.processFrame();
-    self.updateFromDynamicState();
+  this.eleOptCtlShowLabel.addEventListener('change', () => {
+    this.overlayOptions.labelsOnlyOnClick =
+        this.eleOptCtlShowLabel.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowAttr.addEventListener('change', function() {
-    self.overlayOptions.showAttrs = self.eleOptCtlShowAttr.checked;
-    self.processFrame();
-    self.updateFromDynamicState();
+  this.eleOptCtlShowAttr.addEventListener('change', () => {
+    this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowAttrClick.addEventListener('change', function() {
-    self.overlayOptions.attrsOnlyOnClick =
-        self.eleOptCtlShowAttrClick.checked;
-    self.processFrame();
-    self.updateFromDynamicState();
+  this.eleOptCtlShowAttrClick.addEventListener('change', () => {
+    this.overlayOptions.attrsOnlyOnClick =
+        this.eleOptCtlShowAttrClick.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
   });
 
   for (const radio of this.eleOptCtlAttrOptForm) {
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
-        self.processFrame();
+        this.processFrame();
+        this.updateFromDynamicState();
+      }
+    });
+  }
+
+  for (const radio of this.eleActionCtlOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this.overlayOptions.action) {
+        this.overlayOptions.action = radio.value;
+        this._reBindMouseHandler();
+        this.processFrame();
         this.updateFromDynamicState();
       }
     });
