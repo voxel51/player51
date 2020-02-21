@@ -67,7 +67,6 @@ VideoPlayer.prototype.setLoadingPoster = function(url) {
  */
 VideoPlayer.prototype.loop = function(boolLoop = true) {
   this.renderer._boolLoop = boolLoop;
-  this.renderer.updateFromDynamicState();
 };
 
 
