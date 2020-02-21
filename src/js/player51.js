@@ -124,6 +124,10 @@ function Player51(options, ...args) {
       }
     }
   }
+  if (!options.overlay) {
+    // convert undefined and other false-y values to null for internal use
+    options.overlay = null;
+  }
 
   const {media, overlay, fps} = options;
   const mimetype = options.media.type.toLowerCase();
