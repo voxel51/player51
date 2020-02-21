@@ -15,6 +15,7 @@ export {
   ColorGenerator,
   Overlay,
   FrameAttributesOverlay,
+  FrameMaskOverlay,
   ObjectOverlay,
 };
 
@@ -26,6 +27,7 @@ export {
 function ColorGenerator() {
   // member will store all colors created
   this.colors = {};
+  this._rawColors = {};
 
   // standard colors
   this.white = '#ffffff';
@@ -35,6 +37,12 @@ function ColorGenerator() {
   this._colorS = '70%';
   this._colorL = '40%';
   this._colorA = '0.875';
+
+  const maskOffset = Math.floor(Math.random() * 256);
+  this.rawMaskColors = new Uint32Array(256);
+  for (let i = 0; i < this.rawMaskColors.length; i++) {
+    this.rawMaskColors[i] = this.rawColor((i + maskOffset) % 256);
+  }
 }
 
 
@@ -47,9 +55,29 @@ function ColorGenerator() {
  */
 ColorGenerator.prototype.color = function(index) {
   if (!(index in this.colors)) {
-    this.colors[index] = this.generateNewColor();
+    if (typeof(this._colorSet) === 'undefined') {
+      this._generateColorSet();
+    }
+    const rawIndex = Math.floor(Math.random() * this._colorSet.length);
+    this.colors[index] = this._colorSet[rawIndex];
+    this._rawColors[index] = this._rawColors[rawIndex];
   }
   return this.colors[index];
+};
+
+
+/**
+ * Provide raw RGBA values for a color based on an index.
+ *
+ * @member color
+ * @param {int} index
+ * @return {color} color
+ */
+ColorGenerator.prototype.rawColor = function(index) {
+  if (!(index in this._rawColors)) {
+    this.color(index);
+  }
+  return this._rawColors[index];
 };
 
 
@@ -61,28 +89,22 @@ ColorGenerator.prototype.color = function(index) {
  * @param {int} n
  */
 ColorGenerator.prototype._generateColorSet = function(n = 36) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext('2d');
   const delta = 360 / n;
   this._colorSet = new Array(n);
   for (let i = 0; i < n; i++) {
     this._colorSet[i] = (
       `hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${this._colorA})`
     );
+    context.fillStyle = this._colorSet[i];
+    context.clearRect(0, 0, 1, 1);
+    context.fillRect(0, 0, 1, 1);
+    this._rawColors[i] = new Uint32Array(
+        context.getImageData(0, 0, 1, 1).data.buffer)[0];
   }
-};
-
-
-/**
- * Called to generate a random bounding box color to use in rendering.
- *
- * @member generateNewColor
- * @return {color} color
- */
-ColorGenerator.prototype.generateNewColor = function() {
-  if (typeof(this._colorSet) === 'undefined') {
-    this._generateColorSet();
-  }
-  return this._colorSet[Math.floor(Math.random() * this._colorSet
-      .length)];
 };
 
 
@@ -108,7 +130,7 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 
 
 /**
- * A Class for rendering an FrameAttributesOverlay on the Video
+ * An overlay that renders frame-level attributes
  *
  * @param {array} d is an array with the following structure
  *    [
@@ -259,6 +281,79 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
 
 
 /**
+ * An overlay that renders frame-level masks
+ *
+ * @param {array} mask a base64-encoded mask
+ * @param {Renderer} renderer Associated renderer
+ *
+ */
+function FrameMaskOverlay(mask, renderer) {
+  if (!FrameMaskOverlay._tempMaskCanvas) {
+    FrameMaskOverlay._tempMaskCanvas = document.createElement('canvas');
+  }
+
+  Overlay.call(this);
+  this.renderer = renderer;
+
+  this.mask = deserialize(mask);
+  this.x = null;
+  this.y = null;
+  this.w = null;
+  this.h = null;
+}
+FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
+FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
+
+
+/**
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @method setup
+ * @constructor
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
+    canvasHeight) {
+  this.x = 0;
+  this.y = 0;
+  this.w = canvasWidth;
+  this.h = canvasHeight;
+};
+
+
+/**
+ * Basic rendering function for drawing the overlay instance.
+ *
+ * @method draw
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
+    canvasHeight) {
+  const [maskHeight, maskWidth] = this.mask.shape;
+  ensureCanvasSize(FrameMaskOverlay._tempMaskCanvas, {
+    width: maskWidth,
+    height: maskHeight,
+  });
+  const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext('2d');
+  const maskImage = maskContext.createImageData(maskWidth, maskHeight);
+  const imageColors = new Uint32Array(maskImage.data.buffer);
+  for (let i = 0; i < this.mask.data.length; i++) {
+    if (this.mask.data[i]) {
+      imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
+    }
+  }
+  maskContext.putImageData(maskImage, 0, 0);
+  context.drawImage(FrameMaskOverlay._tempMaskCanvas,
+      0, 0, maskWidth, maskHeight,
+      0, 0, canvasWidth, canvasHeight);
+};
+
+
+/**
  * A Class for rendering an Overlay on the Video
  *
  * @param {dictionary} d is a dictionary with the following structure
@@ -349,6 +444,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
       .y) * canvasHeight;
   this.color = colorGenerator.color(this.index);
+  this.rawColor = colorGenerator.rawColor(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
@@ -436,29 +532,21 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
   if (this.mask) {
     const [maskHeight, maskWidth] = this.mask.shape;
-    if (ObjectOverlay._tempMaskCanvas.width < maskWidth) {
-      ObjectOverlay._tempMaskCanvas.width = maskWidth;
-    }
-    if (ObjectOverlay._tempMaskCanvas.height < maskHeight) {
-      ObjectOverlay._tempMaskCanvas.height = maskHeight;
-    }
+    ensureCanvasSize(ObjectOverlay._tempMaskCanvas, {
+      width: maskWidth,
+      height: maskHeight,
+    });
 
     const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
     const maskImage = maskContext.createImageData(maskWidth, maskHeight);
+    const maskImageRaw = new Uint32Array(maskImage.data.buffer);
 
-    // draw opaque pixels where mask=1
     for (let i = 0; i < this.mask.data.length; i++) {
       if (this.mask.data[i]) {
-        maskImage.data[(i * 4) + 3] = 255;
+        maskImageRaw[i] = this.rawColor;
       }
     }
     maskContext.putImageData(maskImage, 0, 0);
-
-    // fill where pixels are opaque
-    maskContext.globalCompositeOperation = 'source-in';
-    maskContext.fillStyle = this.color;
-    maskContext.fillRect(0, 0, maskWidth, maskHeight);
-
     context.drawImage(ObjectOverlay._tempMaskCanvas,
         0, 0, maskWidth, maskHeight,
         this.x, this.y, this.w, this.h);
@@ -492,3 +580,20 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.y + this.attrFontHeight + 3 * this.textPadder);
   }
 };
+
+
+/**
+ * Resizes a canvas so it is at least the specified size.
+ *
+ * @param {Canvas} canvas
+ * @param {number} width
+ * @param {number} height
+ */
+function ensureCanvasSize(canvas, {width, height}) {
+  if (canvas.width < width) {
+    canvas.width = width;
+  }
+  if (canvas.height < height) {
+    canvas.height = height;
+  }
+}
