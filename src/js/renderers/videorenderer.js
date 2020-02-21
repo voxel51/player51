@@ -241,8 +241,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     const time = self.eleVideo.duration * (self.eleSeekBar
         .valueAsNumber / 100.0);
     // Update the video time
-    self.eleVideo.currentTime = self.computeFrameTime(
-        self.computeFrameNumber(time));
+    self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
     self._boolSingleFrame = false;
@@ -265,7 +264,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.eleSeekBar.addEventListener('mouseup', function() {
     self._boolManualSeek = false;
     if (self._boolPlaying && self.eleVideo.paused) {
-      self.eleVideo.currentTime = self.computeFrameTime();
+      self.eleVideo.currentTime = self.clampTimeToFrameStart();
       self.eleVideo.play();
     }
   });
@@ -327,7 +326,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.parent.addEventListener('keydown', function(e) {
     if (self.eleVideo.ended) {
-      return;
+      self.eleVideo.pause();
     }
     if (self.eleVideo.paused) {
       if (e.keyCode === 37) { // left arrow
@@ -417,20 +416,19 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     this._boolPlaying = true;
   }
   if (this._boolPlaying) {
-    const overlayIsReady =
-      this._isOverlayPrepared && this._overlayCanBePrepared;
     if (
       this.eleVideo.paused &&
       !this._boolSingleFrame &&
       !this._boolManualSeek &&
-      overlayIsReady) {
+      this._isOverlayPrepared) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
     if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
-      this.eleVideo.currentTime = this.computeFrameTime();
+      this.eleVideo.currentTime = this.clampTimeToFrameStart();
+      this._updateFrame();
     }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
@@ -499,11 +497,16 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  */
 VideoRenderer.prototype.updateStateFromTimeChange = function() {
+  this.updateFromDynamicState();
+  this._updateFrame();
+};
+
+
+VideoRenderer.prototype._updateFrame = function() {
   let cfn = this.computeFrameNumber();
   // check if we have a media fragment and should be looping
   // if so, reset the playing location appropriately
   cfn = this.checkForFragmentReset(cfn);
-  this.updateFromDynamicState();
   if (cfn !== this._frameNumber && !this.eleVideo.seeking) {
     this._frameNumber = cfn;
     this.processFrame();
@@ -595,6 +598,7 @@ VideoRenderer.prototype.customDraw = function(context) {
  */
 VideoRenderer.prototype.timerCallback = function() {
   if (this.eleVideo.paused || this.eleVideo.ended) {
+    this._updateFrame();
     return;
   }
   this.updateStateFromTimeChange();
@@ -677,8 +681,12 @@ VideoRenderer.prototype.computeFrameNumber = function(time) {
   if (typeof(time) === 'undefined') {
     time = this.eleVideo.currentTime;
   }
-  const currentFrameNumber = time * this.frameRate + this.frameZeroOffset;
-  return Math.floor(currentFrameNumber);
+  // account for exact end of video
+  if (this.eleVideo && time === this.eleVideo.duration) {
+    time -= this.frameDuration / 2;
+  }
+  const frameNumber = time * this.frameRate + this.frameZeroOffset;
+  return Math.floor(frameNumber);
 };
 
 
@@ -698,6 +706,26 @@ VideoRenderer.prototype.computeFrameTime = function(frameNumber) {
   // offset by 1/100 of a frame to avoid browser issues where being *exactly*
   // on a frame boundary sometimes renders the previous frame
   return (frameNumber + 0.01) * this.frameDuration;
+};
+
+
+/**
+ * Computes the video time of the start of the frame displayed at the specified
+ * time (or if unspecified, the current video time).
+ *
+ * @member clampTimeToFrameStart
+ * @param {number} time Video time
+ * @return {number} Video time
+ */
+
+VideoRenderer.prototype.clampTimeToFrameStart = function(time) {
+  if (typeof(time) === 'undefined') {
+    time = this.eleVideo.currentTime;
+  }
+  if (!isFinite(this.frameRate)) {
+    return time;
+  }
+  return this.computeFrameTime(this.computeFrameNumber(time));
 };
 
 
