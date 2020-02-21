@@ -27,23 +27,6 @@ export {
   Renderer,
 };
 
-/**
- * Wait until a condition is true, then call a callback.
- *
- * @param {function} condition Condition - returns boolean
- * @param {function} callback Function to call when condition() returns true
- * @param {int} interval How often to call condition() (in milliseconds)
- */
-function waitUntil(condition, callback, interval) {
-  if (condition()) {
-    callback();
-  } else {
-    setTimeout(function() {
-      waitUntil(condition, callback, interval);
-    }, interval);
-  }
-}
-
 
 /**
  * Renderer Class Definition
@@ -233,9 +216,8 @@ Renderer.prototype.handleOverlay = function(overlay) {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === 'object') && (overlay != null) && Object
-      .keys(overlay).length >
-    0) {
+  } else if ((typeof(overlay) === 'object') && (overlay != null) &&
+      Object.keys(overlay).length > 0) {
     this._overlayURL = null;
     this._overlayData = overlay;
   }
@@ -315,6 +297,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
+  this.updateFromDynamicState();
 };
 
 
@@ -329,10 +312,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 Renderer.prototype._prepareOverlay_auxAttributes = function(context,
     attributes, frameKey = null) {
   const o = new FrameAttributesOverlay(attributes, this);
-  waitUntil(() => (typeof(this.canvasWidth) != 'undefined' &&
-                   typeof(this.canvasHeight) != 'undefined'),
-  () => o.setup(context, this.canvasWidth, this.canvasHeight),
-  500);
+  o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
@@ -360,17 +340,12 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
   }
   for (let len = objects.length, i = 0; i < len; i++) {
     const o = new ObjectOverlay(objects[i], this);
-
-    waitUntil(() => (typeof(this.canvasWidth) != 'undefined' &&
-                     typeof(this.canvasHeight) != 'undefined'),
-    () => {
-      o.setup(context, this.canvasWidth, this.canvasHeight);
-      if (frameFlag) {
-        this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
-      } else {
-        this._prepareOverlay_auxCheckAdd(o);
-      }
-    }, 500);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    if (frameFlag) {
+      this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+    } else {
+      this._prepareOverlay_auxCheckAdd(o);
+    }
   }
 };
 
