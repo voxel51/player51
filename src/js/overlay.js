@@ -288,6 +288,10 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
  *
  */
 function FrameMaskOverlay(mask, renderer) {
+  if (!FrameMaskOverlay._tempMaskCanvas) {
+    FrameMaskOverlay._tempMaskCanvas = document.createElement('canvas');
+  }
+
   Overlay.call(this);
   this.renderer = renderer;
 
@@ -329,14 +333,23 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
-  const maskImage = context.createImageData(canvasWidth, canvasHeight);
+  const [maskHeight, maskWidth] = this.mask.shape;
+  ensureCanvasSize(FrameMaskOverlay._tempMaskCanvas, {
+    width: maskWidth,
+    height: maskHeight,
+  });
+  const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext('2d');
+  const maskImage = maskContext.createImageData(maskWidth, maskHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
   for (let i = 0; i < this.mask.data.length; i++) {
     if (this.mask.data[i]) {
       imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
     }
   }
-  context.putImageData(maskImage, 0, 0);
+  maskContext.putImageData(maskImage, 0, 0);
+  context.drawImage(FrameMaskOverlay._tempMaskCanvas,
+      0, 0, maskWidth, maskHeight,
+      0, 0, canvasWidth, canvasHeight);
 };
 
 
@@ -519,12 +532,10 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
   if (this.mask) {
     const [maskHeight, maskWidth] = this.mask.shape;
-    if (ObjectOverlay._tempMaskCanvas.width < maskWidth) {
-      ObjectOverlay._tempMaskCanvas.width = maskWidth;
-    }
-    if (ObjectOverlay._tempMaskCanvas.height < maskHeight) {
-      ObjectOverlay._tempMaskCanvas.height = maskHeight;
-    }
+    ensureCanvasSize(ObjectOverlay._tempMaskCanvas, {
+      width: maskWidth,
+      height: maskHeight,
+    });
 
     const maskContext = ObjectOverlay._tempMaskCanvas.getContext('2d');
     const maskImage = maskContext.createImageData(maskWidth, maskHeight);
@@ -569,3 +580,20 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.y + this.attrFontHeight + 3 * this.textPadder);
   }
 };
+
+
+/**
+ * Resizes a canvas so it is at least the specified size.
+ *
+ * @param {Canvas} canvas
+ * @param {number} width
+ * @param {number} height
+ */
+function ensureCanvasSize(canvas, {width, height}) {
+  if (canvas.width < width) {
+    canvas.width = width;
+  }
+  if (canvas.height < height) {
+    canvas.height = height;
+  }
+}
