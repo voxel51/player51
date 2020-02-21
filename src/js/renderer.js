@@ -201,6 +201,7 @@ Renderer.prototype.handleOverlay = function(overlay) {
   if ((overlay === null) || (typeof(overlay) === 'undefined')) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
+    this._isOverlayPrepared = true;
   } else if (typeof(overlay) === 'string') {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
@@ -289,6 +290,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
+  this.updateFromDynamicState();
 };
 
 

@@ -118,10 +118,6 @@ VideoRenderer.prototype.initPlayer = function() {
 VideoRenderer.prototype.initPlayerControls = function() {
   this.checkPlayer();
 
-  if (this._boolAutoplay) {
-    this.eleVideo.toggleAttribute('autoplay', true);
-  }
-
   if (this.player._boolHasPoster) {
     this.eleVideo.setAttribute('poster', this.player._loadingPosterURL);
     if (this.player._boolForcedSize) {
@@ -234,8 +230,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     const time = self.eleVideo.duration * (self.eleSeekBar
         .valueAsNumber / 100.0);
     // Update the video time
-    self.eleVideo.currentTime = self.computeFrameTime(
-      self.computeFrameNumber(time));
+    self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
     // Unlock the fragment so the user can browse the whole video
     self._lockToMF = false;
     self._boolSingleFrame = false;
@@ -258,7 +253,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.eleSeekBar.addEventListener('mouseup', function() {
     self._boolManualSeek = false;
     if (self._boolPlaying && self.eleVideo.paused) {
-      self.eleVideo.currentTime = self.computeFrameTime();
+      self.eleVideo.currentTime = self.clampTimeToFrameStart();
       self.eleVideo.play();
     }
   });
@@ -405,16 +400,23 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
-
+  if (this._boolAutoplay) {
+    this._boolAutoplay = false;
+    this._boolPlaying = true;
+  }
   if (this._boolPlaying) {
-    if (this.eleVideo.paused && !this._boolSingleFrame && !this._boolManualSeek) {
+    if (
+      this.eleVideo.paused &&
+      !this._boolSingleFrame &&
+      !this._boolManualSeek &&
+      this._isOverlayPrepared) {
       this.eleVideo.play();
     }
     this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
     if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
-      this.eleVideo.currentTime = this.computeFrameTime();
+      this.eleVideo.currentTime = this.clampTimeToFrameStart();
       this._updateFrame();
     }
     this.elePlayPauseButton.innerHTML = 'Play';
@@ -683,6 +685,26 @@ VideoRenderer.prototype.computeFrameTime = function(frameNumber) {
   // offset by 1/100 of a frame to avoid browser issues where being *exactly*
   // on a frame boundary sometimes renders the previous frame
   return (frameNumber + 0.01) * this.frameDuration;
+};
+
+
+/**
+ * Computes the video time of the start of the frame displayed at the specified
+ * time (or if unspecified, the current video time).
+ *
+ * @member clampTimeToFrameStart
+ * @param {number} time Video time
+ * @return {number} Video time
+ */
+
+VideoRenderer.prototype.clampTimeToFrameStart = function(time) {
+  if (typeof(time) === 'undefined') {
+    time = this.eleVideo.currentTime;
+  }
+  if (!isFinite(this.frameRate)) {
+    return time;
+  }
+  return this.computeFrameTime(this.computeFrameNumber(time));
 };
 
 
