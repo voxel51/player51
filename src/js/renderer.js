@@ -64,14 +64,17 @@ function Renderer(media, overlay) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+  this._actionOptions = {
+    click: {name: 'Click', type: 'click'},
+    hover: {name: 'Hover', type: 'mousemove'},
+  };
   this.overlayOptions = {
     labelsOnlyOnClick: false,
     attrsOnlyOnClick: false,
     showAttrs: true,
     attrRenderMode: 'value',
-    action: 'click',
+    action: this._actionOptions.click,
   };
-  this._actionOptions = ['click', 'mousemove'];
   this._attrRenderModeOptions = ['value', 'attr-value'];
   this._focusIndex = -1;
   // Loading state attributes
@@ -86,6 +89,7 @@ function Renderer(media, overlay) {
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
+  this._focusPos = {x: -1, y: -1};
   this.handleOverlay(overlay);
   this._mouseEventHandler = this._handleMouseEvent.bind(this);
 }
@@ -312,12 +316,12 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 
 
 Renderer.prototype._reBindMouseHandler = function() {
-  for (const action of this._actionOptions) {
+  for (const action of Object.values(this._actionOptions)) {
     this.eleCanvas.removeEventListener(
-        action, this._mouseEventHandler);
+        action.type, this._mouseEventHandler);
   }
   this.eleCanvas.addEventListener(
-      this.overlayOptions.action, this._mouseEventHandler);
+      this.overlayOptions.action.type, this._mouseEventHandler);
 };
 
 /**
@@ -436,10 +440,14 @@ Renderer.prototype.processFrame = function() {
   this.customDraw(context);
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
+      // Hover Focus setting
+      if (this.overlayOptions.action === this._actionOptions.hover) {
+        this.setFocus(this._findOverlayAt(this._focusPos));
+      }
       const fm = this.frameOverlay[this._frameNumber];
       const len = fm.length;
       // draw items without focus first, if settings allow
-      if (!this.overlayOptions.labelsOnlyOnClick || !this._focusedObject) {
+      if (this._renderRest()) {
         for (let i = 0; i < len; i++) {
           if (!this.isFocus(fm[i])) {
             fm[i].draw(context, this.canvasWidth, this.canvasHeight);
@@ -453,11 +461,19 @@ Renderer.prototype.processFrame = function() {
       }
     }
   }
-  return;
+};
+
+Renderer.prototype._renderRest = function() {
+  if (this.overlayOptions.action === this._actionOptions.hover ||
+    (this.overlayOptions.labelsOnlyOnClick &&
+      this.overlayOptions.action === this._actionOptions.click)) {
+    return !this._focusedObject;
+  }
+  return true;
 };
 
 
-Renderer.prototype._findOverlayAt = function(x, y) {
+Renderer.prototype._findOverlayAt = function({x, y}) {
   const objects = this.frameOverlay[this._frameNumber];
   if (!objects) {
     return;
@@ -476,10 +492,14 @@ Renderer.prototype.isFocus = function(overlayObj) {
     overlayObj.index === this._focusIndex;
 };
 
-Renderer.prototype.setFocus = function(overlayObj) {
+Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
+  if (position) {
+    this._focusPos = position;
+  }
   if (this._focusedObject !== overlayObj) {
     this._focusedObject = overlayObj;
     if (overlayObj === undefined) {
+      this._focusedObject = undefined;
       this._focusIndex = -1;
     } else {
       this._focusIndex = overlayObj.index !== undefined ? overlayObj.index : -1;
@@ -498,9 +518,9 @@ Renderer.prototype._handleMouseEvent = function(e) {
   // rescale to canvas width/height
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
-  const overlayObj = this._findOverlayAt(x, y);
+  const overlayObj = this._findOverlayAt({x, y});
 
-  if (this.setFocus(overlayObj)) {
+  if (this.setFocus(overlayObj, {x, y})) {
     this.processFrame();
   }
 };
@@ -810,16 +830,16 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
   // eslint-disable-next-line no-unused-vars
-  for (const val of this._actionOptions) {
+  for (const obj of Object.values(this._actionOptions)) {
     const radio = document.createElement('input');
-    radio.id = `radio-${val}`;
+    radio.id = `radio-${obj.name}`;
     radio.setAttribute('type', 'radio');
     radio.name = 'selectActionOpt';
-    radio.value = val;
-    radio.checked = this.overlayOptions.action === val;
+    radio.value = obj.type;
+    radio.checked = this.overlayOptions.action.type === obj.type;
     const label = document.createElement('label');
     label.setAttribute('for', radio.id);
-    label.innerHTML = val;
+    label.innerHTML = obj.name;
     label.appendChild(radio);
     this.eleActionCtlOptForm.appendChild(label);
   }
@@ -911,14 +931,20 @@ Renderer.prototype.initPlayerOptionsControls = function() {
 
   for (const radio of this.eleActionCtlOptForm) {
     radio.addEventListener('change', () => {
-      if (radio.value !== this.overlayOptions.action) {
-        this.overlayOptions.action = radio.value;
+      if (radio.value !== this.overlayOptions.action.type) {
+        this.overlayOptions.action = this._getActionByKey('type', radio.value);
         this._reBindMouseHandler();
         this.processFrame();
         this.updateFromDynamicState();
       }
     });
   }
+};
+
+Renderer.prototype._getActionByKey = function(key, val) {
+  return Object.values(this._actionOptions).find(
+      (e) => Object.entries(e).find(
+          ([k, v]) => key === k && val === v));
 };
 
 
