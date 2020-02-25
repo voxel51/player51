@@ -830,13 +830,11 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   // eslint-disable-next-line no-unused-vars
   for (const obj of Object.values(this._actionOptions)) {
     const radio = document.createElement('input');
-    radio.id = `radio-${obj.name}`;
     radio.setAttribute('type', 'radio');
     radio.name = 'selectActionOpt';
     radio.value = obj.type;
     radio.checked = this.overlayOptions.action.type === obj.type;
     const label = document.createElement('label');
-    label.setAttribute('for', radio.id);
     label.innerHTML = obj.name;
     label.appendChild(radio);
     this.eleActionCtlOptForm.appendChild(label);
@@ -870,13 +868,11 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   // eslint-disable-next-line no-unused-vars
   for (const val of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
-    radio.id = `radio-${val}`;
     radio.setAttribute('type', 'radio');
     radio.name = 'attrRenderOpt';
     radio.value = val;
     radio.checked = this.overlayOptions.attrRenderMode === val;
     const label = document.createElement('label');
-    label.setAttribute('for', radio.id);
     label.innerHTML = val;
     label.appendChild(radio);
     this.eleOptCtlAttrOptForm.appendChild(label);
