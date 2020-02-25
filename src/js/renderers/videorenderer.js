@@ -429,26 +429,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
-
-  if (this._boolShowVideoOptions && this._boolShowControls) {
-    this.eleDivVideoOpts.style.opacity = '0.9';
-  } else {
-    this.eleDivVideoOpts.style.opacity = '0.0';
-    if (this.player._boolThumbnailMode) {
-      this.eleDivVideoOpts.remove();
-    }
-  }
-
-  if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = '0.9';
-  } else {
-    this.eleDivVideoControls.style.opacity = '0.0';
-    if (this.player._boolThumbnailMode) {
-      this.eleDivVideoControls.remove();
-    }
-  }
-
-  this.setAttributeControlsDisplay();
+  this.updateControlsDisplayState();
 };
 
 /**

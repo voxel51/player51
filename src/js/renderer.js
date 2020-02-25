@@ -941,15 +941,54 @@ Renderer.prototype._getActionByKey = function(key, val) {
           ([k, v]) => key === k && val === v));
 };
 
+/**
+ * This function is to be called by child classes in updateFromDynamicState
+ * to properly show or hide all configured controls
+ *
+ * @member updateControlsDisplayState
+ * @required the viewer must be rendered.
+ */
+Renderer.prototype.updateControlsDisplayState = function() {
+  if (!this.eleDivVideoControls) {
+    return;
+  }
+  if (this._boolShowControls) {
+    this.eleDivVideoControls.style.opacity = '0.9';
+  } else {
+    this.eleDivVideoControls.style.opacity = '0.0';
+    if (this.player._boolThumbnailMode) {
+      this.eleDivVideoControls.remove();
+    }
+  }
+  this._updateOptionsDisplayState();
+};
 
-Renderer.prototype.setAttributeControlsDisplay = function() {
+Renderer.prototype._updateOptionsDisplayState = function() {
+  if (!this.eleDivVideoOpts) {
+    return;
+  }
+  if (this._boolShowVideoOptions && this._boolShowControls) {
+    this.eleDivVideoOpts.style.opacity = '0.9';
+    this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  } else {
+    this.eleDivVideoOpts.style.opacity = '0.0';
+    this.eleDivVideoOpts.className = 'p51-display-none';
+    if (this.player._boolThumbnailMode) {
+      this.eleDivVideoOpts.remove();
+    }
+  }
+  this._setAttributeControlsDisplay();
+};
+
+Renderer.prototype._setAttributeControlsDisplay = function() {
   let func = (node) => node.hidden = false;
-  this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
-  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   if (!this.overlayOptions.showAttrs) {
     this.eleOptCtlShowAttrClickWrapper.className = '';
     this.eleOptCtlAttrOptForm.className = '';
     func = (node) => node.hidden = true;
+  } else {
+    this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
+    this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   }
   recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
   recursiveMap(this.eleOptCtlAttrOptForm, func);
