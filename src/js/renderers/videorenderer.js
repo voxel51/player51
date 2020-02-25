@@ -102,16 +102,8 @@ VideoRenderer.prototype.initPlayer = function() {
 VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
   this.eleDivVideoControls = document.createElement('div');
   this.eleDivVideoControls.className = 'p51-video-controls';
-  this.elePlayPauseButton = document.createElement('button');
-  this.elePlayPauseButton.setAttribute('type', 'button');
-  this.elePlayPauseButton.className = 'p51-play-pause';
-  this.elePlayPauseButton.innerHTML = 'Play';
-  this.eleSeekBar = document.createElement('input');
-  this.eleSeekBar.setAttribute('type', 'range');
-  this.eleSeekBar.setAttribute('value', '0');
-  this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-  this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
+  this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
   this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
   this.parent.appendChild(this.eleDivVideoControls);
 };
@@ -420,15 +412,14 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
       this._isOverlayPrepared) {
       this.eleVideo.play();
     }
-    this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
     if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
       this.eleVideo.currentTime = this.clampTimeToFrameStart();
       this._updateFrame();
     }
-    this.elePlayPauseButton.innerHTML = 'Play';
   }
+  this.updatePlayButton(this._boolPlaying);
   this.updateControlsDisplayState();
 };
 

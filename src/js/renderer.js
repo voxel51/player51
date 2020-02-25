@@ -777,10 +777,29 @@ Renderer.prototype.initSharedControls = function() {
   }
 };
 
+Renderer.prototype.initPlayerControlsPlayButtonHTML = function(parent) {
+  this.elePlayPauseButton = document.createElement('i');
+  this.elePlayPauseButton.className = 'p51-material-icons p51-clickable';
+  this.elePlayPauseButton.innerHTML = 'play';
+  this.elePlayPauseButton.style.gridArea = '2 / 2 / 2 / 2';
+  parent.appendChild(this.elePlayPauseButton);
+};
+
+Renderer.prototype.initPlayerControlsSeekBarHTML = function(parent) {
+  this.eleSeekBar = document.createElement('input');
+  this.eleSeekBar.setAttribute('type', 'range');
+  this.eleSeekBar.setAttribute('value', '0');
+  this.eleSeekBar.className = 'p51-seek-bar';
+  this.eleSeekBar.style.gridArea = '1 / 2 / 1 / 5';
+  parent.appendChild(this.eleSeekBar);
+};
+
+
 Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
-  this.eleOptionsButton = document.createElement('button');
-  this.eleOptionsButton.className = 'p51-video-options';
-  this.eleOptionsButton.innerHTML = 'Options';
+  this.eleOptionsButton = document.createElement('i');
+  this.eleOptionsButton.className = 'p51-material-icons p51-clickable';
+  this.eleOptionsButton.innerHTML = 'settings';
+  this.eleOptionsButton.style.gridArea = '2 / 4 / 2 / 4';
   parent.appendChild(this.eleOptionsButton);
 };
 
@@ -1011,6 +1030,15 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
   recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
 
+Renderer.prototype.updatePlayButton = function(playing) {
+  if (this.elePlayPauseButton) {
+    if (playing) {
+      this.elePlayPauseButton.innerHTML = 'pause';
+    } else {
+      this.elePlayPauseButton.innerHTML = 'play_arrow';
+    }
+  }
+};
 
 /**
  * This function updates the size and padding based on the configuration

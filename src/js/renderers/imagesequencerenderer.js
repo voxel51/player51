@@ -73,16 +73,8 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   // Video controls
   this.eleDivVideoControls = document.createElement('div');
   this.eleDivVideoControls.className = 'p51-video-controls controls-auto-size';
-  this.elePlayPauseButton = document.createElement('button');
-  this.elePlayPauseButton.setAttribute('type', 'button');
-  this.elePlayPauseButton.className = 'p51-play-pause';
-  this.elePlayPauseButton.innerHTML = 'Play';
-  this.eleSeekBar = document.createElement('input');
-  this.eleSeekBar.setAttribute('type', 'range');
-  this.eleSeekBar.setAttribute('value', '0');
-  this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-  this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
+  this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
   this.parent.appendChild(this.eleDivVideoControls);
   this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
@@ -190,23 +182,19 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
   }
 
   if (this._boolPlaying) {
-    this.elePlayPauseButton.innerHTML = 'Pause';
+    this.elePlayPauseButton.innerHTML = 'pause';
     // Update slider value
     const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
     this.eleSeekBar.value = value;
   } else {
-    this.elePlayPauseButton.innerHTML = 'Play';
+    this.elePlayPauseButton.innerHTML = 'play';
     if (this._frameNumber === this._totalNumberOfFrames) {
       // Reset
       this._frameNumber = 1;
     }
   }
-
-  if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = '0.9';
-  } else {
-    this.eleDivVideoControls.style.opacity = '0.0';
-  }
+  this.updatePlayButton(this._boolPlaying);
+  this.updateControlsDisplayState();
 };
 
 
