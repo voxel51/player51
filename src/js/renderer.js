@@ -64,11 +64,16 @@ function Renderer(media, overlay) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+  this._actionOptions = {
+    click: {name: 'Click', type: 'click'},
+    hover: {name: 'Hover', type: 'mousemove'},
+  };
   this.overlayOptions = {
     labelsOnlyOnClick: false,
     attrsOnlyOnClick: false,
     showAttrs: true,
     attrRenderMode: 'value',
+    action: this._actionOptions.click,
   };
   this._attrRenderModeOptions = ['value', 'attr-value'];
   this._focusIndex = -1;
@@ -84,7 +89,9 @@ function Renderer(media, overlay) {
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
+  this._focusPos = {x: -1, y: -1};
   this.handleOverlay(overlay);
+  this._mouseEventHandler = this._handleMouseEvent.bind(this);
 }
 
 
@@ -299,8 +306,7 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
-  this.eleCanvas.addEventListener('click',
-      this._handleMouseEvent.bind(this));
+  this._reBindMouseHandler();
 
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
@@ -308,6 +314,15 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this.updateFromDynamicState();
 };
 
+
+Renderer.prototype._reBindMouseHandler = function() {
+  for (const action of Object.values(this._actionOptions)) {
+    this.eleCanvas.removeEventListener(
+        action.type, this._mouseEventHandler);
+  }
+  this.eleCanvas.addEventListener(
+      this.overlayOptions.action.type, this._mouseEventHandler);
+};
 
 /**
  * Helper function to parse attributes of an overlay and add it to the overlay
@@ -425,10 +440,14 @@ Renderer.prototype.processFrame = function() {
   this.customDraw(context);
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
+      // Hover Focus setting
+      if (this.overlayOptions.action === this._actionOptions.hover) {
+        this.setFocus(this._findOverlayAt(this._focusPos));
+      }
       const fm = this.frameOverlay[this._frameNumber];
       const len = fm.length;
       // draw items without focus first, if settings allow
-      if (!this.overlayOptions.labelsOnlyOnClick || !this._focusedObject) {
+      if (this._renderRest()) {
         for (let i = 0; i < len; i++) {
           if (!this.isFocus(fm[i])) {
             fm[i].draw(context, this.canvasWidth, this.canvasHeight);
@@ -442,11 +461,17 @@ Renderer.prototype.processFrame = function() {
       }
     }
   }
-  return;
+};
+
+Renderer.prototype._renderRest = function() {
+  if (this.overlayOptions.labelsOnlyOnClick) {
+    return !this._focusedObject;
+  }
+  return true;
 };
 
 
-Renderer.prototype._findOverlayAt = function(x, y) {
+Renderer.prototype._findOverlayAt = function({x, y}) {
   const objects = this.frameOverlay[this._frameNumber];
   if (!objects) {
     return;
@@ -465,10 +490,14 @@ Renderer.prototype.isFocus = function(overlayObj) {
     overlayObj.index === this._focusIndex;
 };
 
-Renderer.prototype.setFocus = function(overlayObj) {
+Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
+  if (position) {
+    this._focusPos = position;
+  }
   if (this._focusedObject !== overlayObj) {
     this._focusedObject = overlayObj;
     if (overlayObj === undefined) {
+      this._focusedObject = undefined;
       this._focusIndex = -1;
     } else {
       this._focusIndex = overlayObj.index !== undefined ? overlayObj.index : -1;
@@ -487,9 +516,9 @@ Renderer.prototype._handleMouseEvent = function(e) {
   // rescale to canvas width/height
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
-  const overlayObj = this._findOverlayAt(x, y);
+  const overlayObj = this._findOverlayAt({x, y});
 
-  if (this.setFocus(overlayObj)) {
+  if (this.setFocus(overlayObj, {x, y})) {
     this.processFrame();
   }
 };
@@ -791,6 +820,26 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     eleOptCtlShowLabelRow,
   ]);
 
+  // Selection for action type
+  this.eleActionCtlOptForm = document.createElement('form');
+  this.eleActionCtlOptForm.className = 'p51-video-opt-input';
+  const actionFormTitle = document.createElement('div');
+  actionFormTitle.innerHTML = 'Select mode:';
+  this.eleActionCtlOptForm.appendChild(actionFormTitle);
+  this.eleActionCtlOptForm.appendChild(document.createElement('div'));
+  // eslint-disable-next-line no-unused-vars
+  for (const obj of Object.values(this._actionOptions)) {
+    const radio = document.createElement('input');
+    radio.setAttribute('type', 'radio');
+    radio.name = 'selectActionOpt';
+    radio.value = obj.type;
+    radio.checked = this.overlayOptions.action.type === obj.type;
+    const label = document.createElement('label');
+    label.innerHTML = obj.name;
+    label.appendChild(radio);
+    this.eleActionCtlOptForm.appendChild(label);
+  }
+
   // Checkbox for show attrs
   const eleOptCtlShowAttrRow = makeCheckboxRow(
       'Show attributes', this.overlayOptions.showAttrs);
@@ -819,18 +868,17 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   // eslint-disable-next-line no-unused-vars
   for (const val of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
-    radio.id = `radio-${val}`;
     radio.setAttribute('type', 'radio');
     radio.name = 'attrRenderOpt';
     radio.value = val;
     radio.checked = this.overlayOptions.attrRenderMode === val;
     const label = document.createElement('label');
-    label.setAttribute('for', radio.id);
     label.innerHTML = val;
     label.appendChild(radio);
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
+  this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
@@ -840,42 +888,57 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
 
 Renderer.prototype.initPlayerOptionsControls = function() {
-  const self = this;
-
-  this.eleOptionsButton.addEventListener('click', function() {
-    self._boolShowVideoOptions = !self._boolShowVideoOptions;
-    self.updateFromDynamicState();
+  this.eleOptionsButton.addEventListener('click', () => {
+    this._boolShowVideoOptions = !this._boolShowVideoOptions;
+    this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowLabel.addEventListener('change', function() {
-    self.overlayOptions.labelsOnlyOnClick =
-        self.eleOptCtlShowLabel.checked;
-    self.processFrame();
-    self.updateFromDynamicState();
+  this.eleOptCtlShowLabel.addEventListener('change', () => {
+    this.overlayOptions.labelsOnlyOnClick =
+        this.eleOptCtlShowLabel.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowAttr.addEventListener('change', function() {
-    self.overlayOptions.showAttrs = self.eleOptCtlShowAttr.checked;
-    self.processFrame();
-    self.updateFromDynamicState();
+  this.eleOptCtlShowAttr.addEventListener('change', () => {
+    this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowAttrClick.addEventListener('change', function() {
-    self.overlayOptions.attrsOnlyOnClick =
-        self.eleOptCtlShowAttrClick.checked;
-    self.processFrame();
-    self.updateFromDynamicState();
+  this.eleOptCtlShowAttrClick.addEventListener('change', () => {
+    this.overlayOptions.attrsOnlyOnClick =
+        this.eleOptCtlShowAttrClick.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
   });
 
   for (const radio of this.eleOptCtlAttrOptForm) {
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
-        self.processFrame();
+        this.processFrame();
         this.updateFromDynamicState();
       }
     });
   }
+
+  for (const radio of this.eleActionCtlOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this.overlayOptions.action.type) {
+        this.overlayOptions.action = this._getActionByKey('type', radio.value);
+        this._reBindMouseHandler();
+        this.processFrame();
+        this.updateFromDynamicState();
+      }
+    });
+  }
+};
+
+Renderer.prototype._getActionByKey = function(key, val) {
+  return Object.values(this._actionOptions).find(
+      (e) => Object.entries(e).find(
+          ([k, v]) => key === k && val === v));
 };
 
 

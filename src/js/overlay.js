@@ -614,8 +614,9 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         context.fillText(
-          line, this.x + this.textPadder,
-          this.y + 3 + this.attrFontHeight + this.textPadder + this.attrFontHeight * i);
+            line, this.x + this.textPadder,
+            this.y + 3 + this.attrFontHeight +
+            this.textPadder + this.attrFontHeight * i);
       }
     }
   }
