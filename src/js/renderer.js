@@ -464,9 +464,7 @@ Renderer.prototype.processFrame = function() {
 };
 
 Renderer.prototype._renderRest = function() {
-  if (this.overlayOptions.action === this._actionOptions.hover ||
-    (this.overlayOptions.labelsOnlyOnClick &&
-      this.overlayOptions.action === this._actionOptions.click)) {
+  if (this.overlayOptions.labelsOnlyOnClick) {
     return !this._focusedObject;
   }
   return true;
