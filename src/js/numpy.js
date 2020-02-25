@@ -99,7 +99,8 @@ function parse(array) {
   }
   const rawData = array.slice(bodyIndex);
   const typedData = (ArrayType === Uint8Array) ? rawData :
-      new ArrayType(rawData.buffer, rawData.byteOffset, rawData.byteLength);
+      new ArrayType(rawData.buffer, rawData.byteOffset,
+          rawData.byteLength / ArrayType.BYTES_PER_ELEMENT);
   return {
     shape: header.shape,
     data: typedData,
