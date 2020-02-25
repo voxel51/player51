@@ -15,7 +15,30 @@ export {
 const DATA_TYPES = {
   '|b1': Uint8Array,
   '|u1': Uint8Array,
+  '<u1': Uint8Array,
+  '>u1': Uint8Array,
+  '|i1': Int8Array,
+  '<i1': Int8Array,
+  '>i1': Int8Array,
+
+  '|u2': Uint16Array,
+  '<u2': Uint16Array,
+  '|i2': Int16Array,
+  '<i2': Int16Array,
+
+  '|u4': Uint32Array,
+  '<u4': Uint32Array,
+  '|i4': Int32Array,
+  '<i4': Int32Array,
 };
+
+if (window.BigInt64Array) {
+  DATA_TYPES['<i8'] = DATA_TYPES['|i8'] = BigInt64Array;
+}
+
+if (window.BigUint64Array) {
+  DATA_TYPES['<u8'] = DATA_TYPES['|u8'] = BigUint64Array;
+}
 
 /**
  * Parses a uint16 (unsigned 16-bit integer) at a specified position in a
