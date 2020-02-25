@@ -941,6 +941,23 @@ Renderer.prototype._getActionByKey = function(key, val) {
           ([k, v]) => key === k && val === v));
 };
 
+
+/**
+ * This function returns if the mouseEvent target is inside any of the player
+ * controls
+ *
+ * @param {MouseEvent} e - mouseEvent from eventHandler
+ * @return {Boolean} if contained
+ */
+Renderer.prototype.checkMouseOnControls = function(e) {
+  if (this.eleDivVideoControls && this.eleDivVideoControls.contains(e.target)) {
+    return true;
+  } else if (this.eleDivVideoOpts && this.eleDivVideoOpts.contains(e.target)) {
+    return true;
+  }
+  return false;
+};
+
 /**
  * This function is to be called by child classes in updateFromDynamicState
  * to properly show or hide all configured controls

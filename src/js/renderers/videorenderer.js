@@ -295,10 +295,10 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.parent.addEventListener('mousemove', function(e) {
     if (!self.player._boolThumbnailMode) {
       self._boolShowControls = true;
-      if (!self.eleDivVideoControls.contains(e.target)) {
-        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
-      } else {
+      if (self.checkMouseOnControls(e)) {
         self.clearTimeout('hideControls');
+      } else {
+        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
       }
     }
     self.updateFromDynamicState();
