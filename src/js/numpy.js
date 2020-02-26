@@ -30,14 +30,34 @@ const DATA_TYPES = {
   '<u4': Uint32Array,
   '|i4': Int32Array,
   '<i4': Int32Array,
+
+  '|u8': convert64to32Array(Uint32Array),
+  '<u8': convert64to32Array(Uint32Array),
+  '|i8': convert64to32Array(Int32Array),
+  '<i8': convert64to32Array(Int32Array),
 };
 
-if (window.BigInt64Array) {
-  DATA_TYPES['<i8'] = DATA_TYPES['|i8'] = BigInt64Array;
-}
 
-if (window.BigUint64Array) {
-  DATA_TYPES['<u8'] = DATA_TYPES['|u8'] = BigUint64Array;
+/**
+ * Polyfill to convert a 64-bit integer array to a 32-bit integer array. This
+ * assumes that no element actually requires more than 32 bits to store, which
+ * should be a safe assumption for our purposes.
+ *
+ * @param {function} TargetArrayType the TypedArray subclass to produce (either
+ *   Int32Array or Uint32Array)
+ * @return {function} wrapper around the TargetArrayType constructor
+ */
+function convert64to32Array(TargetArrayType) {
+  const makeArray = function(buffer, byteOffset, length) {
+    const source = new TargetArrayType(buffer, byteOffset, length * 2);
+    const target = new TargetArrayType(source.length);
+    for (let i = 0; i < target.length; i++) {
+      target[i] = source[i * 2];
+    }
+    return target;
+  };
+  makeArray.BYTES_PER_ELEMENT = 8;
+  return makeArray;
 }
 
 /**
