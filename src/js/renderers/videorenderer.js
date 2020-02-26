@@ -325,7 +325,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
         self.eleVideo.currentTime = Math.min(
             self.eleVideo.duration,
             self.computeFrameTime() + self.frameDuration);
+      } else {
+        return;
       }
+      e.preventDefault();
+      e.stopPropagation();
       self.updateStateFromTimeChange();
     }
   });
