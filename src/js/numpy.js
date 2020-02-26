@@ -17,6 +17,8 @@ const DATA_TYPES = {
   // we assume hosts are little-endian (like x86) so big-endian types are only
   // supported for 8-bit integers, where endianness doesn't matter
   '|b1': Uint8Array,
+  '<b1': Uint8Array,
+  '>b1': Uint8Array,
   '|u1': Uint8Array,
   '<u1': Uint8Array,
   '>u1': Uint8Array,
