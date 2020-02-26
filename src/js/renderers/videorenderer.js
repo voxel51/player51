@@ -387,7 +387,7 @@ VideoRenderer.prototype.resizeControls = function() {
     // The controls are tuned using margins when padding exists.
     this.eleDivVideoControls.style.width = (this.width + 'px');
     this.eleDivVideoControls.style.height = (
-      Math.min(80, 0.1 * this.height) + 'px'
+      Math.max(60, 0.075 * this.height) + 'px'
     );
     // controls have 0 padding because we want them only to show
     // on the video, this impacts their left location too.

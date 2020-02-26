@@ -38,16 +38,45 @@
   background-image: -ms-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
 }
 
+.p51-video-controls * {
+  color: #EEE;
+}
+
+.p51-video-controls.vbig img
+{
+  height: 2.5rem;
+}
+
+.p51-video-controls.big img
+{
+  height: 2.25rem;
+}
+
+.p51-video-controls.med img
+{
+  height: 2.0rem;
+}
+
+.p51-video-controls.small img
+{
+  height: 1.75rem;
+}
+
+.p51-video-controls.vsmall img
+{
+  height: 1.5rem;
+}
+
 .p51-video-controls.vbig *,
 .p51-video-controls.vbig .p51-material-icons
 {
-  font-size: 2.5rem;
+  font-size: 2.0rem;
 }
 
 .p51-video-controls.big *,
 .p51-video-controls.big .p51-material-icons
 {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 
 .p51-video-controls.med *,
@@ -65,7 +94,7 @@
 .p51-video-controls.vsmall *,
 .p51-video-controls.vsmall .p51-material-icons
 {
-  font-size: 1rem;
+  font-size: 1.0rem;
 }
 
 
@@ -245,29 +274,6 @@
 
 .p51-display-none {
   display: none;
-}
-
-@font-face {
-  font-family: 'Material Icons';
-  font-style: normal;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/materialicons/v50/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
-}
-
-.p51-material-icons {
-  font-family: 'Material Icons';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 2rem;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -moz-font-feature-settings: 'liga';
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .p51-clickable {
