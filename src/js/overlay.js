@@ -346,27 +346,19 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext('2d');
   const maskImage = maskContext.createImageData(maskWidth, maskHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
-  if (this.mask.rendered) {
+  const index = this.renderer.frameMaskIndex;
+  if (index) {
     for (let i = 0; i < this.mask.data.length; i++) {
-      maskImage.data[i] = this.mask.data[i];
+      if (index[this.mask.data[i]]) {
+        imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
+      }
     }
   } else {
-    const index = this.renderer.frameMaskIndex;
-    if (index) {
-      for (let i = 0; i < this.mask.data.length; i++) {
-        if (index[this.mask.data[i]]) {
-          imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
-        }
-      }
-    } else {
-      for (let i = 0; i < this.mask.data.length; i++) {
-        if (this.mask.data[i]) {
-          imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
-        }
+    for (let i = 0; i < this.mask.data.length; i++) {
+      if (this.mask.data[i]) {
+        imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
       }
     }
-    this.mask.data = maskImage.data;
-    this.mask.rendered = true;
   }
   maskContext.putImageData(maskImage, 0, 0);
   context.drawImage(FrameMaskOverlay._tempMaskCanvas,
