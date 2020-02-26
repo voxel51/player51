@@ -43,6 +43,11 @@ function ColorGenerator() {
   for (let i = 0; i < this.rawMaskColors.length; i++) {
     this.rawMaskColors[i] = this.rawColor((i + maskOffset) % 256);
   }
+  // reduce alpha of masks
+  const rawMaskColorComponents = new Uint8Array(this.rawMaskColors.buffer);
+  for (let i = 3; i < rawMaskColorComponents.length; i += 4) {
+    rawMaskColorComponents[i] = Math.floor(255 * 0.6);
+  }
 }
 
 
