@@ -13,6 +13,9 @@ export {
 };
 
 const DATA_TYPES = {
+  // < = little-endian, > = big-endian, | = host architecture
+  // we assume hosts are little-endian (like x86) so big-endian types are only
+  // supported for 8-bit integers, where endianness doesn't matter
   '|b1': Uint8Array,
   '|u1': Uint8Array,
   '<u1': Uint8Array,
@@ -48,7 +51,11 @@ const DATA_TYPES = {
  * @return {function} wrapper around the TargetArrayType constructor
  */
 function convert64to32Array(TargetArrayType) {
+  // we only need the 3-argument constructor to be implemented. For details:
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray
   const makeArray = function(buffer, byteOffset, length) {
+    // view buffer as 32-bit type and copy the 4 lowest bytes out of every 8
+    // bytes into a new array (assumes little-endian)
     const source = new TargetArrayType(buffer, byteOffset, length * 2);
     const target = new TargetArrayType(source.length);
     for (let i = 0; i < target.length; i++) {
@@ -56,6 +63,7 @@ function convert64to32Array(TargetArrayType) {
     }
     return target;
   };
+  // needed by parse()
   makeArray.BYTES_PER_ELEMENT = 8;
   return makeArray;
 }
