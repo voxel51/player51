@@ -65,8 +65,8 @@ function Renderer(media, overlay) {
   // Rendering options
   this._boolBorderBox = false;
   this._actionOptions = {
-    click: {name: 'Click', type: 'click'},
-    hover: {name: 'Hover', type: 'mousemove'},
+    click: {name: 'Click', type: 'click', labelText: 'clicked'},
+    hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
   };
   this.overlayOptions = {
     labelsOnlyOnClick: false,
@@ -790,16 +790,22 @@ Renderer.prototype.initPlayerControlsSeekBarHTML = function(parent) {
   this.eleSeekBar.setAttribute('type', 'range');
   this.eleSeekBar.setAttribute('value', '0');
   this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleSeekBar.style.gridArea = '1 / 2 / 1 / 5';
+  this.eleSeekBar.style.gridArea = '1 / 2 / 1 / 6';
   parent.appendChild(this.eleSeekBar);
 };
 
+Renderer.prototype.initTimeStampHTML = function(parent) {
+  this.eleTimeStamp = document.createElement('div');
+  this.eleTimeStamp.className = 'p51-time';
+  this.eleTimeStamp.style.gridArea = '2 / 3 / 2 / 3';
+  parent.appendChild(this.eleTimeStamp);
+};
 
 Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
   this.eleOptionsButton = document.createElement('i');
   this.eleOptionsButton.className = 'p51-material-icons p51-clickable';
   this.eleOptionsButton.innerHTML = 'settings';
-  this.eleOptionsButton.style.gridArea = '2 / 4 / 2 / 4';
+  this.eleOptionsButton.style.gridArea = '2 / 5 / 2 / 5';
   parent.appendChild(this.eleOptionsButton);
 };
 
@@ -902,13 +908,28 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
-  this.parent.appendChild(this.eleDivVideoOpts);
+
+  parent.appendChild(this.eleDivVideoOpts);
+};
+
+Renderer.prototype._repositionOptionsPanel = function(target) {
+  // Position options panel relative to location of options button
+  // Display invisibly to get width and height
+  this.eleDivVideoOpts.style.opacity = '0.0';
+  this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  this.eleDivVideoOpts.style.left = (
+    target.offsetLeft-this.eleDivVideoOpts.offsetWidth + target.offsetWidth
+  ) + 'px';
+  this.eleDivVideoOpts.style.top = (
+    target.parentElement.offsetTop - this.eleDivVideoOpts.offsetHeight
+  ) + 'px';
 };
 
 
 Renderer.prototype.initPlayerOptionsControls = function() {
-  this.eleOptionsButton.addEventListener('click', () => {
+  this.eleOptionsButton.addEventListener('click', (e) => {
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
+    this._repositionOptionsPanel(e.target);
     this.updateFromDynamicState();
   });
 
@@ -923,6 +944,7 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
     this.processFrame();
     this.updateFromDynamicState();
+    this._repositionOptionsPanel(this.eleOptionsButton);
   });
 
   this.eleOptCtlShowAttrClick.addEventListener('change', () => {
@@ -936,6 +958,7 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
+        this._alterOptionsLabelText();
         this.processFrame();
         this.updateFromDynamicState();
       }
@@ -946,12 +969,32 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     radio.addEventListener('change', () => {
       if (radio.value !== this.overlayOptions.action.type) {
         this.overlayOptions.action = this._getActionByKey('type', radio.value);
+        this._alterOptionsLabelText();
         this._reBindMouseHandler();
         this.processFrame();
         this.updateFromDynamicState();
       }
     });
   }
+};
+
+Renderer.prototype._alterOptionsLabelText = function() {
+  const getTextNode = (nodes) => {
+    for (const node of nodes) {
+      if (node.nodeName === '#text') {
+        return node;
+      }
+    }
+  };
+  let textNode = getTextNode(
+      this.eleOptCtlShowAttrClickWrapper.querySelector('label').childNodes);
+  textNode.textContent =
+    `Only show ${this.overlayOptions.action.labelText} attributes`;
+
+  textNode = getTextNode(
+      this.eleOptCtlShowLabelWrapper.querySelector('label').childNodes);
+  textNode.textContent =
+    `Only show ${this.overlayOptions.action.labelText} object`;
 };
 
 Renderer.prototype._getActionByKey = function(key, val) {
@@ -1038,6 +1081,13 @@ Renderer.prototype.updatePlayButton = function(playing) {
       this.elePlayPauseButton.innerHTML = 'play_arrow';
     }
   }
+};
+
+Renderer.prototype.updateTimeStamp = function(timeStr) {
+  if (!this.eleTimeStamp) {
+    return;
+  }
+  this.eleTimeStamp.innerHTML = timeStr;
 };
 
 /**

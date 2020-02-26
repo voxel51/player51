@@ -105,6 +105,7 @@ VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
   this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
   this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
   this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
+  this.initTimeStampHTML(this.eleDivVideoControls);
   this.parent.appendChild(this.eleDivVideoControls);
 };
 
@@ -353,6 +354,18 @@ VideoRenderer.prototype.determineMediaDimensions = function() {
  * @required initPlayer() to be called
  */
 VideoRenderer.prototype.resizeControls = function() {
+  if (this.width>1400) {
+    this.eleDivVideoControls.className = 'p51-video-controls vbig';
+  } else if (this.width>1200) {
+    this.eleDivVideoControls.className = 'p51-video-controls big';
+  } else if (this.width>800) {
+    this.eleDivVideoControls.className = 'p51-video-controls med';
+  } else if (this.width>600) {
+    this.eleDivVideoControls.className = 'p51-video-controls small';
+  } else {
+    this.eleDivVideoControls.className = 'p51-video-controls vsmall';
+  }
+
   if (this._boolBorderBox) {
     // need to size the controls too.
     // The controls are tuned using margins when padding exists.
@@ -528,6 +541,10 @@ VideoRenderer.prototype.customDraw = function(context) {
     context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
+  const hhmmss = this.currentTimestamp();
+  const duration = this.durationStamp();
+  this.updateTimeStamp(`${hhmmss}/${duration}`);
+
   if (this.player.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
     // working on a new way of forcing certain font sizes
@@ -539,7 +556,6 @@ VideoRenderer.prototype.customDraw = function(context) {
     fontheight = this.checkFontHeight(fontheight);
     context.font = `${fontheight}px sans-serif`;
 
-    const hhmmss = this.currentTimestamp();
     const tw = context.measureText(hhmmss).width;
     const pad = 4;
     const pad2 = 2; // pad divided by 2
@@ -699,15 +715,27 @@ VideoRenderer.prototype.clampTimeToFrameStart = function(time) {
 
 
 /**
+ * Retrieves the video duration in a human-readable format.
+ *
+ * @member currentTimestamp
+ * @return {time}
+ */
+VideoRenderer.prototype.durationStamp = function() {
+  return this._renderTime(this.eleVideo.duration);
+};
+
+/**
  * Retrieves the current time of the video being played in a human-readable
  * format.
  *
  * @member currentTimestamp
- * @param {int} decimals
  * @return {time}
  */
-VideoRenderer.prototype.currentTimestamp = function(decimals = 1) {
-  let numSeconds = this.eleVideo.currentTime;
+VideoRenderer.prototype.currentTimestamp = function() {
+  return this._renderTime(this.eleVideo.currentTime);
+};
+
+VideoRenderer.prototype._renderTime = function(numSeconds, decimals = 1) {
   const hours = Math.floor(numSeconds / 3600);
   numSeconds = numSeconds % 3600;
   const minutes = Math.floor(numSeconds / 60);
