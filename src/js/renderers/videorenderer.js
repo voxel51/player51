@@ -45,6 +45,7 @@ function VideoRenderer(media, overlay, fps) {
   this._boolPlaying = false;
   this._boolManualSeek = false;
   this._boolShowControls = false;
+  this._boolShowVideoOptions = false;
   this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
@@ -90,6 +91,15 @@ VideoRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivVideo);
 
   // Video controls
+  this.initPlayerControlHTML(this.parent);
+  this.initPlayerOptionsPanelHTML(this.parent);
+  this.mediaElement = this.eleVideo;
+  this.mediaDiv = this.eleDivVideo;
+  this.initCanvas();
+};
+
+
+VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
   this.eleDivVideoControls = document.createElement('div');
   this.eleDivVideoControls.className = 'p51-video-controls';
   this.elePlayPauseButton = document.createElement('button');
@@ -102,10 +112,8 @@ VideoRenderer.prototype.initPlayer = function() {
   this.eleSeekBar.className = 'p51-seek-bar';
   this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
   this.eleDivVideoControls.appendChild(this.eleSeekBar);
+  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
   this.parent.appendChild(this.eleDivVideoControls);
-  this.mediaElement = this.eleVideo;
-  this.mediaDiv = this.eleDivVideo;
-  this.initCanvas();
 };
 
 
@@ -287,10 +295,10 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.parent.addEventListener('mousemove', function(e) {
     if (!self.player._boolThumbnailMode) {
       self._boolShowControls = true;
-      if (!self.eleDivVideoControls.contains(e.target)) {
-        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
-      } else {
+      if (self.checkMouseOnControls(e)) {
         self.clearTimeout('hideControls');
+      } else {
+        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
       }
     }
     self.updateFromDynamicState();
@@ -425,17 +433,8 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
     }
     this.elePlayPauseButton.innerHTML = 'Play';
   }
-
-  if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = '0.9';
-  } else {
-    this.eleDivVideoControls.style.opacity = '0.0';
-    if (this.player._boolThumbnailMode) {
-      this.eleDivVideoControls.remove();
-    }
-  }
+  this.updateControlsDisplayState();
 };
-
 
 /**
  * This function is a controller

@@ -7,7 +7,7 @@
  * renderers should be able to support.
  *
  * Copyright 2017-2020, Voxel51, Inc.
- * Kevin Qi, kevin@voxel51.com
+ * Alan Stahl, alan@voxel51.com
  */
 
 import {
@@ -16,6 +16,10 @@ import {
   FrameMaskOverlay,
   ObjectOverlay,
 } from './overlay.js';
+import {
+  rescale,
+  recursiveMap,
+} from './util.js';
 import {
   ZipLibrary,
 } from './zipreader/zip.js';
@@ -60,6 +64,19 @@ function Renderer(media, overlay) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+  this._actionOptions = {
+    click: {name: 'Click', type: 'click'},
+    hover: {name: 'Hover', type: 'mousemove'},
+  };
+  this.overlayOptions = {
+    labelsOnlyOnClick: false,
+    attrsOnlyOnClick: false,
+    showAttrs: true,
+    attrRenderMode: 'value',
+    action: this._actionOptions.click,
+  };
+  this._attrRenderModeOptions = ['value', 'attr-value'];
+  this._focusIndex = -1;
   // Loading state attributes
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
@@ -72,7 +89,9 @@ function Renderer(media, overlay) {
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
+  this._focusPos = {x: -1, y: -1};
   this.handleOverlay(overlay);
+  this._mouseEventHandler = this._handleMouseEvent.bind(this);
 }
 
 
@@ -291,12 +310,23 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
+  this._reBindMouseHandler();
+
   this._isOverlayPrepared = true;
   this._isPreparingOverlay = false;
   this.updateFromLoadingState();
   this.updateFromDynamicState();
 };
 
+
+Renderer.prototype._reBindMouseHandler = function() {
+  for (const action of Object.values(this._actionOptions)) {
+    this.eleCanvas.removeEventListener(
+        action.type, this._mouseEventHandler);
+  }
+  this.eleCanvas.addEventListener(
+      this.overlayOptions.action.type, this._mouseEventHandler);
+};
 
 /**
  * Helper function to parse attributes of an overlay and add it to the overlay
@@ -410,19 +440,91 @@ Renderer.prototype.processFrame = function() {
   if (!this._isReadyProcessFrames) {
     return;
   }
-
   const context = this.setupCanvasContext();
   this.customDraw(context);
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
+      // Hover Focus setting
+      if (this.overlayOptions.action === this._actionOptions.hover) {
+        this.setFocus(this._findOverlayAt(this._focusPos));
+      }
       const fm = this.frameOverlay[this._frameNumber];
-      for (let len = fm.length, i = 0; i < len; i++) {
-        fm[i].draw(
-            context, this.canvasWidth, this.canvasHeight);
+      const len = fm.length;
+      // draw items without focus first, if settings allow
+      if (this._renderRest()) {
+        for (let i = 0; i < len; i++) {
+          if (!this.isFocus(fm[i])) {
+            fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+          }
+        }
+      }
+      for (let i = 0; i < len; i++) {
+        if (this.isFocus(fm[i])) {
+          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        }
       }
     }
   }
-  return;
+};
+
+Renderer.prototype._renderRest = function() {
+  if (this.overlayOptions.labelsOnlyOnClick) {
+    return !this._focusedObject;
+  }
+  return true;
+};
+
+
+Renderer.prototype._findOverlayAt = function({x, y}) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return;
+  }
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
+    if (object.containsPoint(x, y)) {
+      return object;
+    }
+  }
+};
+
+
+Renderer.prototype.isFocus = function(overlayObj) {
+  return this._focusedObject === overlayObj ||
+    overlayObj.index === this._focusIndex;
+};
+
+Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
+  if (position) {
+    this._focusPos = position;
+  }
+  if (this._focusedObject !== overlayObj) {
+    this._focusedObject = overlayObj;
+    if (overlayObj === undefined) {
+      this._focusedObject = undefined;
+      this._focusIndex = -1;
+    } else {
+      this._focusIndex = overlayObj.index !== undefined ? overlayObj.index : -1;
+    }
+    return true;
+  }
+  return false;
+};
+
+
+Renderer.prototype._handleMouseEvent = function(e) {
+  const rect = e.target.getBoundingClientRect();
+  // calculate relative to top left of canvas
+  let x = e.clientX - rect.left;
+  let y = e.clientY - rect.top;
+  // rescale to canvas width/height
+  x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
+  y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
+  const overlayObj = this._findOverlayAt({x, y});
+
+  if (this.setFocus(overlayObj, {x, y})) {
+    this.processFrame();
+  }
 };
 
 
@@ -674,6 +776,243 @@ Renderer.prototype.initSharedControls = function() {
   if (typeof(this.player._thumbnailClickAction) !== 'undefined') {
     this.parent.addEventListener('click', this.player._thumbnailClickAction);
   }
+  if (this.eleOptionsButton) {
+    this.initPlayerOptionsControls();
+  }
+};
+
+Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
+  this.eleOptionsButton = document.createElement('button');
+  this.eleOptionsButton.className = 'p51-video-options';
+  this.eleOptionsButton.innerHTML = 'Options';
+  parent.appendChild(this.eleOptionsButton);
+};
+
+Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
+  this.eleDivVideoOpts = document.createElement('div');
+  this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  this.eleDivVideoOpts.innerHTML = 'Display options';
+
+  const makeWrapper = function(children) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'p51-video-opt-input';
+    for (const child of children) { // eslint-disable-line no-unused-vars
+      wrapper.appendChild(child);
+    }
+    return wrapper;
+  };
+
+  const makeCheckboxRow = function(text, checked) {
+    const label = document.createElement('label');
+    label.innerHTML = text;
+
+    const checkbox = document.createElement('input');
+    checkbox.setAttribute('type', 'checkbox');
+    checkbox.checked = checked;
+    label.appendChild(checkbox);
+
+    return label;
+  };
+
+
+  // Checkbox for show label on click only
+  const eleOptCtlShowLabelRow = makeCheckboxRow(
+      'Only show clicked object', this.overlayOptions.labelsOnlyOnClick);
+  this.eleOptCtlShowLabel =
+      eleOptCtlShowLabelRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowLabelWrapper = makeWrapper([
+    eleOptCtlShowLabelRow,
+  ]);
+
+  // Selection for action type
+  this.eleActionCtlOptForm = document.createElement('form');
+  this.eleActionCtlOptForm.className = 'p51-video-opt-input';
+  const actionFormTitle = document.createElement('div');
+  actionFormTitle.innerHTML = 'Select mode:';
+  this.eleActionCtlOptForm.appendChild(actionFormTitle);
+  this.eleActionCtlOptForm.appendChild(document.createElement('div'));
+  // eslint-disable-next-line no-unused-vars
+  for (const obj of Object.values(this._actionOptions)) {
+    const radio = document.createElement('input');
+    radio.setAttribute('type', 'radio');
+    radio.name = 'selectActionOpt';
+    radio.value = obj.type;
+    radio.checked = this.overlayOptions.action.type === obj.type;
+    const label = document.createElement('label');
+    label.innerHTML = obj.name;
+    label.appendChild(radio);
+    this.eleActionCtlOptForm.appendChild(label);
+  }
+
+  // Checkbox for show attrs
+  const eleOptCtlShowAttrRow = makeCheckboxRow(
+      'Show attributes', this.overlayOptions.showAttrs);
+  this.eleOptCtlShowAttr =
+      eleOptCtlShowAttrRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowAttrWrapper = makeWrapper([
+    eleOptCtlShowAttrRow,
+  ]);
+
+  // Checkbox for show attrs on click only
+  const eleOptCtlShowAttrClickRow = makeCheckboxRow(
+      'Only show clicked attributes', this.overlayOptions.attrsOnlyOnClick);
+  this.eleOptCtlShowAttrClick =
+      eleOptCtlShowAttrClickRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowAttrClickWrapper = makeWrapper([
+    eleOptCtlShowAttrClickRow,
+  ]);
+
+  // Radio for how to show attrs
+  this.eleOptCtlAttrOptForm = document.createElement('form');
+  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
+  const formTitle = document.createElement('div');
+  formTitle.innerHTML = 'Attribute rendering mode:';
+  this.eleOptCtlAttrOptForm.appendChild(formTitle);
+  this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
+  // eslint-disable-next-line no-unused-vars
+  for (const val of this._attrRenderModeOptions) {
+    const radio = document.createElement('input');
+    radio.setAttribute('type', 'radio');
+    radio.name = 'attrRenderOpt';
+    radio.value = val;
+    radio.checked = this.overlayOptions.attrRenderMode === val;
+    const label = document.createElement('label');
+    label.innerHTML = val;
+    label.appendChild(radio);
+    this.eleOptCtlAttrOptForm.appendChild(label);
+  }
+
+  this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
+  this.parent.appendChild(this.eleDivVideoOpts);
+};
+
+
+Renderer.prototype.initPlayerOptionsControls = function() {
+  this.eleOptionsButton.addEventListener('click', () => {
+    this._boolShowVideoOptions = !this._boolShowVideoOptions;
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowLabel.addEventListener('change', () => {
+    this.overlayOptions.labelsOnlyOnClick =
+        this.eleOptCtlShowLabel.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttr.addEventListener('change', () => {
+    this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttrClick.addEventListener('change', () => {
+    this.overlayOptions.attrsOnlyOnClick =
+        this.eleOptCtlShowAttrClick.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  for (const radio of this.eleOptCtlAttrOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this.overlayOptions.attrRenderMode) {
+        this.overlayOptions.attrRenderMode = radio.value;
+        this.processFrame();
+        this.updateFromDynamicState();
+      }
+    });
+  }
+
+  for (const radio of this.eleActionCtlOptForm) {
+    radio.addEventListener('change', () => {
+      if (radio.value !== this.overlayOptions.action.type) {
+        this.overlayOptions.action = this._getActionByKey('type', radio.value);
+        this._reBindMouseHandler();
+        this.processFrame();
+        this.updateFromDynamicState();
+      }
+    });
+  }
+};
+
+Renderer.prototype._getActionByKey = function(key, val) {
+  return Object.values(this._actionOptions).find(
+      (e) => Object.entries(e).find(
+          ([k, v]) => key === k && val === v));
+};
+
+
+/**
+ * This function returns if the mouseEvent target is inside any of the player
+ * controls
+ *
+ * @param {MouseEvent} e - mouseEvent from eventHandler
+ * @return {Boolean} if contained
+ */
+Renderer.prototype.checkMouseOnControls = function(e) {
+  if (this.eleDivVideoControls && this.eleDivVideoControls.contains(e.target)) {
+    return true;
+  } else if (this.eleDivVideoOpts && this.eleDivVideoOpts.contains(e.target)) {
+    return true;
+  }
+  return false;
+};
+
+/**
+ * This function is to be called by child classes in updateFromDynamicState
+ * to properly show or hide all configured controls
+ *
+ * @member updateControlsDisplayState
+ * @required the viewer must be rendered.
+ */
+Renderer.prototype.updateControlsDisplayState = function() {
+  if (!this.eleDivVideoControls) {
+    return;
+  }
+  if (this._boolShowControls) {
+    this.eleDivVideoControls.style.opacity = '0.9';
+  } else {
+    this.eleDivVideoControls.style.opacity = '0.0';
+    if (this.player._boolThumbnailMode) {
+      this.eleDivVideoControls.remove();
+    }
+  }
+  this._updateOptionsDisplayState();
+};
+
+Renderer.prototype._updateOptionsDisplayState = function() {
+  if (!this.eleDivVideoOpts) {
+    return;
+  }
+  if (this._boolShowVideoOptions && this._boolShowControls) {
+    this.eleDivVideoOpts.style.opacity = '0.9';
+    this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  } else {
+    this.eleDivVideoOpts.style.opacity = '0.0';
+    this.eleDivVideoOpts.className = 'p51-display-none';
+    if (this.player._boolThumbnailMode) {
+      this.eleDivVideoOpts.remove();
+    }
+  }
+  this._setAttributeControlsDisplay();
+};
+
+Renderer.prototype._setAttributeControlsDisplay = function() {
+  let func = (node) => node.hidden = false;
+  if (!this.overlayOptions.showAttrs) {
+    this.eleOptCtlShowAttrClickWrapper.className = '';
+    this.eleOptCtlAttrOptForm.className = '';
+    func = (node) => node.hidden = true;
+  } else {
+    this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
+    this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
+  }
+  recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
+  recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
 
 

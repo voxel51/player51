@@ -34,6 +34,8 @@ export {
 function ImageRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
+  this._boolShowControls = false;
+  this._boolShowVideoOptions = false;
 }
 ImageRenderer.prototype = Object.create(Renderer.prototype);
 ImageRenderer.prototype.constructor = ImageRenderer;
@@ -54,8 +56,13 @@ ImageRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleImage.setAttribute('src', this.media.src);
   this.eleImage.setAttribute('type', this.media.type);
+  this.eleDivVideoControls = document.createElement('div');
+  this.eleDivVideoControls.className = 'p51-image-controls';
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
+  this.parent.appendChild(this.eleDivVideoControls);
+  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
+  this.initPlayerOptionsPanelHTML(this.parent);
   this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
   this.initCanvas();
@@ -90,20 +97,47 @@ ImageRenderer.prototype.initPlayerControls = function() {
     }
   });
 
+  const hideControls = function() {
+    self._boolShowControls = false;
+    self.updateFromDynamicState();
+  };
+
+
   this.parent.addEventListener('mouseenter', function() {
     if (!self._isDataLoaded) {
       return;
     }
-    if (self.player._boolThumbnailMode) {
-      self.updateFromDynamicState();
+    if (!self.player._boolThumbnailMode) {
+      self._boolShowControls = true;
+      self.setTimeout('hideControls', hideControls, 2.5 * 1000);
     }
+    self.updateFromDynamicState();
+  });
+
+  this.parent.addEventListener('mousemove', function(e) {
+    if (!self.player._boolThumbnailMode) {
+      self._boolShowControls = true;
+      if (self.checkMouseOnControls(e)) {
+        self.clearTimeout('hideControls');
+      } else {
+        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
+      }
+    }
+    self.updateFromDynamicState();
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    if (!self._isDataLoaded) {
+      return;
+    }
     if (self.player._boolThumbnailMode) {
       self.setupCanvasContext().clearRect(0, 0, self
           .canvasWidth, self.canvasHeight);
+    } else {
+      hideControls();
+      self.clearTimeout('hideControls');
     }
+    self.updateFromDynamicState();
   });
 
   this.updateFromLoadingState();
@@ -146,6 +180,8 @@ ImageRenderer.prototype.updateFromDynamicState = function() {
   if (this.player._boolThumbnailMode) {
     this.processFrame();
   }
+
+  this.updateControlsDisplayState();
 };
 
 
@@ -206,4 +242,5 @@ isPreparingOverlay: ${this._isPreparingOverlay}
  * @param {context} context
  */
 ImageRenderer.prototype.customDraw = function(context) {
+  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 };

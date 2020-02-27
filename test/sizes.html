@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Simple Video Player Test</title>
+    <style>
+      body {
+        background: black;
+        color:#CCCCCC;
+      }
+      .grid{
+        padding: 2rem;
+        display: grid;
+        grid-gap: 2rem;
+        justify-items: center;
+      }
+      #vbig {
+        position: relative;
+        width: 1600px;
+        height: 1200px;
+      }
+      #big {
+        position: relative;
+        width: 1200px;
+        height: 900px;
+      }
+      #med {
+        position: relative;
+        width: 800px;
+        height: 600px;
+      }
+      #small {
+        position: relative;
+        width: 400px;
+        height: 300px;
+      }
+      #vsmall {
+        position: relative;
+        width: 200px;
+        height: 150px;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Simple ES6 Single Video Player Test </h1>
+    <div class="grid">
+      <div id="vbig"></div>
+      <div id="big"></div>
+      <div id="med"></div>
+      <div id="small"></div>
+      <div id="vsmall"></div>
+    </div>
+
+    <script src="/test/data/config.js"></script>
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Player51 Simple: Example code running.");
+        const sizes = ['vbig', 'big', 'med', 'small', 'vsmall'];
+        for (let i=0; i<sizes.length; i++) {
+          let player = new Player51(
+            {
+              src: "/test/data/video.mp4",
+              type: "video/mp4"
+            },
+            "/test/data/video-labels.json",
+            CONFIG.video_fps
+          );
+
+          console.log("Player51 created.");
+
+          player.setBoolDrawFrameNumber(true);
+          player.setBoolDrawTimeStamp(true);
+          player.loop();
+          //player.autoplay();
+          player.resetToFragment();
+
+          player.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");
+          //player.forceMax();  // uncomment and video will maximize to pixel resolution
+          player.render(sizes[i]);
+
+          console.log("Player51 rendered and ready.");
+        }
+      });
+    </script>
+  </body>
+</html>

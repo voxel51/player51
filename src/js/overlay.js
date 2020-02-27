@@ -9,6 +9,9 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
+import {
+  inRect,
+} from './util.js';
 import {deserialize} from './numpy.js';
 
 export {
@@ -122,8 +125,13 @@ const colorGenerator = new ColorGenerator();
  * video.
  *
  * Each sub-class must overload the setup and the draw functions.
+ *
+ * @param {Renderer} renderer Associated renderer
  */
-function Overlay() {}
+function Overlay(renderer) {
+  this.renderer = renderer;
+  this.options = renderer.overlayOptions;
+}
 Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
   console.log('ERROR: draw called on abstract type');
@@ -131,6 +139,14 @@ Overlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   /* eslint-disable-next-line no-console */
   console.log('ERROR: setup called on abstract type');
+};
+
+Overlay.prototype.hasFocus = function() {
+  return this.renderer.isFocus(this);
+};
+
+Overlay.prototype.containsPoint = function(x, y) {
+  return false;
 };
 
 
@@ -143,12 +159,11 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
  *      "value": "value for the attribute",
  *      "confidence": confidence of the attribute
  *    ]
- * @param {renderer} renderer
+ * @param {Renderer} renderer Associated renderer
  *
  */
 function FrameAttributesOverlay(d, renderer) {
-  Overlay.call(this);
-  this.renderer = renderer;
+  Overlay.call(this, renderer);
 
   this.attrs = d.attrs;
   this.attrText =
@@ -297,8 +312,7 @@ function FrameMaskOverlay(mask, renderer) {
     FrameMaskOverlay._tempMaskCanvas = document.createElement('canvas');
   }
 
-  Overlay.call(this);
-  this.renderer = renderer;
+  Overlay.call(this, renderer);
 
   this.mask = deserialize(mask);
   this.x = null;
@@ -391,16 +405,15 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
  *           "y": 0.2, // floating number in relative 0:1 coordinates
  *         }
  *       }
- * @param {renderer} renderer
+ * @param {Renderer} renderer Associated renderer
  */
 function ObjectOverlay(d, renderer) {
   if (!ObjectOverlay._tempMaskCanvas) {
     ObjectOverlay._tempMaskCanvas = document.createElement('canvas');
   }
+  Overlay.call(this, renderer);
 
-  Overlay.call(this);
-
-  this.renderer = renderer;
+  this._cache_options = Object.assign({}, this.options);
 
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
@@ -521,11 +534,26 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     attrs = this._attrs;
   }
 
-  this.attrText = attrs.sort(function(attr1, attr2) {
+  const sortedAttrs = attrs.sort(function(attr1, attr2) {
     return attr1.name.localeCompare(attr2.name);
-  }).map(function(attr) {
-    return attr.value.replace(/_/g, ' ');
-  }).join(', ');
+  });
+
+  if (!this.options.showAttrs) {
+    this.attrText = '';
+    return;
+  }
+
+  if (this.options.attrRenderMode === 'attr-value') {
+    this.attrText = sortedAttrs.map(function(attr) {
+      const attrVal = attr.value.replace(/_/g, ' ');
+      const attrName = attr.name.replace(/_/g, ' ');
+      return `${attrName}: ${attrVal}`;
+    }).join('\n');
+  } else {
+    this.attrText = sortedAttrs.map(function(attr) {
+      return attr.value.replace(/_/g, ' ');
+    }).join(', ');
+  }
 };
 
 
@@ -540,6 +568,13 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   if (typeof(context) === 'undefined') {
     return;
+  }
+
+  if (this._cache_options.attrRenderMode !== this.options.attrRenderMode ||
+    this._cache_options.showAttrs !== this.options.showAttrs) {
+    this._cache_options.attrRenderMode = this.options.attrRenderMode;
+    this._cache_options = Object.assign({}, this.options);
+    this._parseAttrs(this._attrs);
   }
 
   if (this.labelTextWidth === null) {
@@ -585,22 +620,33 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.x + this.textPadder, this.y - this.textPadder);
 
     context.fillText(this.indexStr,
-        this.x + this.headerWidth - 4 * this.textPadder - this
-            .indexTextWidth,
+        this.x + this.headerWidth -
+            4 * this.textPadder - this.indexTextWidth,
         this.y - this.textPadder);
 
-    context.font = `${this.attrFontHeight}px sans-serif`;
-    if ((typeof(this.attrFontWidth) === 'undefined') ||
-      (this.attrFontWidth === null)) {
-      this.attrFontWidth = context.measureText(this.attrText).width;
+    if (!this.options.attrsOnlyOnClick || this.hasFocus()) {
+      context.font = `${this.attrFontHeight}px sans-serif`;
+      if ((typeof(this.attrFontWidth) === 'undefined') ||
+        (this.attrFontWidth === null)) {
+        this.attrFontWidth = context.measureText(this.attrText).width;
+      }
+      const lines = this.attrText.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        context.fillText(
+            line, this.x + this.textPadder,
+            this.y + 3 + this.attrFontHeight +
+            this.textPadder + this.attrFontHeight * i);
+      }
     }
-
-    context.fillText(this.attrText,
-        this.x + this.textPadder,
-        this.y + this.attrFontHeight + 3 * this.textPadder);
   }
 };
 
+ObjectOverlay.prototype.containsPoint = function(x, y) {
+  return inRect(x, y, this.x, this.y, this.w, this.h) ||
+      inRect(x, y, this.x, this.y - this.headerHeight,
+          this.headerWidth, this.headerHeight);
+};
 
 /**
  * Resizes a canvas so it is at least the specified size.
