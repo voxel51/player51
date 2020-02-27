@@ -91,22 +91,10 @@ VideoRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivVideo);
 
   // Video controls
-  this.initPlayerControlHTML(this.parent);
-  this.initPlayerOptionsPanelHTML(this.parent);
+  this.initPlayerControlHTML(this.eleDivVideo);
   this.mediaElement = this.eleVideo;
   this.mediaDiv = this.eleDivVideo;
   this.initCanvas();
-};
-
-
-VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls';
-  this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
-  this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
-  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
-  this.initTimeStampHTML(this.eleDivVideoControls);
-  this.parent.appendChild(this.eleDivVideoControls);
 };
 
 
@@ -365,37 +353,7 @@ VideoRenderer.prototype.resizeControls = function() {
   } else {
     this.eleDivVideoControls.className = 'p51-video-controls vsmall';
   }
-
-  if (this._boolBorderBox) {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.min(60 + this.paddingBottomN, 0.1 * this.height +
-        this.paddingBottomN) + 'px'
-    );
-
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
-      2) + 'px';
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  } else {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.max(60, 0.075 * this.height) + 'px'
-    );
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = this.paddingBottom;
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  }
+  Renderer.prototype.resizeControls.call(this);
 };
 
 
@@ -543,7 +501,7 @@ VideoRenderer.prototype.customDraw = function(context) {
 
   const hhmmss = this.currentTimestamp();
   const duration = this.durationStamp();
-  this.updateTimeStamp(`${hhmmss}/${duration}`);
+  this.updateTimeStamp(`${hhmmss} / ${duration}`);
 
   if (this.player.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
@@ -736,15 +694,24 @@ VideoRenderer.prototype.currentTimestamp = function() {
 };
 
 VideoRenderer.prototype._renderTime = function(numSeconds, decimals = 1) {
-  const hours = Math.floor(numSeconds / 3600);
+  const renderHours = Math.floor(this.eleVideo.duration/3600) > 0;
+  let hours = 0;
+  if (renderHours) {
+    hours = Math.floor(numSeconds / 3600);
+  }
   numSeconds = numSeconds % 3600;
   const minutes = Math.floor(numSeconds / 60);
   const seconds = numSeconds % 60;
 
-  return this._seconds_to_hhmmss_aux(hours) + ':' +
-    this._seconds_to_hhmmss_aux(minutes) + ':' +
+  const mmss = this._seconds_to_hhmmss_aux(minutes) + ':' +
     this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
+
+  if (renderHours) {
+    return this._seconds_to_hhmmss_aux(hours) + ':' + mmss;
+  }
+  return mmss;
 };
+
 VideoRenderer.prototype._seconds_to_hhmmss_aux = function(number) {
   let str = '';
   if (number == 0) {

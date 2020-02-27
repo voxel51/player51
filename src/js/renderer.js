@@ -130,13 +130,44 @@ Renderer.prototype.determineMediaDimensions = function() {
 
 
 /**
- * Define abstract function resizeControls to be implemented in subclasses
+ * Define base function resizeControls to be implemented in subclasses
  *
  * @member resizeControls
- * @abstract
  */
 Renderer.prototype.resizeControls = function() {
-  throw new Error('Method resizeControls() must be implemented.');
+  if (!this.eleDivVideoControls) {
+    return;
+  }
+  if (this._boolBorderBox) {
+    // need to size the controls too.
+    // The controls are tuned using margins when padding exists.
+    this.eleDivVideoControls.style.width = (this.width + 'px');
+    this.eleDivVideoControls.style.height = (
+      Math.min(60 + this.paddingBottomN, 0.1 * this.height +
+        this.paddingBottomN) + 'px'
+    );
+
+    // controls have 0 padding because we want them only to show
+    // on the video, this impacts their left location too.
+    this.eleDivVideoControls.style.paddingLeft = 0;
+    this.eleDivVideoControls.style.paddingRight = 0;
+    this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
+      2) + 'px';
+    this.eleDivVideoControls.style.left = this.paddingLeft;
+  } else {
+    // need to size the controls too.
+    // The controls are tuned using margins when padding exists.
+    this.eleDivVideoControls.style.width = (this.width + 'px');
+    this.eleDivVideoControls.style.height = (
+      Math.max(60, 0.075 * this.height) + 'px'
+    );
+    // controls have 0 padding because we want them only to show
+    // on the video, this impacts their left location too.
+    this.eleDivVideoControls.style.paddingLeft = 0;
+    this.eleDivVideoControls.style.paddingRight = 0;
+    this.eleDivVideoControls.style.bottom = this.paddingBottom;
+    this.eleDivVideoControls.style.left = this.paddingLeft;
+  }
 };
 
 
@@ -777,6 +808,20 @@ Renderer.prototype.initSharedControls = function() {
   }
 };
 
+
+Renderer.prototype.initPlayerControlHTML = function(parent, sequence=true) {
+  this.eleDivVideoControls = document.createElement('div');
+  this.eleDivVideoControls.className = 'p51-video-controls';
+  if (sequence) {
+    this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
+    this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
+  }
+  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
+  this.initTimeStampHTML(this.eleDivVideoControls);
+  parent.appendChild(this.eleDivVideoControls);
+  this.initPlayerOptionsPanelHTML(parent);
+};
+
 Renderer.prototype.initPlayerControlsPlayButtonHTML = function(parent) {
   this.playSVG = 'data:image/svg+xml,%0A%3Csvg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"%3E%3Cpath fill="rgb(238, 238, 238)" d="M8 5v14l11-7z"/%3E%3Cpath d="M0 0h24v24H0z" fill="none"/%3E%3C/svg%3E';
   this.pauseSVG = 'data:image/svg+xml,%0A%3Csvg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"%3E%3Cpath fill="rgb(238, 238, 238)" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/%3E%3Cpath d="M0 0h24v24H0z" fill="none"/%3E%3C/svg%3E';
@@ -921,10 +966,14 @@ Renderer.prototype._repositionOptionsPanel = function(target) {
   this.eleDivVideoOpts.style.opacity = '0.0';
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
   this.eleDivVideoOpts.style.left = (
-    target.offsetLeft-this.eleDivVideoOpts.offsetWidth + target.offsetWidth
+    target.offsetLeft -
+    this.eleDivVideoOpts.offsetWidth +
+    target.offsetWidth
   ) + 'px';
-  this.eleDivVideoOpts.style.top = (
-    target.parentElement.offsetTop - this.eleDivVideoOpts.offsetHeight
+  this.eleDivVideoOpts.style.bottom = (
+    this.eleDivVideoOpts.offsetHeight -
+    target.parentElement.offsetTop +
+    target.parentElement.offsetHeight
   ) + 'px';
 };
 

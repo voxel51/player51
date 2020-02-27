@@ -26,6 +26,8 @@
   justify-items: center;
   align-items: center;
 
+  color: #EEE;
+
   -webkit-transition: opacity .5s;
   -moz-transition: opacity .5s;
   -o-transition: opacity .5s;
@@ -70,77 +72,31 @@
 .p51-video-controls.vbig *,
 .p51-video-controls.vbig .p51-material-icons
 {
-  font-size: 2.0rem;
+  font-size: 1.75rem;
 }
 
 .p51-video-controls.big *,
 .p51-video-controls.big .p51-material-icons
 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
 }
 
 .p51-video-controls.med *,
 .p51-video-controls.med .p51-material-icons
 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .p51-video-controls.small *,
 .p51-video-controls.small .p51-material-icons
 {
-  font-size: 1.25rem;
+  font-size: 1.0rem;
 }
 
 .p51-video-controls.vsmall *,
 .p51-video-controls.vsmall .p51-material-icons
 {
-  font-size: 1.0rem;
-}
-
-
-.p51-image-controls {
-  font-family: "helvetica";
-  position: absolute;
-  min-width: max-content;
-  min-height: max-content;
-  width: 100%;
-  height: 7%;
-  float: right;
-  bottom: 0;
-  right: 0;
-  padding: 5px;
-  opacity: 0;
-  z-index: 20;
-  display: grid;
-  align-items: center;
-
-  -webkit-transition: opacity .5s;
-  -moz-transition: opacity .5s;
-  -o-transition: opacity .5s;
-  -ms-transition: opacity .5s;
-  transition: opacity .5s;
-  background-image: linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -o-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -moz-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -webkit-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -ms-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-}
-
-.p51-image-controls button {
-  background: rgba(0,0,0,.5);
-  border: 0;
-  color: #EEE;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  -o-border-radius: 3px;
-  border-radius: 3px;
-  margin: 3px;
-  min-width: max-content;
-  min-height: max-content;
-  width: 5%;
-  height: fit-content;
-  padding: 1%;
-  justify-self: end;
+  font-size: 0.75rem;
 }
 
 .p51-video-options-panel {
@@ -155,6 +111,8 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
+
+  color: #EEE;
 
   display: grid;
 
@@ -215,13 +173,6 @@
   width: 100%;
   margin: 3px;
 }
-
-.controls-auto-size {
-  min-height: 30px;
-  max-height: 70px;
-  height: 10%;
-}
-
 
 /* Functionality Parts.  Do not edit. */
 .p51-contained-video, .p51-contained-image, .p51-contained-canvas {

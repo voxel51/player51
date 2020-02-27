@@ -71,11 +71,7 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivImage);
 
   // Video controls
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls controls-auto-size';
-  this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
-  this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
-  this.parent.appendChild(this.eleDivVideoControls);
+  this.initPlayerControlHTML(this.parent);
   this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
   this.initCanvas();
@@ -267,6 +263,27 @@ ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
   this.updateFromDynamicState();
   this.insertFrame(this._frameNumber);
   this.processFrame();
+};
+
+/**
+ * Resizes controls
+ *
+ * @member resizeControls
+ * @required initPlayer() to be called
+ */
+ImageSequenceRenderer.prototype.resizeControls = function() {
+  if (this.width>1400) {
+    this.eleDivVideoControls.className = 'p51-video-controls vbig';
+  } else if (this.width>1200) {
+    this.eleDivVideoControls.className = 'p51-video-controls big';
+  } else if (this.width>800) {
+    this.eleDivVideoControls.className = 'p51-video-controls med';
+  } else if (this.width>600) {
+    this.eleDivVideoControls.className = 'p51-video-controls small';
+  } else {
+    this.eleDivVideoControls.className = 'p51-video-controls vsmall';
+  }
+  Renderer.prototype.resizeControls.call(this);
 };
 
 
