@@ -327,6 +327,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     }
   }
 
+  if (typeof(rawjson.mask_index) !== 'undefined') {
+    this.frameMaskIndex = rawjson.mask_index.index;
+  }
+
   // Attributes and masks for images
   if (typeof(rawjson.mask) !== 'undefined') {
     const context = this.setupCanvasContext();
