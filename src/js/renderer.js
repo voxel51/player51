@@ -1116,11 +1116,15 @@ Renderer.prototype._updateOptionsDisplayState = function() {
 };
 
 Renderer.prototype._setAttributeControlsDisplay = function() {
-  let func = (node) => node.hidden = false;
+  let func = (node) => {
+    node.hidden = false;
+  };
   if (!this.overlayOptions.showAttrs) {
     this.eleOptCtlShowAttrClickWrapper.className = '';
     this.eleOptCtlAttrOptForm.className = '';
-    func = (node) => node.hidden = true;
+    func = (node) => {
+      node.hidden = true;
+    };
   } else {
     this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
     this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
