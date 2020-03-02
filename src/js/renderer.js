@@ -77,6 +77,7 @@ function Renderer(media, overlay) {
   };
   this._attrRenderModeOptions = ['value', 'attr-value'];
   this._focusIndex = -1;
+  this.seekBarMax = 100;
   // Loading state attributes
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
@@ -840,6 +841,8 @@ Renderer.prototype.initPlayerControlsSeekBarHTML = function(parent) {
   this.eleSeekBar = document.createElement('input');
   this.eleSeekBar.setAttribute('type', 'range');
   this.eleSeekBar.setAttribute('value', '0');
+  this.eleSeekBar.setAttribute('min', '0');
+  this.eleSeekBar.setAttribute('max', this.seekBarMax.toString());
   this.eleSeekBar.className = 'p51-seek-bar';
   this.eleSeekBar.style.gridArea = '1 / 2 / 1 / 6';
   parent.appendChild(this.eleSeekBar);

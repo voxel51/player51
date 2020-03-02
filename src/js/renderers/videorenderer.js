@@ -183,7 +183,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // Update the seek bar as the video plays
   this.eleVideo.addEventListener('timeupdate', function() {
     // Calculate the slider value
-    const value = (100 / self.eleVideo.duration) * self.eleVideo
+    const value = (self.seekBarMax / self.eleVideo.duration) * self.eleVideo
         .currentTime;
     // Update the slider value
     self.eleSeekBar.value = value;
@@ -217,7 +217,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.eleSeekBar.addEventListener('change', function() {
     // Calculate the new time
     const time = self.eleVideo.duration * (self.eleSeekBar
-        .valueAsNumber / 100.0);
+        .valueAsNumber / self.seekBarMax);
     // Update the video time
     self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
     // Unlock the fragment so the user can browse the whole video
