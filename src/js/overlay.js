@@ -482,7 +482,6 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
       .headerFontHeight);
-  console.log(this.headerFontHeight)
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   this.headerHeight = Math.min(26, 0.13 * canvasHeight);

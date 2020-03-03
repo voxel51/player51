@@ -977,10 +977,12 @@ Renderer.prototype._repositionOptionsPanel = function(target) {
     this.eleDivVideoOpts.offsetWidth +
     target.offsetWidth
   ) + 'px';
+  // Parse any padding to deal with offset from parent container
+  const paddingTxt = this.eleDivVideoControls.parentElement.style.paddingTop;
+  const topPad = parseInt(paddingTxt.replace('px', ''));
   this.eleDivVideoOpts.style.bottom = (
     this.eleDivVideoOpts.offsetHeight -
-    target.parentElement.offsetTop +
-    target.parentElement.offsetHeight
+    this.eleDivVideoControls.offsetTop + topPad + 12
   ) + 'px';
 };
 

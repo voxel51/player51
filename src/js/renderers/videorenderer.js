@@ -346,17 +346,6 @@ VideoRenderer.prototype.determineMediaDimensions = function() {
  * @required initPlayer() to be called
  */
 VideoRenderer.prototype.resizeControls = function() {
-  if (this.width > 1400) {
-    this.eleDivVideoControls.className = 'p51-video-controls vbig';
-  } else if (this.width > 1200) {
-    this.eleDivVideoControls.className = 'p51-video-controls big';
-  } else if (this.width > 800) {
-    this.eleDivVideoControls.className = 'p51-video-controls med';
-  } else if (this.width > 600) {
-    this.eleDivVideoControls.className = 'p51-video-controls small';
-  } else {
-    this.eleDivVideoControls.className = 'p51-video-controls vsmall';
-  }
   Renderer.prototype.resizeControls.call(this);
 };
 
