@@ -12,97 +12,55 @@
 
 /* Look and Feel */
 .p51-video-controls {
+  font-family: "Palanquin", sans-serif;
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 5px;
   opacity: 0;
   z-index: 20;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-
-  -webkit-transition: opacity .3s;
-  -moz-transition: opacity .3s;
-  -o-transition: opacity .3s;
-  -ms-transition: opacity .3s;
-  transition: opacity .3s;
-  background-image: linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -o-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -moz-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -webkit-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -ms-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-
-  background-image: -webkit-gradient(
-    linear,
-    to right to top,
-    to right to bottom,
-    color-stop(0.13, rgb(55,55,55)),
-    color-stop(1, rgb(33,33,33))
-  );
-}
-
-.p51-image-controls {
-  position: absolute;
-  min-width: max-content;
-  min-height: max-content;
-  width: 100%;
-  height: 7%;
-  float: right;
-  bottom: 0;
-  right: 0;
-  padding: 5px;
-  opacity: 0;
-  z-index: 20;
+  padding-bottom: 0.25rem;
   display: grid;
+  grid-template-columns: 1rem max-content max-content 1fr max-content max-content 1rem;
+  grid-gap: 0.25rem;
+  justify-items: center;
   align-items: center;
 
-  -webkit-transition: opacity .3s;
-  -moz-transition: opacity .3s;
-  -o-transition: opacity .3s;
-  -ms-transition: opacity .3s;
-  transition: opacity .3s;
-  background-image: linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -o-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -moz-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -webkit-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -ms-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-
-  background-image: -webkit-gradient(
-    linear,
-    to right to top,
-    to right to bottom,
-    color-stop(0.13, rgb(55,55,55)),
-    color-stop(1, rgb(33,33,33))
-  );
-}
-
-.p51-image-controls button {
-  background: rgba(0,0,0,.5);
-  border: 0;
   color: #EEE;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  -o-border-radius: 3px;
-  border-radius: 3px;
-  margin: 3px;
-  min-width: max-content;
-  min-height: max-content;
-  width: 5%;
-  height: fit-content;
-  padding: 1%;
-  justify-self: end;
+
+  -webkit-transition: opacity .5s;
+  -moz-transition: opacity .5s;
+  -o-transition: opacity .5s;
+  -ms-transition: opacity .5s;
+  transition: opacity .5s;
+  background-image: linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
+  background-image: -o-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
+  background-image: -moz-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
+  background-image: -webkit-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
+  background-image: -ms-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
 }
+
+.p51-video-controls * {
+  color: #EEE;
+}
+
+.p51-video-controls img
+{
+  height: 1.75rem;
+}
+
+.p51-video-controls *,
+.p51-video-controls .p51-material-icons
+{
+  font-size: 1.25rem;
+}
+
 
 .p51-video-options-panel {
+  font-family: "Palanquin", sans-serif;
   position: relative;
   width: min-content;
   height: min-content;
-  float: right;
-  right: 2.5%;
-  top: 5%;
   padding: 5px;
   opacity: 0;
   z-index: 20;
@@ -111,26 +69,17 @@
   justify-content: center;
   align-items: center;
 
+  color: #EEE;
+
   display: grid;
 
-  -webkit-transition: opacity .3s;
-  -moz-transition: opacity .3s;
-  -o-transition: opacity .3s;
-  -ms-transition: opacity .3s;
-  transition: opacity .3s;
-  background-image: linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -o-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -moz-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -webkit-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
-  background-image: -ms-linear-gradient(to top, rgb(55,55,55) 13%, rgb(33,33,33) 100%);
+  background: rgba(33,33,33,0.75);
 
-  background-image: -webkit-gradient(
-    linear,
-    to right to top,
-    to right to bottom,
-    color-stop(0.13, rgb(55,55,55)),
-    color-stop(1, rgb(33,33,33))
-  );
+  -webkit-transition: opacity .5s;
+  -moz-transition: opacity .5s;
+  -o-transition: opacity .5s;
+  -ms-transition: opacity .5s;
+  transition: opacity .5s;
 }
 
 .p51-video-opt-input {
@@ -150,6 +99,7 @@
   display: grid;
   justify-items: end;
   grid-template-columns: max-content 1fr;
+  cursor: pointer;
 }
 
 .p51-video-controls button {
@@ -177,16 +127,168 @@
   height: 80%;
 }
 
+/* seek bar stuff */
 .p51-seek-bar {
-  width: 75%;
+  width: 100%;
   margin: 3px;
 }
-
-.controls-auto-size {
-  min-height: 30px;
-  max-height: 70px;
-  height: 10%;
+.p51-video-controls input[type=range] {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(175, 175, 175);
+  outline: none;
+  border: none;
 }
+.p51-video-controls input[type=range]:focus {
+  outline: none;
+  border: none;
+}
+.p51-video-controls input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(175, 175, 175);
+}
+.p51-video-controls input[type=range]::-webkit-slider-thumb, .p51-seek-bar {
+  height: 16px;
+  width: 16px;
+  border-radius: 8px;
+  background: rgb(225, 100, 40);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -6px;
+}
+.p51-video-controls input[type=range]:hover::-webkit-slider-runnable-track {
+  animate: 0.2s;
+  height: 6px;
+  background: rgb(200, 200, 200);
+}
+.p51-video-controls input[type=range]:hover::-webkit-slider-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  background: rgb(225, 100, 40);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -7px;
+}
+.p51-video-controls input[type=range]::-moz-range-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: rgb(175, 175, 175);
+  outline: 0;
+  border: none;
+}
+.p51-video-controls input[type=range]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 8px;
+  background: rgb(225, 100, 40);
+  cursor: pointer;
+  margin-top: -6px;
+  outline: 0;
+  border: none;
+}
+.p51-video-controls input[type=range]:hover::-moz-range-runnable-track {
+  animate: 0.2s;
+  height: 6px;
+  background: rgb(200, 200, 200);
+}
+.p51-video-controls input[type=range]:hover::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  background: rgb(225, 100, 40);
+  cursor: pointer;
+  margin-top: -7px;
+}
+.p51-video-controls *:hover,
+.p51-video-controls *:active,
+.p51-video-controls *:focus {
+  outline: none;
+}
+.p51-video-options-panel *:hover,
+.p51-video-options-panel *:active,
+.p51-video-options-panel *:focus {
+  outline: none;
+}
+
+/* Hide the browser's default checkbox */
+.p51-video-options-panel input {
+  position: absolute;
+
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+.p51-label input[type=radio],
+.p51-label input[type=checkbox] {
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+
+.p51-radio {
+  border-radius: 50%;
+}
+
+.p51-label .p51-radio,
+.p51-label .p51-checkbox {
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background: rgb(33, 33, 33);
+  margin-left: 1rem;
+}
+.p51-label:hover input[type=radio] ~ .p51-radio,
+.p51-label:hover input[type=checkbox] ~ .p51-checkbox {
+  background: rgb(99, 99, 99);
+}
+.p51-label input[type=radio]:checked ~ .p51-radio,
+.p51-label input[type=checkbox]:checked ~ .p51-checkbox {
+  background: rgb(225, 100, 40);
+}
+.p51-radio:after,
+.p51-checkbox:after {
+  content: "";
+  position: relative;
+  display: none;
+}
+.p51-label input[type=radio]:checked ~ .p51-radio:after,
+.p51-label input[type=checkbox]:checked ~ .p51-checkbox:after {
+  display: block;
+}
+
+.p51-label .p51-checkbox:after {
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+  background: rgb(225, 100, 40);
+}
+
+.p51-label .p51-radio:after {
+  top: 6px;
+  left: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+
 
 
 /* Functionality Parts.  Do not edit. */
@@ -240,4 +342,8 @@
 
 .p51-display-none {
   display: none;
+}
+
+.p51-clickable {
+  cursor: pointer;
 }

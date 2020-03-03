@@ -91,29 +91,10 @@ VideoRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivVideo);
 
   // Video controls
-  this.initPlayerControlHTML(this.parent);
-  this.initPlayerOptionsPanelHTML(this.parent);
+  this.initPlayerControlHTML(this.eleDivVideo);
   this.mediaElement = this.eleVideo;
   this.mediaDiv = this.eleDivVideo;
   this.initCanvas();
-};
-
-
-VideoRenderer.prototype.initPlayerControlHTML = function(parent) {
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls';
-  this.elePlayPauseButton = document.createElement('button');
-  this.elePlayPauseButton.setAttribute('type', 'button');
-  this.elePlayPauseButton.className = 'p51-play-pause';
-  this.elePlayPauseButton.innerHTML = 'Play';
-  this.eleSeekBar = document.createElement('input');
-  this.eleSeekBar.setAttribute('type', 'range');
-  this.eleSeekBar.setAttribute('value', '0');
-  this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-  this.eleDivVideoControls.appendChild(this.eleSeekBar);
-  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
-  this.parent.appendChild(this.eleDivVideoControls);
 };
 
 
@@ -202,7 +183,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   // Update the seek bar as the video plays
   this.eleVideo.addEventListener('timeupdate', function() {
     // Calculate the slider value
-    const value = (100 / self.eleVideo.duration) * self.eleVideo
+    const value = (self.seekBarMax / self.eleVideo.duration) * self.eleVideo
         .currentTime;
     // Update the slider value
     self.eleSeekBar.value = value;
@@ -236,7 +217,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   this.eleSeekBar.addEventListener('change', function() {
     // Calculate the new time
     const time = self.eleVideo.duration * (self.eleSeekBar
-        .valueAsNumber / 100.0);
+        .valueAsNumber / self.seekBarMax);
     // Update the video time
     self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
     // Unlock the fragment so the user can browse the whole video
@@ -365,36 +346,7 @@ VideoRenderer.prototype.determineMediaDimensions = function() {
  * @required initPlayer() to be called
  */
 VideoRenderer.prototype.resizeControls = function() {
-  if (this._boolBorderBox) {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.min(60 + this.paddingBottomN, 0.1 * this.height +
-        this.paddingBottomN) + 'px'
-    );
-
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
-      2) + 'px';
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  } else {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.min(80, 0.1 * this.height) + 'px'
-    );
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = this.paddingBottom;
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  }
+  Renderer.prototype.resizeControls.call(this);
 };
 
 
@@ -424,15 +376,14 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
       this._isOverlayPrepared) {
       this.eleVideo.play();
     }
-    this.elePlayPauseButton.innerHTML = 'Pause';
   } else {
     if (!this.eleVideo.paused && !this._boolSingleFrame) {
       this.eleVideo.pause();
       this.eleVideo.currentTime = this.clampTimeToFrameStart();
       this._updateFrame();
     }
-    this.elePlayPauseButton.innerHTML = 'Play';
   }
+  this.updatePlayButton(this._boolPlaying);
   this.updateControlsDisplayState();
 };
 
@@ -541,6 +492,10 @@ VideoRenderer.prototype.customDraw = function(context) {
     context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
+  const hhmmss = this.currentTimestamp();
+  const duration = this.durationStamp();
+  this.updateTimeStamp(`${hhmmss} / ${duration}`);
+
   if (this.player.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
     // working on a new way of forcing certain font sizes
@@ -550,9 +505,8 @@ VideoRenderer.prototype.customDraw = function(context) {
       fontheight = 8 * this.canvasMultiplier;
     }
     fontheight = this.checkFontHeight(fontheight);
-    context.font = `${fontheight}px sans-serif`;
+    context.font = `${fontheight}px Palanquin, sans-serif`;
 
-    const hhmmss = this.currentTimestamp();
     const tw = context.measureText(hhmmss).width;
     const pad = 4;
     const pad2 = 2; // pad divided by 2
@@ -712,24 +666,45 @@ VideoRenderer.prototype.clampTimeToFrameStart = function(time) {
 
 
 /**
+ * Retrieves the video duration in a human-readable format.
+ *
+ * @member currentTimestamp
+ * @return {time}
+ */
+VideoRenderer.prototype.durationStamp = function() {
+  return this._renderTime(this.eleVideo.duration);
+};
+
+/**
  * Retrieves the current time of the video being played in a human-readable
  * format.
  *
  * @member currentTimestamp
- * @param {int} decimals
  * @return {time}
  */
-VideoRenderer.prototype.currentTimestamp = function(decimals = 1) {
-  let numSeconds = this.eleVideo.currentTime;
-  const hours = Math.floor(numSeconds / 3600);
+VideoRenderer.prototype.currentTimestamp = function() {
+  return this._renderTime(this.eleVideo.currentTime);
+};
+
+VideoRenderer.prototype._renderTime = function(numSeconds, decimals = 1) {
+  const renderHours = Math.floor(this.eleVideo.duration/3600) > 0;
+  let hours = 0;
+  if (renderHours) {
+    hours = Math.floor(numSeconds / 3600);
+  }
   numSeconds = numSeconds % 3600;
   const minutes = Math.floor(numSeconds / 60);
   const seconds = numSeconds % 60;
 
-  return this._seconds_to_hhmmss_aux(hours) + ':' +
-    this._seconds_to_hhmmss_aux(minutes) + ':' +
+  const mmss = this._seconds_to_hhmmss_aux(minutes) + ':' +
     this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
+
+  if (renderHours) {
+    return this._seconds_to_hhmmss_aux(hours) + ':' + mmss;
+  }
+  return mmss;
 };
+
 VideoRenderer.prototype._seconds_to_hhmmss_aux = function(number) {
   let str = '';
   if (number == 0) {

@@ -56,13 +56,9 @@ ImageRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleImage.setAttribute('src', this.media.src);
   this.eleImage.setAttribute('type', this.media.type);
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-image-controls';
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
-  this.parent.appendChild(this.eleDivVideoControls);
-  this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
-  this.initPlayerOptionsPanelHTML(this.parent);
+  this.initPlayerControlHTML(this.parent, false);
   this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
   this.initCanvas();
@@ -153,16 +149,6 @@ ImageRenderer.prototype.initPlayerControls = function() {
 ImageRenderer.prototype.determineMediaDimensions = function() {
   this.mediaHeight = this.mediaElement.height;
   this.mediaWidth = this.mediaElement.width;
-};
-
-
-/**
- * Resizes controls
- *
- * @member resizeControls
- * @required initPlayer() to be called
- */
-ImageRenderer.prototype.resizeControls = function() {
 };
 
 

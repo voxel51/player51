@@ -71,19 +71,7 @@ ImageSequenceRenderer.prototype.initPlayer = function() {
   this.parent.appendChild(this.eleDivImage);
 
   // Video controls
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls controls-auto-size';
-  this.elePlayPauseButton = document.createElement('button');
-  this.elePlayPauseButton.setAttribute('type', 'button');
-  this.elePlayPauseButton.className = 'p51-play-pause';
-  this.elePlayPauseButton.innerHTML = 'Play';
-  this.eleSeekBar = document.createElement('input');
-  this.eleSeekBar.setAttribute('type', 'range');
-  this.eleSeekBar.setAttribute('value', '0');
-  this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleDivVideoControls.appendChild(this.elePlayPauseButton);
-  this.eleDivVideoControls.appendChild(this.eleSeekBar);
-  this.parent.appendChild(this.eleDivVideoControls);
+  this.initPlayerControlHTML(this.parent);
   this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
   this.initCanvas();
@@ -190,23 +178,17 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
   }
 
   if (this._boolPlaying) {
-    this.elePlayPauseButton.innerHTML = 'Pause';
     // Update slider value
     const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
     this.eleSeekBar.value = value;
   } else {
-    this.elePlayPauseButton.innerHTML = 'Play';
     if (this._frameNumber === this._totalNumberOfFrames) {
       // Reset
       this._frameNumber = 1;
     }
   }
-
-  if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = '0.9';
-  } else {
-    this.eleDivVideoControls.style.opacity = '0.0';
-  }
+  this.updatePlayButton(this._boolPlaying);
+  this.updateControlsDisplayState();
 };
 
 
@@ -281,6 +263,27 @@ ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
   this.updateFromDynamicState();
   this.insertFrame(this._frameNumber);
   this.processFrame();
+};
+
+/**
+ * Resizes controls
+ *
+ * @member resizeControls
+ * @required initPlayer() to be called
+ */
+ImageSequenceRenderer.prototype.resizeControls = function() {
+  if (this.width>1400) {
+    this.eleDivVideoControls.className = 'p51-video-controls vbig';
+  } else if (this.width>1200) {
+    this.eleDivVideoControls.className = 'p51-video-controls big';
+  } else if (this.width>800) {
+    this.eleDivVideoControls.className = 'p51-video-controls med';
+  } else if (this.width>600) {
+    this.eleDivVideoControls.className = 'p51-video-controls small';
+  } else {
+    this.eleDivVideoControls.className = 'p51-video-controls vsmall';
+  }
+  Renderer.prototype.resizeControls.call(this);
 };
 
 
