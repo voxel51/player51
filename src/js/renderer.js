@@ -880,12 +880,16 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   const makeCheckboxRow = function(text, checked) {
     const label = document.createElement('label');
+    label.className = 'p51-label';
     label.innerHTML = text;
 
     const checkbox = document.createElement('input');
     checkbox.setAttribute('type', 'checkbox');
     checkbox.checked = checked;
+    const span = document.createElement('span');
+    span.className = 'p51-checkbox';
     label.appendChild(checkbox);
+    label.appendChild(span);
 
     return label;
   };
@@ -916,7 +920,11 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     radio.checked = this.overlayOptions.action.type === obj.type;
     const label = document.createElement('label');
     label.innerHTML = obj.name;
+    label.className = 'p51-label';
     label.appendChild(radio);
+    const span = document.createElement('span');
+    span.className = 'p51-radio';
+    label.appendChild(span);
     this.eleActionCtlOptForm.appendChild(label);
   }
 
@@ -954,7 +962,11 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     radio.checked = this.overlayOptions.attrRenderMode === val;
     const label = document.createElement('label');
     label.innerHTML = val;
+    label.className = 'p51-label';
     label.appendChild(radio);
+    const span = document.createElement('span');
+    span.className = 'p51-radio';
+    label.appendChild(span);
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 

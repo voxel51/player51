@@ -217,9 +217,77 @@
   outline: none;
 }
 
-input::-moz-focus-inner { 
-  border: none; 
+/* Hide the browser's default checkbox */
+.p51-video-options-panel input {
+  position: absolute;
+  
+  cursor: pointer;
+  height: 0;
+  width: 0;
 }
+
+/* Create a custom checkbox */
+.p51-label input[type=radio],
+.p51-label input[type=checkbox] {
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+
+.p51-label .p51-radio,
+.p51-label .p51-checkbox {
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background: rgb(33, 33, 33);
+}
+.p51-label:hover input[type=radio] ~ .p51-radio,
+.p51-label:hover input[type=checkbox] ~ .p51-checkbox {
+  background: rgb(99, 99, 99);
+}
+.p51-label input[type=radio]:checked ~ .p51-radio,
+.p51-label input[type=checkbox]:checked ~ .p51-checkbox {
+  background: rgb(225, 100, 40);
+}
+.p51-radio:after,
+.p51-checkbox:after {
+  content: "";
+  position: relative;
+  display: none;
+}
+.p51-label input[type=radio]:checked ~ .p51-radio:after,
+.p51-label input[type=checkbox]:checked ~ .p51-checkbox:after {
+  display: block;
+}
+
+.p51-label .p51-checkbox:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+  background: rgb(225, 100, 40);
+}
+
+.p51-label .p51-radio:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+  background: rgb(225, 100, 40);
+}
+
+
 
 /* Functionality Parts.  Do not edit. */
 .p51-contained-video, .p51-contained-image, .p51-contained-canvas {
