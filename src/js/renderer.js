@@ -867,7 +867,7 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.innerHTML = 'Display options';
+  this.eleDivVideoOpts.innerHTML = 'DISPLAY OPTIONS';
 
   const makeWrapper = function(children) {
     const wrapper = document.createElement('div');
@@ -908,7 +908,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleActionCtlOptForm = document.createElement('form');
   this.eleActionCtlOptForm.className = 'p51-video-opt-input';
   const actionFormTitle = document.createElement('div');
-  actionFormTitle.innerHTML = 'Select mode:';
+  actionFormTitle.innerHTML = '<u>Select mode</u>:';
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
   // eslint-disable-next-line no-unused-vars
@@ -950,7 +950,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlAttrOptForm = document.createElement('form');
   this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   const formTitle = document.createElement('div');
-  formTitle.innerHTML = 'Attribute rendering mode:';
+  formTitle.innerHTML = '<u>Attribute rendering mode</u>:';
   this.eleOptCtlAttrOptForm.appendChild(formTitle);
   this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
   // eslint-disable-next-line no-unused-vars

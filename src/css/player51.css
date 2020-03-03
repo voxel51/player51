@@ -234,13 +234,18 @@
   opacity: 0;
 }
 
+.p51-radio {
+  border-radius: 50%;
+}
+
 .p51-label .p51-radio,
 .p51-label .p51-checkbox {
   top: 0;
   left: 0;
-  height: 25px;
-  width: 25px;
+  height: 20px;
+  width: 20px;
   background: rgb(33, 33, 33);
+  margin-left: 1rem;
 }
 .p51-label:hover input[type=radio] ~ .p51-radio,
 .p51-label:hover input[type=checkbox] ~ .p51-checkbox {
@@ -262,8 +267,8 @@
 }
 
 .p51-label .p51-checkbox:after {
-  left: 9px;
-  top: 5px;
+  left: 6px;
+  top: 2px;
   width: 5px;
   height: 10px;
   border: solid white;
@@ -275,16 +280,12 @@
 }
 
 .p51-label .p51-radio:after {
-  left: 9px;
-  top: 5px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 3px 3px 0;
-  -webkit-transform: rotate(45deg);
-  -ms-transform: rotate(45deg);
-  transform: rotate(45deg);
-  background: rgb(225, 100, 40);
+  top: 6px;
+  left: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
 }
 
 
