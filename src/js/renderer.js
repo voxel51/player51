@@ -897,7 +897,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox to show frames instead of time
   const eleOptCtlFrameCountRow = makeCheckboxRow(
-      'Show Framecount', this.overlayOptions.showFrameCount);
+      'Show Frame Number', this.overlayOptions.showFrameCount);
   this.eleOptCtlShowFrameCount =
       eleOptCtlFrameCountRow.querySelector('input[type=checkbox]');
   this.eleOptCtlShowFrameCountWrapper = makeWrapper([
@@ -1019,6 +1019,7 @@ Renderer.prototype.initPlayerOptionsControls = function() {
 
   this.eleOptCtlShowFrameCount.addEventListener('change', () => {
     this.overlayOptions.showFrameCount = this.eleOptCtlShowFrameCount.checked;
+    this.processFrame();
   });
 
   this.eleOptCtlShowLabel.addEventListener('change', () => {

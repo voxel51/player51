@@ -493,8 +493,8 @@ VideoRenderer.prototype.customDraw = function(context) {
   }
 
   if (this.overlayOptions.showFrameCount) {
-    const frame = this.computeFrameNumber();
-    const total = this.computeFrameNumber(this.eleVideo.duration);
+    const frame = this.currentFrameStamp();
+    const total = this.totalFrameStamp();
     this.updateTimeStamp(`${frame}/${total}`);
   } else {
     const hhmmss = this.currentTimestamp();
@@ -669,6 +669,51 @@ VideoRenderer.prototype.clampTimeToFrameStart = function(time) {
     return time;
   }
   return this.computeFrameTime(this.computeFrameNumber(time));
+};
+
+
+/**
+ * Retrieves the current video frame number as a 0-padding string
+ *
+ * @member currentFrameStamp
+ * @return {String}
+ */
+VideoRenderer.prototype.currentFrameStamp = function() {
+  return this._renderFrameCount(this.computeFrameNumber());
+};
+
+/**
+ * Retrieves the total frames of the video as string
+ *
+ * @member totalFrameStamp
+ * @return {String}
+ */
+VideoRenderer.prototype.totalFrameStamp = function() {
+  return this._renderFrameCount(this.getTotalFrameCount());
+};
+
+/**
+ * Gets and caches the total frames in the video.
+ *
+ * @member getTotalFrameCount
+ * @return {int}
+ */
+VideoRenderer.prototype.getTotalFrameCount = function() {
+  if (this.totalFrameCount === undefined) {
+    this.totalFrameCount = this.computeFrameNumber(this.eleVideo.duration);
+  }
+  return this.totalFrameCount;
+};
+
+VideoRenderer.prototype._renderFrameCount = function(numFrames) {
+  if (this._totalFramesLen === undefined) {
+    this._totalFramesLen = this.getTotalFrameCount().toString().length;
+  }
+  let frameStr = numFrames.toString();
+  while (frameStr.length<this._totalFramesLen) {
+    frameStr = '0'+frameStr;
+  }
+  return frameStr;
 };
 
 
