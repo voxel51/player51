@@ -492,9 +492,16 @@ VideoRenderer.prototype.customDraw = function(context) {
     context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
-  const hhmmss = this.currentTimestamp();
-  const duration = this.durationStamp();
-  this.updateTimeStamp(`${hhmmss} / ${duration}`);
+  if (this.overlayOptions.showFrameCount) {
+    const frame = this.computeFrameNumber();
+    const total = this.computeFrameNumber(this.eleVideo.duration);
+    this.updateTimeStamp(`${frame}/${total}`);
+  } else {
+    const hhmmss = this.currentTimestamp();
+    const duration = this.durationStamp();
+    this.updateTimeStamp(`${hhmmss} / ${duration}`);
+  }
+
 
   if (this.player.boolDrawTimestamp) {
     // @todo better handling of the context paintbrush styles
