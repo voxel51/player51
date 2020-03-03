@@ -99,6 +99,7 @@
   display: grid;
   justify-items: end;
   grid-template-columns: max-content 1fr;
+  cursor: pointer;
 }
 
 .p51-video-controls button {
@@ -143,7 +144,7 @@
 .p51-video-controls input[type=range]:focus {
   outline: none;
   border: none;
-} 
+}
 .p51-video-controls input[type=range]::-webkit-slider-runnable-track {
   width: 100%;
   height: 4px;
@@ -220,7 +221,7 @@
 /* Hide the browser's default checkbox */
 .p51-video-options-panel input {
   position: absolute;
-  
+
   cursor: pointer;
   height: 0;
   width: 0;
