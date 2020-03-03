@@ -12,7 +12,7 @@
 
 /* Look and Feel */
 .p51-video-controls {
-  font-family: "helvetica";
+  font-family: "Palanquin", sans-serif;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -100,7 +100,7 @@
 }
 
 .p51-video-options-panel {
-  font-family: "helvetica";
+  font-family: "Palanquin", sans-serif;
   position: relative;
   width: min-content;
   height: min-content;

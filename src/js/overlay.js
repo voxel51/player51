@@ -237,7 +237,7 @@ FrameAttributesOverlay.prototype._parseAttrs = function() {
 
 FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
     canvasHeight) {
-  context.font = `${this.attrFontHeight}px sans-serif`;
+  context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
   let mw = 0;
   for (let a = 0; a < this.attrText.length; a++) {
     const aw = context.measureText(this.attrText[a]).width;
@@ -285,7 +285,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
     context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(this.x, this.y, this.w, this.h);
 
-    context.font = `${this.attrFontHeight}px sans-serif`;
+    context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
     context.fillStyle = colorGenerator.white;
 
     // Rendering y is at the baseline of the text.  Handle this by padding
@@ -482,6 +482,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
       .headerFontHeight);
+  console.log(this.headerFontHeight)
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   this.headerHeight = Math.min(26, 0.13 * canvasHeight);
@@ -498,11 +499,11 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
     canvasHeight) {
-  context.font = `${this.headerFontHeight}px sans-serif`;
+  context.font = `${this.headerFontHeight}px Palanquin, sans-serif`;
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
 
-  context.font = `${this.attrFontHeight}px sans-serif`;
+  context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
   this.attrFontWidth = context.measureText(this.attrText).width;
 
   if ((this.labelTextWidth + this.indexTextWidth + this
@@ -614,7 +615,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     context.fillRect(this.x, this.y - this.headerHeight,
         this.headerWidth, this.headerHeight);
 
-    context.font = `${this.headerFontHeight}px sans-serif`;
+    context.font = `${this.headerFontHeight}px Palanquin, sans-serif`;
     context.fillStyle = colorGenerator.white;
     context.fillText(this.labelUpper,
         this.x + this.textPadder, this.y - this.textPadder);
@@ -625,7 +626,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.y - this.textPadder);
 
     if (!this.options.attrsOnlyOnClick || this.hasFocus()) {
-      context.font = `${this.attrFontHeight}px sans-serif`;
+      context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
       if ((typeof(this.attrFontWidth) === 'undefined') ||
         (this.attrFontWidth === null)) {
         this.attrFontWidth = context.measureText(this.attrText).width;

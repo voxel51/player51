@@ -516,7 +516,7 @@ VideoRenderer.prototype.customDraw = function(context) {
       fontheight = 8 * this.canvasMultiplier;
     }
     fontheight = this.checkFontHeight(fontheight);
-    context.font = `${fontheight}px sans-serif`;
+    context.font = `${fontheight}px Palanquin, sans-serif`;
 
     const tw = context.measureText(hhmmss).width;
     const pad = 4;
