@@ -1182,7 +1182,7 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
       node.hidden = true;
     };
   } else {
-    this.attrOptsElements.forEach((e) => e.className = 'p51-video-opt-input');
+    this.attrOptsElements.forEach((e) => { e.className = 'p51-video-opt-input'; });
   }
   this.attrOptsElements.forEach((e) => recursiveMap(e, func));
 };
