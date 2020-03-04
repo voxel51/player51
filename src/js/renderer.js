@@ -1177,7 +1177,7 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
     node.hidden = false;
   };
   if (!this.overlayOptions.showAttrs) {
-    this.attrOptsElements.forEach((e) => e.className = '');
+    this.attrOptsElements.forEach((e) => { e.className = ''; });
     func = (node) => {
       node.hidden = true;
     };
