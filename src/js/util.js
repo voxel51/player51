@@ -48,3 +48,67 @@ export function recursiveMap(node, func) {
   node.childNodes.forEach((n) => recursiveMap(n, func));
   func(node);
 }
+
+
+/**
+ * Get the Bbox dimensions for an array of text and their rendering sizes
+ * @param {RenderingContext} context - the rendering context
+ * @param {Array/String} text - array of strings split by line
+ * @param {Number} textHeight - height of the font for the text
+ * @param {Number} padding - amount of padding, num pixels
+ * @return {Object} object with keys: width, height
+ */
+export function computeBBoxForTextOverlay(context, text, textHeight, padding) {
+  const lines = getArrayByLine(text);
+  const width = getMaxWidthByLine(context, lines, padding);
+  const height = getMaxHeightForText(lines, textHeight, padding);
+  return {width, height};
+}
+
+/**
+ * Get the max height for an array of text lines
+ * @param {Array/String} text - array of strings split by line
+ * @param {Number} textHeight - height of the font for the text
+ * @param {Number} padding - amount of padding, num pixels
+ * @return {Number} height
+ */
+export function getMaxHeightForText(text, textHeight, padding) {
+  const lines = getArrayByLine(text);
+  return lines.length * (textHeight + padding) + padding;
+}
+
+/**
+ * Get the max width of an array of text lines
+ * @param {RenderingContext} context - the rendering context
+ * @param {Array/String} text - array of strings split by line
+ * @param {Number} padding - amount of padding, num pixels
+ * @return {Number} width
+ */
+export function getMaxWidthByLine(context, text, padding) {
+  let maxWidth = 0;
+  const lines = getArrayByLine(text);
+  for (const line of lines) {
+    const lineWidth = context.measureText(line).width;
+    if (lineWidth === 0) {
+      /* eslint-disable-next-line no-console */
+      console.log('PLAYER51 WARN: rendering context broken');
+      return;
+    }
+    if (lineWidth > maxWidth) {
+      maxWidth = lineWidth;
+    }
+  }
+  return maxWidth + (2 * padding);
+}
+
+/**
+ * Get text as an array of lines
+ * @param {Array/String} text - array of strings split by line
+ * @return {Array} width
+ */
+function getArrayByLine(text) {
+  if (Array.isArray(text)) {
+    return text;
+  }
+  return text.split('\n');
+}
