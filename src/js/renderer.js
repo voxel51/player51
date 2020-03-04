@@ -1171,15 +1171,18 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
     node.hidden = false;
   };
   if (!this.overlayOptions.showAttrs) {
+    this.eleOptCtlAttrBoxWrapper.className = '';
     this.eleOptCtlShowAttrClickWrapper.className = '';
     this.eleOptCtlAttrOptForm.className = '';
     func = (node) => {
       node.hidden = true;
     };
   } else {
+    this.eleOptCtlAttrBoxWrapper.className = 'p51-video-opt-input';
     this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
     this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   }
+  recursiveMap(this.eleOptCtlAttrBoxWrapper, func);
   recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
   recursiveMap(this.eleOptCtlAttrOptForm, func);
 };
