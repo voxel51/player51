@@ -73,6 +73,7 @@ function Renderer(media, overlay) {
     attrsOnlyOnClick: false,
     showAttrs: true,
     attrRenderMode: 'value',
+    attrRenderBox: true,
     action: this._actionOptions.click,
   };
   this._attrRenderModeOptions = ['value', 'attr-value'];
@@ -946,6 +947,15 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     eleOptCtlShowAttrClickRow,
   ]);
 
+  // Checkbox for rendering background for attr text
+  const eleOptCtlAttrBoxRow = makeCheckboxRow(
+      'Attribute background', this.overlayOptions.attrRenderBox);
+  this.eleOptCtlShowAttrBox =
+      eleOptCtlAttrBoxRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlAttrBoxWrapper = makeWrapper([
+    eleOptCtlAttrBoxRow,
+  ]);
+
   // Radio for how to show attrs
   this.eleOptCtlAttrOptForm = document.createElement('form');
   this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
@@ -974,6 +984,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
 
   parent.appendChild(this.eleDivVideoOpts);
@@ -1023,6 +1034,13 @@ Renderer.prototype.initPlayerOptionsControls = function() {
   this.eleOptCtlShowAttrClick.addEventListener('change', () => {
     this.overlayOptions.attrsOnlyOnClick =
         this.eleOptCtlShowAttrClick.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowAttrBox.addEventListener('change', () => {
+    this.overlayOptions.attrRenderBox =
+        this.eleOptCtlShowAttrBox.checked;
     this.processFrame();
     this.updateFromDynamicState();
   });

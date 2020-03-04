@@ -6,6 +6,28 @@
  * Alan Stahl, alan@voxel51.com
  */
 
+/**
+ * Shallow data-object comparison for equality
+ * @param {Object} a - first object to compare
+ * @param {Object} b - second object to compare
+ * @return {boolean} true if ==
+ */
+export function compareData(a, b) {
+  for (const p in a) {
+    if (a.hasOwnProperty(p) !== b.hasOwnProperty(p)) {
+      return false;
+    } else if (a[p] != b[p]) {
+      return false;
+    }
+  }
+  for (const p in b) {
+    if (!(p in a)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 /**
  * Scales a number from one range to another.
@@ -67,26 +89,24 @@ export function computeBBoxForTextOverlay(context, text, textHeight, padding) {
 
 /**
  * Get the max height for an array of text lines
- * @param {Array/String} text - array of strings split by line
+ * @param {Array} lines - array of strings split by line
  * @param {Number} textHeight - height of the font for the text
  * @param {Number} padding - amount of padding, num pixels
  * @return {Number} height
  */
-export function getMaxHeightForText(text, textHeight, padding) {
-  const lines = getArrayByLine(text);
+export function getMaxHeightForText(lines, textHeight, padding) {
   return lines.length * (textHeight + padding) + padding;
 }
 
 /**
  * Get the max width of an array of text lines
  * @param {RenderingContext} context - the rendering context
- * @param {Array/String} text - array of strings split by line
+ * @param {Array} lines - array of strings split by line
  * @param {Number} padding - amount of padding, num pixels
  * @return {Number} width
  */
-export function getMaxWidthByLine(context, text, padding) {
+export function getMaxWidthByLine(context, lines, padding) {
   let maxWidth = 0;
-  const lines = getArrayByLine(text);
   for (const line of lines) {
     const lineWidth = context.measureText(line).width;
     if (lineWidth === 0) {

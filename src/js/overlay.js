@@ -11,9 +11,8 @@
 
 import {
   inRect,
+  compareData,
   computeBBoxForTextOverlay,
-  getMaxWidthByLine,
-  getMaxHeightForText,
 } from './util.js';
 import {deserialize} from './numpy.js';
 
@@ -485,7 +484,7 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
 
-  context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
+  this._setupAttrFont(context);
   this.attrFontWidth = context.measureText(this.attrText).width;
 
   if ((this.labelTextWidth + this.indexTextWidth + this
@@ -498,7 +497,13 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
   this._setupAttrBox(context);
 };
 
+ObjectOverlay.prototype._setupAttrFont = function(context) {
+  this.attrFont = `${this.attrFontHeight}px Palanquin, sans-serif`;
+  context.font = this.attrFont;
+};
+
 ObjectOverlay.prototype._setupAttrBox = function(context) {
+  this._setupAttrFont(context);
   const wh = computeBBoxForTextOverlay(
       context, this.attrText, this.attrFontHeight, this.textPadder);
   this.attrWidth = wh.width;
@@ -561,9 +566,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (this._cache_options.attrRenderMode !== this.options.attrRenderMode ||
-    this._cache_options.showAttrs !== this.options.showAttrs) {
-    this._cache_options.attrRenderMode = this.options.attrRenderMode;
+  if (!compareData(this._cache_options, this.options)) {
     this._cache_options = Object.assign({}, this.options);
     this._parseAttrs(this._attrs);
     this._setupAttrBox(context);
@@ -617,15 +620,17 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.y - this.textPadder);
 
     if (!this.options.attrsOnlyOnClick || this.hasFocus()) {
-      context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
+      this._setupAttrFont(context);
       if ((typeof(this.attrFontWidth) === 'undefined') ||
         (this.attrFontWidth === null)) {
         this.attrFontWidth = context.measureText(this.attrText).width;
         this._setupAttrBox(context);
       }
-      context.fillStyle = this.renderer.metadataOverlayBGColor;
-      context.fillRect(this.x + this.textPadder, this.y + this.textPadder,
-          this.attrWidth, this.attrHeight);
+      if (this.options.attrRenderBox) {
+        context.fillStyle = this.renderer.metadataOverlayBGColor;
+        context.fillRect(this.x + this.textPadder, this.y + this.textPadder,
+            this.attrWidth, this.attrHeight);
+      }
       const lines = this.attrText.split('\n');
       context.fillStyle = colorGenerator.white;
       for (let i = 0; i < lines.length; i++) {
