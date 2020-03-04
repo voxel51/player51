@@ -69,6 +69,7 @@ function Renderer(media, overlay) {
     hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
   };
   this.overlayOptions = {
+    showFrameCount: false,
     labelsOnlyOnClick: false,
     attrsOnlyOnClick: false,
     showAttrs: true,
@@ -895,6 +896,15 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     return label;
   };
 
+  // Checkbox to show frames instead of time
+  const eleOptCtlFrameCountRow = makeCheckboxRow(
+      'Show Frame Number', this.overlayOptions.showFrameCount);
+  this.eleOptCtlShowFrameCount =
+      eleOptCtlFrameCountRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowFrameCountWrapper = makeWrapper([
+    eleOptCtlFrameCountRow,
+  ]);
+
 
   // Checkbox for show label on click only
   const eleOptCtlShowLabelRow = makeCheckboxRow(
@@ -980,6 +990,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
@@ -1015,6 +1026,11 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
     this._repositionOptionsPanel(e.target);
     this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowFrameCount.addEventListener('change', () => {
+    this.overlayOptions.showFrameCount = this.eleOptCtlShowFrameCount.checked;
+    this.processFrame();
   });
 
   this.eleOptCtlShowLabel.addEventListener('change', () => {

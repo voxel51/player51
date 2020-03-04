@@ -245,12 +245,12 @@
   left: 0;
   height: 20px;
   width: 20px;
-  background: rgb(33, 33, 33);
+  background: rgb(55, 55, 55);
   margin-left: 1rem;
 }
 .p51-label:hover input[type=radio] ~ .p51-radio,
 .p51-label:hover input[type=checkbox] ~ .p51-checkbox {
-  background: rgb(99, 99, 99);
+  background: rgb(122, 122, 122);
 }
 .p51-label input[type=radio]:checked ~ .p51-radio,
 .p51-label input[type=checkbox]:checked ~ .p51-checkbox {
