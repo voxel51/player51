@@ -252,12 +252,8 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
     return;
   }
   if (this.w === null) {
-    /* eslint-disable-next-line no-console */
-    console.log('P51 WARN: draw() called before setup()');
     this.setup(context, canvasWidth, canvasHeight);
     if (this.w <= 0 || this.h <= 0) {
-      /* eslint-disable-next-line no-console */
-      console.log('P51 WARN: setup() failed to obtain drawable area');
       return;
     }
   }

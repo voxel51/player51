@@ -998,6 +998,12 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
 
+  this.attrOptsElements = [
+    this.eleOptCtlAttrOptForm,
+    this.eleOptCtlAttrBoxWrapper,
+    this.eleOptCtlShowAttrClickWrapper,
+  ];
+
   parent.appendChild(this.eleDivVideoOpts);
 };
 
@@ -1171,20 +1177,14 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
     node.hidden = false;
   };
   if (!this.overlayOptions.showAttrs) {
-    this.eleOptCtlAttrBoxWrapper.className = '';
-    this.eleOptCtlShowAttrClickWrapper.className = '';
-    this.eleOptCtlAttrOptForm.className = '';
+    this.attrOptsElements.forEach((e) => e.className = '');
     func = (node) => {
       node.hidden = true;
     };
   } else {
-    this.eleOptCtlAttrBoxWrapper.className = 'p51-video-opt-input';
-    this.eleOptCtlShowAttrClickWrapper.className = 'p51-video-opt-input';
-    this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
+    this.attrOptsElements.forEach((e) => e.className = 'p51-video-opt-input');
   }
-  recursiveMap(this.eleOptCtlAttrBoxWrapper, func);
-  recursiveMap(this.eleOptCtlShowAttrClickWrapper, func);
-  recursiveMap(this.eleOptCtlAttrOptForm, func);
+  this.attrOptsElements.forEach((e) => recursiveMap(e, func));
 };
 
 Renderer.prototype.updatePlayButton = function(playing) {

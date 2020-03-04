@@ -110,8 +110,6 @@ export function getMaxWidthByLine(context, lines, padding) {
   for (const line of lines) {
     const lineWidth = context.measureText(line).width;
     if (lineWidth === 0) {
-      /* eslint-disable-next-line no-console */
-      console.log('PLAYER51 WARN: rendering context broken');
       return;
     }
     if (lineWidth > maxWidth) {
