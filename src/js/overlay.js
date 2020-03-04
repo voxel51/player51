@@ -565,7 +565,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._cache_options.showAttrs !== this.options.showAttrs) {
     this._cache_options.attrRenderMode = this.options.attrRenderMode;
     this._cache_options = Object.assign({}, this.options);
-    this._parseAttrs(this._attrs, context);
+    this._parseAttrs(this._attrs);
+    this._setupAttrBox(context);
   }
 
   if (this.labelTextWidth === null) {
