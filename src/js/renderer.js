@@ -1177,12 +1177,12 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
     node.hidden = false;
   };
   if (!this.overlayOptions.showAttrs) {
-    this.attrOptsElements.forEach((e) => { e.className = ''; });
+    this.attrOptsElements.forEach((e) => e.className = '');
     func = (node) => {
       node.hidden = true;
     };
   } else {
-    this.attrOptsElements.forEach((e) => { e.className = 'p51-video-opt-input'; });
+    this.attrOptsElements.forEach((e) => e.className = 'p51-video-opt-input');
   }
   this.attrOptsElements.forEach((e) => recursiveMap(e, func));
 };
