@@ -492,12 +492,12 @@ VideoRenderer.prototype.customDraw = function(context) {
     context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
+  const hhmmss = this.currentTimestamp();
   if (this.overlayOptions.showFrameCount) {
     const frame = this.currentFrameStamp();
     const total = this.totalFrameStamp();
     this.updateTimeStamp(`${frame}/${total}`);
   } else {
-    const hhmmss = this.currentTimestamp();
     const duration = this.durationStamp();
     this.updateTimeStamp(`${hhmmss} / ${duration}`);
   }
@@ -513,7 +513,6 @@ VideoRenderer.prototype.customDraw = function(context) {
     }
     fontheight = this.checkFontHeight(fontheight);
     context.font = `${fontheight}px Palanquin, sans-serif`;
-
     const tw = context.measureText(hhmmss).width;
     const pad = 4;
     const pad2 = 2; // pad divided by 2
