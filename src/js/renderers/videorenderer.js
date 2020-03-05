@@ -513,6 +513,7 @@ VideoRenderer.prototype.customDraw = function(context) {
     }
     fontheight = this.checkFontHeight(fontheight);
     context.font = `${fontheight}px Palanquin, sans-serif`;
+
     const tw = context.measureText(hhmmss).width;
     const pad = 4;
     const pad2 = 2; // pad divided by 2
