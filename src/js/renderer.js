@@ -377,6 +377,11 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
+    // @todo remove this when video attrs are supported
+    // In the meantime, this allows video labels with video attrs to load
+    if (typeof this._frameNumber === 'undefined') {
+      this._frameNumber = 1;
+    }
     this.frameOverlay[this._frameNumber].push(o);
   }
 };
