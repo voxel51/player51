@@ -545,7 +545,11 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 
   if (this.options.attrRenderMode === 'attr-value') {
     this.attrText = sortedAttrs.map(function(attr) {
-      const attrVal = attr.value.replace(/_/g, ' ');
+      let attrVal = attr.value;
+      if (typeof attrVal !== 'string') {
+        attrVal = attrValue.toString();
+      }
+      attrVal = attrVal.replace(/_/g, ' ');
       const attrName = attr.name.replace(/_/g, ' ');
       return `${attrName}: ${attrVal}`;
     }).join('\n');
