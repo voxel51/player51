@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Attribute Types Video Player</title>
+    <style>
+      body {
+        background: black;
+        color:#CCCCCC;
+      }
+      #test-container {
+        width: 640px;
+        height: 360px;
+        position: relative;
+        padding: 2rem;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Attribute Types ES6 Single Video Player Test </h1>
+
+    <div id="test-container"></div>
+
+    <script src="/test/data/config.js"></script>
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Player51 Attributes: Example code running.");
+
+        let player = window.player = new Player51(
+          {
+            src: "/test/data/attrs.mp4",
+            type: "video/mp4"
+          },
+          "/test/data/attrs.json"
+        );
+
+        console.log("Player51 created.");
+
+        player.setBoolDrawFrameNumber(true);
+        //player.setBoolDrawTimeStamp(true);
+        player.loop();
+        player.autoplay();
+        player.resetToFragment();
+
+        player.poster("https://voxel51.com/images/logo/voxel51-logo-horz-color-600dpi.png");
+        player.forceMax();  // uncomment and video will maximize to pixel resolution
+        player.render('test-container');
+
+        console.log("Player51 rendered and ready.");
+
+      });
+    </script>
+  </body>
+</html>

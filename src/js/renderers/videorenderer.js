@@ -491,6 +491,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   if (this.player.boolDrawFrameNumber) {
     context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
+
   let hhmmss;
 
   if (this.overlayOptions.showFrameCount) {

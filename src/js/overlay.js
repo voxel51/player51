@@ -537,13 +537,13 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 
   if (this.options.attrRenderMode === 'attr-value') {
     this.attrText = sortedAttrs.map(function(attr) {
-      const attrVal = attr.value.replace(/_/g, ' ');
+      const attrVal = String(attr.value).replace(/_/g, ' ');
       const attrName = attr.name.replace(/_/g, ' ');
       return `${attrName}: ${attrVal}`;
     }).join('\n');
   } else {
     this.attrText = sortedAttrs.map(function(attr) {
-      return attr.value.replace(/_/g, ' ');
+      return String(attr.value).replace(/_/g, ' ');
     }).join(', ');
   }
 };
