@@ -11,6 +11,8 @@
 
 import {
   inRect,
+  compareData,
+  computeBBoxForTextOverlay,
 } from './util.js';
 import {deserialize} from './numpy.js';
 
@@ -171,6 +173,7 @@ function FrameAttributesOverlay(d, renderer) {
 
   this.attrFontHeight = null;
   this.maxAttrTextWidth = -1;
+  this.font = null;
 
   // Location and Size to draw these
   this.x = null;
@@ -197,23 +200,24 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
   if (typeof(this.attrs) !== undefined) {
     this._parseAttrs();
   }
+  this.textPadder = 10;
+  if (this.x === null || this.y === null) {
+    this.x = this.textPadder;
+    this.y = this.textPadder;
+  }
 
   this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
-  // this is *0.4 instead of / 2 because it looks better
-  this.textPadder = 10;
-
-  this.x = this.textPadder;
-  this.y = this.textPadder;
-
-  // this.w is set up by the _setupWidths function
-  this.h = this.attrText.length * (this.attrFontHeight + this
-      .textPadder) + this.textPadder;
-
+  this.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
   if (typeof(context) === 'undefined') {
     return;
   }
-  this._setupWidths(context, canvasWidth, canvasHeight);
+  context.font = this.font;
+  // this is *0.4 instead of / 2 because it looks better
+  const bbox = computeBBoxForTextOverlay(
+      context, this.attrText, this.attrFontHeight, this.textPadder);
+  this.w = bbox.width;
+  this.h = bbox.height;
 };
 
 
@@ -234,27 +238,6 @@ FrameAttributesOverlay.prototype._parseAttrs = function() {
   }
 };
 
-
-FrameAttributesOverlay.prototype._setupWidths = function(context, canvasWidth,
-    canvasHeight) {
-  context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
-  let mw = 0;
-  for (let a = 0; a < this.attrText.length; a++) {
-    const aw = context.measureText(this.attrText[a]).width;
-    if (aw == 0) {
-      /* eslint-disable-next-line no-console */
-      console.log('PLAYER51 WARN: rendering context broken');
-      return;
-    }
-    if (aw > mw) {
-      mw = aw;
-    }
-  }
-  this.maxAttrTextWidth = mw;
-  this.w = this.maxAttrTextWidth + 2 * this.textPadder;
-};
-
-
 /**
  * Basic rendering function for drawing the overlay instance.
  *
@@ -268,15 +251,9 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
   if (typeof(context) === 'undefined') {
     return;
   }
-
   if (this.w === null) {
-    this._setupWidths(context, canvasWidth, canvasHeight);
-    // If something went wrong in trying to estimate the sizes of things, then
-    // we still cannot draw.
-    if (this.w <= 0) {
-      /* eslint-disable-next-line no-console */
-      console.log(
-          'PLAYER51 WARN: FAO draw before setup; invalid canvas');
+    this.setup(context, canvasWidth, canvasHeight);
+    if (this.w <= 0 || this.h <= 0) {
       return;
     }
   }
@@ -284,8 +261,7 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
   if (!this.renderer.player._boolThumbnailMode) {
     context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(this.x, this.y, this.w, this.h);
-
-    context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
+    context.font = this.font;
     context.fillStyle = colorGenerator.white;
 
     // Rendering y is at the baseline of the text.  Handle this by padding
@@ -432,6 +408,8 @@ function ObjectOverlay(d, renderer) {
   this.attrText = null;
   this.attrTextWidth = -1;
   this.attrFontHeight = null;
+  this.attrWidth = 0;
+  this.attrHeight = 0;
 
   if (typeof(d.mask) === 'string') {
     this.mask = deserialize(d.mask);
@@ -484,6 +462,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
       .headerFontHeight);
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
+
   this.headerHeight = Math.min(26, 0.13 * canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
@@ -491,7 +470,6 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   if (typeof(context) === 'undefined') {
     return;
   }
-
   this._setupFontWidths(context, canvasWidth, canvasHeight);
 };
 
@@ -502,7 +480,7 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
 
-  context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
+  this._setupAttrFont(context);
   this.attrFontWidth = context.measureText(this.attrText).width;
 
   if ((this.labelTextWidth + this.indexTextWidth + this
@@ -512,6 +490,20 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
     this.headerWidth = this.labelTextWidth + this.indexTextWidth + 2 *
       this.textPadder + this.labelIndexPadding;
   }
+  this._setupAttrBox(context);
+};
+
+ObjectOverlay.prototype._setupAttrFont = function(context) {
+  this.attrFont = `${this.attrFontHeight}px Palanquin, sans-serif`;
+  context.font = this.attrFont;
+};
+
+ObjectOverlay.prototype._setupAttrBox = function(context) {
+  this._setupAttrFont(context);
+  const wh = computeBBoxForTextOverlay(
+      context, this.attrText, this.attrFontHeight, this.textPadder);
+  this.attrWidth = wh.width;
+  this.attrHeight = wh.height;
 };
 
 
@@ -570,11 +562,10 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (this._cache_options.attrRenderMode !== this.options.attrRenderMode ||
-    this._cache_options.showAttrs !== this.options.showAttrs) {
-    this._cache_options.attrRenderMode = this.options.attrRenderMode;
+  if (!compareData(this._cache_options, this.options)) {
     this._cache_options = Object.assign({}, this.options);
     this._parseAttrs(this._attrs);
+    this._setupAttrBox(context);
   }
 
   if (this.labelTextWidth === null) {
@@ -625,12 +616,19 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
         this.y - this.textPadder);
 
     if (!this.options.attrsOnlyOnClick || this.hasFocus()) {
-      context.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
+      this._setupAttrFont(context);
       if ((typeof(this.attrFontWidth) === 'undefined') ||
         (this.attrFontWidth === null)) {
         this.attrFontWidth = context.measureText(this.attrText).width;
+        this._setupAttrBox(context);
+      }
+      if (this.options.attrRenderBox) {
+        context.fillStyle = this.renderer.metadataOverlayBGColor;
+        context.fillRect(this.x + this.textPadder, this.y + this.textPadder,
+            this.attrWidth, this.attrHeight);
       }
       const lines = this.attrText.split('\n');
+      context.fillStyle = colorGenerator.white;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         context.fillText(
