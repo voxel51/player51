@@ -32,8 +32,7 @@ import eta.core.utils as etau
 logger = logging.getLogger(__name__)
 
 
-FILE_ID = "1kdwJ3ZG8TURzUxNK-H9c909SnhE7YlYD"
-
+FILE_ID = "1MZAKNHNFYVhqP47MkUAvLApY5GKYpKuR"
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 logger.info("Downloading example data from Google Drive")
