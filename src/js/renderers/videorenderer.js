@@ -492,12 +492,12 @@ VideoRenderer.prototype.customDraw = function(context) {
     context.fillText(this._frameNumber || 0, 15, 30, 70);
   }
 
-  const hhmmss = this.currentTimestamp();
   if (this.overlayOptions.showFrameCount) {
     const frame = this.currentFrameStamp();
     const total = this.totalFrameStamp();
     this.updateTimeStamp(`${frame}/${total}`);
   } else {
+    const hhmmss = this.currentTimestamp();
     const duration = this.durationStamp();
     this.updateTimeStamp(`${hhmmss} / ${duration}`);
   }

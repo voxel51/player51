@@ -555,11 +555,11 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
     }).join('\n');
   } else {
     this.attrText = sortedAttrs.map(function(attr) {
-      let value = attr.value;
-      if (typeof value !== 'string') {
-        value = value.toString();
+      let attrVal = attr.value;
+      if (typeof attrVal !== 'string') {
+        attrVal = attrVal.toString();
       }
-      return value.replace(/_/g, ' ');
+      return attrVal.replace(/_/g, ' ');
     }).join(', ');
   }
 };
