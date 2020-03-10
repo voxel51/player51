@@ -98,6 +98,17 @@ function Renderer(media, overlay) {
 }
 
 
+/*
+ * Destroy the renderer
+ * @member destroy
+ */
+Renderer.prototype.destroy = function() {
+  for (const child of this.parent.children) {
+    this.parent.removeChild(child);
+  }
+};
+
+
 /**
  * Define abstract function initPlayer to be implemented in subclasses
  *

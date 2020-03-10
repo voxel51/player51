@@ -79,6 +79,21 @@ function MediaPlayer(type, media, overlay, fps) {
 
 
 /**
+ * Destroy the player
+ * @member destroy
+ */
+MediaPlayer.prototype.destroy = function() {
+  MediaPlayer._instances = MediaPlayer._instances.filter(
+      player => player !== this);
+  if (MediaPlayer._focusedInstance === this) {
+    MediaPlayer._focusedInstance = null;
+  }
+  this.renderer.destroy();
+  delete this.renderer;
+};
+
+
+/**
  * Define abstract function setLoadingPoster to be implemented in subclasses
  *
  * @member setLoadingPoster
