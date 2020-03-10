@@ -303,6 +303,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
 
 VideoRenderer.prototype._handleKeyboardEvent = function(e) {
+  Renderer.prototype._handleKeyboardEvent.call(this, e);
   if (e.keyCode === 32) { // space
     this._boolPlaying = !this._boolPlaying;
     this.updateFromDynamicState();

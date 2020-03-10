@@ -567,7 +567,10 @@ Renderer.prototype._handleMouseEvent = function(e) {
 
 
 Renderer.prototype._handleKeyboardEvent = function(e) {
-  // optionally overridden by subclasses
+  if (e.keyCode === 27 && this._boolShowVideoOptions) {
+    this._boolShowVideoOptions = false;
+    this.updateFromDynamicState();
+  }
 };
 
 

@@ -286,6 +286,7 @@ MediaPlayer.prototype.setZipLibraryParameters = function(path) {
 /**
  * Handle global click events to determine which player, if any, has focus for
  * keyboard events
+ * @param {Event} e
  */
 MediaPlayer._handleGlobalClick = function(e) {
   for (const player of MediaPlayer._instances) {
@@ -300,6 +301,7 @@ MediaPlayer._handleGlobalClick = function(e) {
 
 /**
  * Pass global keyboard events to the appropriate player if one has focus
+ * @param {Event} e
  */
 MediaPlayer._handleGlobalKeyboard = function(e) {
   if (MediaPlayer._focusedInstance) {
