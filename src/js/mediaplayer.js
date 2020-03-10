@@ -84,7 +84,7 @@ function MediaPlayer(type, media, overlay, fps) {
  */
 MediaPlayer.prototype.destroy = function() {
   MediaPlayer._instances = MediaPlayer._instances.filter(
-      player => player !== this);
+      (player) => player !== this);
   if (MediaPlayer._focusedInstance === this) {
     MediaPlayer._focusedInstance = null;
   }
@@ -295,6 +295,16 @@ MediaPlayer.prototype.setZipLibraryParameters = function(path) {
   if (this.renderer && this.renderer.reader) {
     this.renderer.reader.workerScriptsPath = path;
   }
+};
+
+
+/**
+ * Obtain (or release) global keyboard focus, causing all keyboard events to be
+ * handled by this player
+ * @param {boolean} grab Whether to obtain focus (default true)
+ */
+MediaPlayer.prototype.grabKeyboardFocus = function(grab=true) {
+  MediaPlayer._focusedInstance = grab ? this : null;
 };
 
 
