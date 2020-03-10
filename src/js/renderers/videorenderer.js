@@ -205,11 +205,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   // Event listener for the play/pause button
   this.elePlayPauseButton.addEventListener('click', function() {
-    if (self._boolPlaying !== true) {
-      self._boolPlaying = true;
-    } else {
-      self._boolPlaying = false;
-    }
+    self._boolPlaying = !self._boolPlaying;
     self.updateFromDynamicState();
   });
 
@@ -307,8 +303,9 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
 
 VideoRenderer.prototype._handleKeyboardEvent = function(e) {
-  if (this.eleVideo.ended) {
-    this.eleVideo.pause();
+  if (e.keyCode === 32) { // space
+    this._boolPlaying = !this._boolPlaying;
+    this.updateFromDynamicState();
   }
   // navigating frame-by-frame with arrow keys
   if (this.eleVideo.paused) {
