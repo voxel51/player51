@@ -566,6 +566,11 @@ Renderer.prototype._handleMouseEvent = function(e) {
 };
 
 
+Renderer.prototype._handleKeyboardEvent = function(e) {
+  // optionally overridden by subclasses
+};
+
+
 /**
  * Used by overlay rendering code.
  *

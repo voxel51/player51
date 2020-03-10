@@ -69,6 +69,12 @@ function MediaPlayer(type, media, overlay, fps) {
   this._boolNotFound = false;
   this._loadingPosterURL = '';
   this._notFoundPosterURL = '';
+  MediaPlayer._installEventHandlers();
+  if (!MediaPlayer._instances) {
+    MediaPlayer._instances = [];
+    MediaPlayer._focusedInstance = null;
+  }
+  MediaPlayer._instances.push(this);
 }
 
 
@@ -273,5 +279,41 @@ MediaPlayer.prototype.setBoolDrawFrameNumber = function(value) {
 MediaPlayer.prototype.setZipLibraryParameters = function(path) {
   if (this.renderer && this.renderer.reader) {
     this.renderer.reader.workerScriptsPath = path;
+  }
+};
+
+
+/**
+ * Handle global click events to determine which player, if any, has focus for
+ * keyboard events
+ */
+MediaPlayer._handleGlobalClick = function(e) {
+  for (const player of MediaPlayer._instances) {
+    if (player.renderer.parent.contains(e.target)) {
+      MediaPlayer._focusedInstance = player;
+      return;
+    }
+  }
+  MediaPlayer._focusedInstance = null;
+};
+
+
+/**
+ * Pass global keyboard events to the appropriate player if one has focus
+ */
+MediaPlayer._handleGlobalKeyboard = function(e) {
+  if (MediaPlayer._focusedInstance) {
+    MediaPlayer._focusedInstance.renderer._handleKeyboardEvent(e);
+  }
+};
+
+/**
+ * Install a global event handler to handle player focus
+ */
+MediaPlayer._installEventHandlers = function() {
+  if (!MediaPlayer._installedEventHandlers) {
+    window.addEventListener('click', MediaPlayer._handleGlobalClick);
+    window.addEventListener('keydown', MediaPlayer._handleGlobalKeyboard);
+    MediaPlayer._installedEventHandlers = true;
   }
 };

@@ -302,28 +302,30 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
-  this.parent.addEventListener('keydown', function(e) {
-    if (self.eleVideo.ended) {
-      self.eleVideo.pause();
-    }
-    if (self.eleVideo.paused) {
-      if (e.keyCode === 37) { // left arrow
-        self.eleVideo.currentTime = Math.max(
-            0, self.computeFrameTime() - self.frameDuration);
-      } else if (e.keyCode === 39) { // right arrow
-        self.eleVideo.currentTime = Math.min(
-            self.eleVideo.duration,
-            self.computeFrameTime() + self.frameDuration);
-      } else {
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      self.updateStateFromTimeChange();
-    }
-  });
-
   this.updateFromLoadingState();
+};
+
+
+VideoRenderer.prototype._handleKeyboardEvent = function(e) {
+  if (this.eleVideo.ended) {
+    this.eleVideo.pause();
+  }
+  // navigating frame-by-frame with arrow keys
+  if (this.eleVideo.paused) {
+    if (e.keyCode === 37) { // left arrow
+      this.eleVideo.currentTime = Math.max(
+          0, this.computeFrameTime() - this.frameDuration);
+    } else if (e.keyCode === 39) { // right arrow
+      this.eleVideo.currentTime = Math.min(
+          this.eleVideo.duration,
+          this.computeFrameTime() + this.frameDuration);
+    } else {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    this.updateStateFromTimeChange();
+  }
 };
 
 
