@@ -392,7 +392,7 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
     // @todo remove this when video attrs are supported
     // In the meantime, this allows video labels with video attrs to load
     if (typeof this._frameNumber !== 'undefined') {
-      this.frameOverlay[this._frameNumber].push(o);
+      this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
     }
   }
 };
@@ -413,7 +413,7 @@ Renderer.prototype._prepareOverlay_auxMask = function(context,
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
-    this.frameOverlay[this._frameNumber].push(o);
+    this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
   }
 };
 
