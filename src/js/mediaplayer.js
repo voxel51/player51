@@ -330,7 +330,10 @@ MediaPlayer._handleGlobalClick = function(e) {
  */
 MediaPlayer._handleGlobalKeyboard = function(e) {
   if (MediaPlayer._focusedInstance) {
-    MediaPlayer._focusedInstance.renderer._handleKeyboardEvent(e);
+    if (MediaPlayer._focusedInstance.renderer._handleKeyboardEvent(e)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }
 };
 

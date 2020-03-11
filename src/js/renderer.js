@@ -577,10 +577,15 @@ Renderer.prototype._handleMouseEvent = function(e) {
 };
 
 
+/**
+ * Handle a keyboard event
+ * @return {boolean} true if the event was handled and should not be propagated
+ */
 Renderer.prototype._handleKeyboardEvent = function(e) {
   if (e.keyCode === 27 && this._boolShowVideoOptions) {
     this._boolShowVideoOptions = false;
     this.updateFromDynamicState();
+    return true;
   }
 };
 

@@ -307,6 +307,7 @@ VideoRenderer.prototype._handleKeyboardEvent = function(e) {
   if (e.keyCode === 32) { // space
     this._boolPlaying = !this._boolPlaying;
     this.updateFromDynamicState();
+    return true;
   }
   // navigating frame-by-frame with arrow keys
   if (this.eleVideo.paused) {
@@ -318,11 +319,10 @@ VideoRenderer.prototype._handleKeyboardEvent = function(e) {
           this.eleVideo.duration,
           this.computeFrameTime() + this.frameDuration);
     } else {
-      return;
+      return false;
     }
-    e.preventDefault();
-    e.stopPropagation();
     this.updateStateFromTimeChange();
+    return true;
   }
 };
 
