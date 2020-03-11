@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Player51 Video Player Test: Video Labels Overlay Format</title>
+    <style>
+      body {
+        background: black;
+        color:#CCCCCC;
+      }
+      #test-container {
+        width: 640px;
+        height: 360px;
+        position: relative;
+      }
+
+      #test-container:hover {
+        opacity: .9;
+      }
+
+      #outer-container {
+        background-color: #c00;
+        padding: 3em;
+      }
+
+      #outer-container:active {
+        background-color: red;
+      }
+    </style>
+    <link rel="stylesheet" href="/src/css/player51.css">
+  </head>
+
+  <body>
+
+    <h1> Player51: Video Player Test: Video Labels Overlay Format</h1>
+
+    <div id="outer-container">
+      <div id="test-container"></div>
+      <h1>Click this area to select the player</h1>
+    </div>
+
+    <script src="/test/data/config.js"></script>
+    <script type="module">
+      import Player51 from '/src/js/player51.js';
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Player51 Simple: Example code running.");
+
+        let player = window.player = new Player51(
+          {
+            src: "/test/data/video.mp4",
+            type: "video/mp4"
+          },
+          "/test/data/video-labels.json",
+          CONFIG.video_fps
+        );
+
+        console.log("Player51 created.");
+
+        player.render('test-container');
+
+        console.log("Player51 rendered and ready.");
+
+        document.getElementById('outer-container').addEventListener('click', (e) => {
+          player.grabKeyboardFocus();
+          e.stopPropagation();
+        });
+
+      });
+    </script>
+  </body>
+</html>

@@ -98,6 +98,17 @@ function Renderer(media, overlay) {
 }
 
 
+/*
+ * Destroy the renderer
+ * @member destroy
+ */
+Renderer.prototype.destroy = function() {
+  for (const child of this.parent.children) {
+    this.parent.removeChild(child);
+  }
+};
+
+
 /**
  * Define abstract function initPlayer to be implemented in subclasses
  *
@@ -562,6 +573,19 @@ Renderer.prototype._handleMouseEvent = function(e) {
 
   if (this.setFocus(overlayObj, {x, y})) {
     this.processFrame();
+  }
+};
+
+
+/**
+ * Handle a keyboard event
+ * @return {boolean} true if the event was handled and should not be propagated
+ */
+Renderer.prototype._handleKeyboardEvent = function(e) {
+  if (e.keyCode === 27 && this._boolShowVideoOptions) {
+    this._boolShowVideoOptions = false;
+    this.updateFromDynamicState();
+    return true;
   }
 };
 

@@ -69,7 +69,28 @@ function MediaPlayer(type, media, overlay, fps) {
   this._boolNotFound = false;
   this._loadingPosterURL = '';
   this._notFoundPosterURL = '';
+  MediaPlayer._installEventHandlers();
+  if (!MediaPlayer._instances) {
+    MediaPlayer._instances = [];
+    MediaPlayer._focusedInstance = null;
+  }
+  MediaPlayer._instances.push(this);
 }
+
+
+/**
+ * Destroy the player
+ * @member destroy
+ */
+MediaPlayer.prototype.destroy = function() {
+  MediaPlayer._instances = MediaPlayer._instances.filter(
+      (player) => player !== this);
+  if (MediaPlayer._focusedInstance === this) {
+    MediaPlayer._focusedInstance = null;
+  }
+  this.renderer.destroy();
+  delete this.renderer;
+};
 
 
 /**
@@ -273,5 +294,56 @@ MediaPlayer.prototype.setBoolDrawFrameNumber = function(value) {
 MediaPlayer.prototype.setZipLibraryParameters = function(path) {
   if (this.renderer && this.renderer.reader) {
     this.renderer.reader.workerScriptsPath = path;
+  }
+};
+
+
+/**
+ * Obtain (or release) global keyboard focus, causing all keyboard events to be
+ * handled by this player
+ * @param {boolean} grab Whether to obtain focus (default true)
+ */
+MediaPlayer.prototype.grabKeyboardFocus = function(grab=true) {
+  MediaPlayer._focusedInstance = grab ? this : null;
+};
+
+
+/**
+ * Handle global click events to determine which player, if any, has focus for
+ * keyboard events
+ * @param {Event} e
+ */
+MediaPlayer._handleGlobalClick = function(e) {
+  for (const player of MediaPlayer._instances) {
+    if (player.renderer.parent.contains(e.target)) {
+      MediaPlayer._focusedInstance = player;
+      return;
+    }
+  }
+  MediaPlayer._focusedInstance = null;
+};
+
+
+/**
+ * Pass global keyboard events to the appropriate player if one has focus
+ * @param {Event} e
+ */
+MediaPlayer._handleGlobalKeyboard = function(e) {
+  if (MediaPlayer._focusedInstance) {
+    if (MediaPlayer._focusedInstance.renderer._handleKeyboardEvent(e)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+};
+
+/**
+ * Install a global event handler to handle player focus
+ */
+MediaPlayer._installEventHandlers = function() {
+  if (!MediaPlayer._installedEventHandlers) {
+    window.addEventListener('click', MediaPlayer._handleGlobalClick);
+    window.addEventListener('keydown', MediaPlayer._handleGlobalKeyboard);
+    MediaPlayer._installedEventHandlers = true;
   }
 };

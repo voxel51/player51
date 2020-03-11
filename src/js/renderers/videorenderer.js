@@ -205,11 +205,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   // Event listener for the play/pause button
   this.elePlayPauseButton.addEventListener('click', function() {
-    if (self._boolPlaying !== true) {
-      self._boolPlaying = true;
-    } else {
-      self._boolPlaying = false;
-    }
+    self._boolPlaying = !self._boolPlaying;
     self.updateFromDynamicState();
   });
 
@@ -302,28 +298,32 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
-  this.parent.addEventListener('keydown', function(e) {
-    if (self.eleVideo.ended) {
-      self.eleVideo.pause();
-    }
-    if (self.eleVideo.paused) {
-      if (e.keyCode === 37) { // left arrow
-        self.eleVideo.currentTime = Math.max(
-            0, self.computeFrameTime() - self.frameDuration);
-      } else if (e.keyCode === 39) { // right arrow
-        self.eleVideo.currentTime = Math.min(
-            self.eleVideo.duration,
-            self.computeFrameTime() + self.frameDuration);
-      } else {
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      self.updateStateFromTimeChange();
-    }
-  });
-
   this.updateFromLoadingState();
+};
+
+
+VideoRenderer.prototype._handleKeyboardEvent = function(e) {
+  Renderer.prototype._handleKeyboardEvent.call(this, e);
+  if (e.keyCode === 32) { // space
+    this._boolPlaying = !this._boolPlaying;
+    this.updateFromDynamicState();
+    return true;
+  }
+  // navigating frame-by-frame with arrow keys
+  if (this.eleVideo.paused) {
+    if (e.keyCode === 37) { // left arrow
+      this.eleVideo.currentTime = Math.max(
+          0, this.computeFrameTime() - this.frameDuration);
+    } else if (e.keyCode === 39) { // right arrow
+      this.eleVideo.currentTime = Math.min(
+          this.eleVideo.duration,
+          this.computeFrameTime() + this.frameDuration);
+    } else {
+      return false;
+    }
+    this.updateStateFromTimeChange();
+    return true;
+  }
 };
 
 
