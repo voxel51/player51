@@ -407,7 +407,9 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
+  }
 
+  if (this._isOverlayPrepared) {
     if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
         isFinite(this.eleVideo.duration)) {
       // FPS wasn't provided, so guess it from the labels. If we don't have
