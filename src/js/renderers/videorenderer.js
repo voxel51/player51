@@ -310,16 +310,15 @@ VideoRenderer.prototype._handleKeyboardEvent = function(e) {
     return true;
   }
   // navigating frame-by-frame with arrow keys
-  if (this.eleVideo.paused) {
+  if (this.eleVideo.paused && this._hasOverlay &&
+      (e.keyCode === 37 || e.keyCode === 39)) {
     if (e.keyCode === 37) { // left arrow
       this.eleVideo.currentTime = Math.max(
           0, this.computeFrameTime() - this.frameDuration);
-    } else if (e.keyCode === 39) { // right arrow
+    } else { // right arrow
       this.eleVideo.currentTime = Math.min(
           this.eleVideo.duration,
           this.computeFrameTime() + this.frameDuration);
-    } else {
-      return false;
     }
     this.updateStateFromTimeChange();
     return true;
