@@ -84,6 +84,7 @@ function Renderer(media, overlay) {
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
   this._isDataLoaded = false;
+  this._hasOverlay = Boolean(overlay);
   this._overlayCanBePrepared = true;
   this._isOverlayPrepared = false;
   this._isPreparingOverlay = false;
@@ -262,7 +263,7 @@ Renderer.prototype.handleBlob = function() {
  * @param {string} overlay of overlay JSON
  */
 Renderer.prototype.handleOverlay = function(overlay) {
-  if ((overlay === null) || (typeof(overlay) === 'undefined')) {
+  if (!overlay) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
     this._isOverlayPrepared = true;
@@ -270,7 +271,7 @@ Renderer.prototype.handleOverlay = function(overlay) {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === 'object') && (overlay != null) &&
+  } else if ((typeof(overlay) === 'object') &&
       Object.keys(overlay).length > 0) {
     this._overlayURL = null;
     this._overlayData = overlay;
@@ -1018,7 +1019,9 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
+  if (this._hasOverlay) {
+    this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
+  }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
