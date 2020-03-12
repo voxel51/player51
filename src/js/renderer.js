@@ -77,7 +77,13 @@ function Renderer(media, overlay) {
     attrRenderBox: true,
     action: this._actionOptions.click,
   };
-  this._attrRenderModeOptions = ['value', 'attr-value'];
+  this._attrRenderModeOptions = [{
+    name: 'Value',
+    value: 'value',
+  }, {
+    name: 'Attribute: Value',
+    value: 'attr-value',
+  }];
   this._focusIndex = -1;
   this.seekBarMax = 100;
   // Loading state attributes
@@ -927,7 +933,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox to show frames instead of time
   const eleOptCtlFrameCountRow = makeCheckboxRow(
-      'Show Frame Number', this.overlayOptions.showFrameCount);
+      'Show frame number', this.overlayOptions.showFrameCount);
   this.eleOptCtlShowFrameCount =
       eleOptCtlFrameCountRow.querySelector('input[type=checkbox]');
   this.eleOptCtlShowFrameCountWrapper = makeWrapper([
@@ -948,7 +954,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleActionCtlOptForm = document.createElement('form');
   this.eleActionCtlOptForm.className = 'p51-video-opt-input';
   const actionFormTitle = document.createElement('div');
-  actionFormTitle.innerHTML = '<u>Select mode</u>:';
+  actionFormTitle.innerHTML = '<u>Object selection mode</u>';
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
   // eslint-disable-next-line no-unused-vars
@@ -988,7 +994,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox for rendering background for attr text
   const eleOptCtlAttrBoxRow = makeCheckboxRow(
-      'Attribute background', this.overlayOptions.attrRenderBox);
+      'Show attribute background', this.overlayOptions.attrRenderBox);
   this.eleOptCtlShowAttrBox =
       eleOptCtlAttrBoxRow.querySelector('input[type=checkbox]');
   this.eleOptCtlAttrBoxWrapper = makeWrapper([
@@ -999,18 +1005,18 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlAttrOptForm = document.createElement('form');
   this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   const formTitle = document.createElement('div');
-  formTitle.innerHTML = '<u>Attribute rendering mode</u>:';
+  formTitle.innerHTML = '<u>Object attribute mode</u>';
   this.eleOptCtlAttrOptForm.appendChild(formTitle);
   this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
   // eslint-disable-next-line no-unused-vars
-  for (const val of this._attrRenderModeOptions) {
+  for (const item of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
     radio.name = 'attrRenderOpt';
-    radio.value = val;
-    radio.checked = this.overlayOptions.attrRenderMode === val;
+    radio.value = item.value;
+    radio.checked = this.overlayOptions.attrRenderMode === item.value;
     const label = document.createElement('label');
-    label.innerHTML = val;
+    label.innerHTML = item.name;
     label.className = 'p51-label';
     label.appendChild(radio);
     const span = document.createElement('span');
