@@ -330,7 +330,6 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   if (typeof(rawjson.frames) !== 'undefined') {
     const context = this.setupCanvasContext();
     const frameKeys = Object.keys(rawjson.frames);
-    /* eslint-disable-next-line no-unused-vars */
     for (const frameKeyI in frameKeys) {
       if (frameKeyI) {
         const frameKey = frameKeys[frameKeyI];
@@ -586,6 +585,7 @@ Renderer.prototype._handleMouseEvent = function(e) {
 
 /**
  * Handle a keyboard event
+ * @param {Event} e
  * @return {boolean} true if the event was handled and should not be propagated
  */
 Renderer.prototype._handleKeyboardEvent = function(e) {
@@ -909,7 +909,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   const makeWrapper = function(children) {
     const wrapper = document.createElement('div');
     wrapper.className = 'p51-video-opt-input';
-    for (const child of children) { // eslint-disable-line no-unused-vars
+    for (const child of children) {
       wrapper.appendChild(child);
     }
     return wrapper;
@@ -957,7 +957,6 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   actionFormTitle.innerHTML = '<u>Object selection mode</u>';
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
-  // eslint-disable-next-line no-unused-vars
   for (const obj of Object.values(this._actionOptions)) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
@@ -1008,7 +1007,6 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   formTitle.innerHTML = '<u>Object attribute mode</u>';
   this.eleOptCtlAttrOptForm.appendChild(formTitle);
   this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
-  // eslint-disable-next-line no-unused-vars
   for (const item of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
