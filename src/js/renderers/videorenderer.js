@@ -515,7 +515,7 @@ VideoRenderer.prototype.customDraw = function(context) {
       fontheight = 8 * this.canvasMultiplier;
     }
     fontheight = this.checkFontHeight(fontheight);
-    context.font = `${fontheight}px Palanquin, sans-serif`;
+    context.font = `${fontheight}px Arial, sans-serif`;
     if (hhmmss === undefined) {
       hmmss = this.currentTimestamp();
     }
