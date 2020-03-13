@@ -1046,7 +1046,7 @@ Renderer.prototype._repositionOptionsPanel = function(target) {
   // Position options panel relative to location of options button
   // Display invisibly to get width and height
   this.eleDivVideoOpts.style.opacity = '0.0';
-  this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  this.eleDivVideoOpts.classList.remove('p51-display-none');
   this.eleDivVideoOpts.style.left = (
     target.offsetLeft -
     this.eleDivVideoOpts.offsetWidth +
@@ -1196,10 +1196,10 @@ Renderer.prototype._updateOptionsDisplayState = function() {
   }
   if (this._boolShowVideoOptions && this._boolShowControls) {
     this.eleDivVideoOpts.style.opacity = '0.9';
-    this.eleDivVideoOpts.className = 'p51-video-options-panel';
+    this.eleDivVideoOpts.classList.remove('p51-display-none');
   } else {
     this.eleDivVideoOpts.style.opacity = '0.0';
-    this.eleDivVideoOpts.className = 'p51-display-none';
+    this.eleDivVideoOpts.classList.add('p51-display-none');
     if (this.player._boolThumbnailMode) {
       this.eleDivVideoOpts.remove();
     }

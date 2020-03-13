@@ -58,6 +58,7 @@
   width: min-content;
   height: min-content;
   padding: 5px;
+  line-height: 1;
   opacity: 0;
   z-index: 20;
   display: flex;
@@ -96,6 +97,8 @@
   justify-items: end;
   grid-template-columns: max-content 1fr;
   cursor: pointer;
+  margin: 0;
+  padding: 0;
 }
 
 .p51-video-controls button {
