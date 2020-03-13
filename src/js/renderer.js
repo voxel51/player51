@@ -904,7 +904,7 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.innerHTML = 'DISPLAY OPTIONS';
+  this.eleDivVideoOpts.innerHTML = '<b>DISPLAY OPTIONS</b>';
 
   const makeWrapper = function(children) {
     const wrapper = document.createElement('div');
@@ -954,7 +954,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleActionCtlOptForm = document.createElement('form');
   this.eleActionCtlOptForm.className = 'p51-video-opt-input';
   const actionFormTitle = document.createElement('div');
-  actionFormTitle.innerHTML = '<u>Object selection mode</u>';
+  actionFormTitle.innerHTML = '<b>Object selection mode</b>';
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
   for (const obj of Object.values(this._actionOptions)) {
@@ -1004,7 +1004,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlAttrOptForm = document.createElement('form');
   this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   const formTitle = document.createElement('div');
-  formTitle.innerHTML = '<u>Object attribute mode</u>';
+  formTitle.innerHTML = '<b>Object attribute mode</b>';
   this.eleOptCtlAttrOptForm.appendChild(formTitle);
   this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
   for (const item of this._attrRenderModeOptions) {
