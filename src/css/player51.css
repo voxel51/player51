@@ -33,11 +33,7 @@
   -o-transition: opacity .5s;
   -ms-transition: opacity .5s;
   transition: opacity .5s;
-  background-image: linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -o-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -moz-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -webkit-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
-  background-image: -ms-linear-gradient(to top, rgba(33,33,33,1), rgba(33,33,33,0));
+  background-color: rgba(33, 33, 33, 0.5);
 }
 
 .p51-video-controls * {
