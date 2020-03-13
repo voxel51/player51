@@ -498,7 +498,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   if (this.overlayOptions.showFrameCount) {
     const frame = this.currentFrameStamp();
     const total = this.totalFrameStamp();
-    this.updateTimeStamp(`${frame}/${total}`);
+    this.updateTimeStamp(`${frame} / ${total}`);
   } else {
     hhmmss = this.currentTimestamp();
     const duration = this.durationStamp();
