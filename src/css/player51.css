@@ -311,20 +311,21 @@
 
 .p51-gallery-right-nav,
 .p51-gallery-left-nav {
-   cursor: pointer;
-   position: absolute;
-   top: 50%;
-   width: auto;
-   padding: 16px;
-   margin-top: -24px;
-   background-color: rgba(0, 0, 0, 0.2);
-   color: white;
-   font-weight: bold;
-   font-size: 25px;
-   border-radius: 0 3px 3px 0;
-   user-select: none;
-   -webkit-user-select: none;
-   height: auto;
+  cursor: pointer;
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -24px;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-weight: bold;
+  font-size: 25px;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  -webkit-user-select: none;
+  height: auto;
 }
 
 
