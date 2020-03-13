@@ -230,3 +230,7 @@ isPreparingOverlay: ${this._isPreparingOverlay}
 ImageRenderer.prototype.customDraw = function(context) {
   context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 };
+
+ImageRenderer.prototype.hasFrameNumbers = function() {
+  return false;
+};

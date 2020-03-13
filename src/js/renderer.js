@@ -1023,7 +1023,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
-  if (this._hasOverlay) {
+  if (this.hasFrameNumbers()) {
     this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
   }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
@@ -1220,6 +1220,10 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
     this.attrOptsElements.forEach((e) => e.className = 'p51-video-opt-input');
   }
   this.attrOptsElements.forEach((e) => recursiveMap(e, func));
+};
+
+Renderer.prototype.hasFrameNumbers = function() {
+  return this._hasOverlay;
 };
 
 Renderer.prototype.updatePlayButton = function(playing) {

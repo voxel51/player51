@@ -310,7 +310,7 @@ VideoRenderer.prototype._handleKeyboardEvent = function(e) {
     return true;
   }
   // navigating frame-by-frame with arrow keys
-  if (this.eleVideo.paused && this._hasOverlay &&
+  if (this.eleVideo.paused && this.hasFrameNumbers() &&
       (e.keyCode === 37 || e.keyCode === 39)) {
     if (e.keyCode === 37) { // left arrow
       this.eleVideo.currentTime = Math.max(
