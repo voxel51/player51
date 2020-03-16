@@ -1044,8 +1044,6 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
 Renderer.prototype._repositionOptionsPanel = function(target) {
   // Position options panel relative to location of options button
-  // Display invisibly to get width and height
-  this.eleDivVideoOpts.style.opacity = '0.0';
   this.eleDivVideoOpts.classList.remove('p51-display-none');
   this.eleDivVideoOpts.style.left = (
     target.offsetLeft -
