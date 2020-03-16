@@ -1043,20 +1043,11 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 };
 
 Renderer.prototype._repositionOptionsPanel = function(target) {
-  // Position options panel relative to location of options button
-  this.eleDivVideoOpts.classList.remove('p51-display-none');
-  this.eleDivVideoOpts.style.left = (
-    target.offsetLeft -
-    this.eleDivVideoOpts.offsetWidth +
-    target.offsetWidth
-  ) + 'px';
-  // Parse any padding to deal with offset from parent container
-  const paddingTxt = this.eleDivVideoControls.parentElement.style.paddingTop;
-  const topPad = parseInt(paddingTxt.replace('px', ''));
-  this.eleDivVideoOpts.style.bottom = (
-    this.eleDivVideoOpts.offsetHeight -
-    this.eleDivVideoControls.offsetTop + topPad + 12
-  ) + 'px';
+  // account for control bar height and any padding
+  this.eleDivVideoOpts.style.bottom = this.eleDivVideoControls.clientHeight +
+    parseInt(this.paddingBottom) + 4 + 'px';
+  this.eleDivVideoOpts.style.right =
+    parseInt(this.paddingRight) + 'px';
 };
 
 
