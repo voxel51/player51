@@ -92,12 +92,17 @@
   margin: 3px;
 }
 
+.p51-video-opt-input .p51-section-header {
+  display: block;
+  margin-bottom: 2px;
+}
+
 .p51-video-opt-input label {
   display: grid;
   justify-items: end;
   grid-template-columns: max-content 1fr;
   cursor: pointer;
-  margin: 0;
+  margin: 0 0 1px;
   padding: 0;
 }
 
