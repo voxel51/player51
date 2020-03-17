@@ -902,8 +902,8 @@ Renderer.prototype.initPlayerControlsPlayButtonHTML = function(parent) {
   this.pauseSVG = 'data:image/svg+xml,%0A%3Csvg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"%3E%3Cpath fill="rgb(238, 238, 238)" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/%3E%3Cpath d="M0 0h24v24H0z" fill="none"/%3E%3C/svg%3E';
   this.elePlayPauseButton = document.createElement('img');
   this.elePlayPauseButton.className = 'p51-clickable';
-  this.elePlayPauseButton.src = this.playSVG;
   this.elePlayPauseButton.style.gridArea = '2 / 2 / 2 / 2';
+  this.updatePlayButton(false);
   parent.appendChild(this.elePlayPauseButton);
 };
 
@@ -930,6 +930,7 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
   this.eleOptionsButton = document.createElement('img');
   this.eleOptionsButton.className = 'p51-clickable';
   this.eleOptionsButton.src = this.optionsSVG;
+  this.eleOptionsButton.title = 'Settings (s)';
   this.eleOptionsButton.style.gridArea = '2 / 5 / 2 / 5';
   parent.appendChild(this.eleOptionsButton);
 };
@@ -1259,8 +1260,10 @@ Renderer.prototype.updatePlayButton = function(playing) {
   if (this.elePlayPauseButton) {
     if (playing) {
       this.elePlayPauseButton.src = this.pauseSVG;
+      this.elePlayPauseButton.title = 'Pause (space)';
     } else {
       this.elePlayPauseButton.src = this.playSVG;
+      this.elePlayPauseButton.title = 'Play (space)';
     }
   }
 };
