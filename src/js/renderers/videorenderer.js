@@ -234,10 +234,16 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener('mouseup', function() {
+  this.eleSeekBar.addEventListener('mouseup', function(e) {
     self._boolManualSeek = false;
     if (self._boolPlaying && self.eleVideo.paused) {
-      self.eleVideo.currentTime = self.clampTimeToFrameStart();
+      // Calculate the new time
+      const seekRect = self.eleSeekBar.getBoundingClientRect();
+      const time = self.eleVideo.duration *
+          ((e.clientX - seekRect.left) / seekRect.width);
+      // Update the video time
+      self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
+      self.eleSeekBar.value = time / self.eleVideo.duration * self.seekBarMax;
       self.eleVideo.play();
     }
   });
