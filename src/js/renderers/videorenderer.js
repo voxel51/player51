@@ -45,7 +45,6 @@ function VideoRenderer(media, overlay, fps) {
   this._boolPlaying = false;
   this._boolManualSeek = false;
   this._boolShowControls = false;
-  this._boolShowVideoOptions = false;
   this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
@@ -249,6 +248,9 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   const hideControls = function() {
+    if (self._boolShowVideoOptions) {
+      return;
+    }
     self._boolShowControls = false;
     self.updateFromDynamicState();
   };

@@ -85,6 +85,7 @@ function Renderer(media, overlay) {
     name: 'Attribute: Value',
     value: 'attr-value',
   }];
+  this._boolShowVideoOptions = false;
   this._focusIndex = -1;
   this.seekBarMax = 100;
   // Loading state attributes
@@ -601,6 +602,16 @@ Renderer.prototype._handleKeyboardEvent = function(e) {
     this.updateFromDynamicState();
     return true;
   }
+};
+
+
+/**
+ * Called when the player loses focus
+ */
+Renderer.prototype._handleFocusLost = function() {
+  this._boolShowVideoOptions = false;
+  this._boolShowControls = false;
+  this.updateFromDynamicState();
 };
 
 

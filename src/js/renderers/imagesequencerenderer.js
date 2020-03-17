@@ -119,7 +119,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
    * @param {bool} showControls new visibility of controls
    */
   function handleShowControls(showControls) {
-    if (!self._isFrameInserted) {
+    if (self._boolShowVideoOptions || !self._isFrameInserted) {
       return;
     }
     self._boolShowControls = showControls;

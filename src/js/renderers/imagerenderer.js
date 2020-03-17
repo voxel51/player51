@@ -35,7 +35,6 @@ function ImageRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
   this._boolShowControls = false;
-  this._boolShowVideoOptions = false;
 }
 ImageRenderer.prototype = Object.create(Renderer.prototype);
 ImageRenderer.prototype.constructor = ImageRenderer;
@@ -94,6 +93,9 @@ ImageRenderer.prototype.initPlayerControls = function() {
   });
 
   const hideControls = function() {
+    if (self._boolShowVideoOptions) {
+      return;
+    }
     self._boolShowControls = false;
     self.updateFromDynamicState();
   };
