@@ -605,8 +605,15 @@ Renderer.prototype._handleMouseEvent = function(e) {
  * @return {boolean} true if the event was handled and should not be propagated
  */
 Renderer.prototype._handleKeyboardEvent = function(e) {
+  // esc: hide settings
   if (e.keyCode === 27 && this._boolShowVideoOptions) {
     this._boolShowVideoOptions = false;
+    this.updateFromDynamicState();
+    return true;
+  }
+  // s: toggle settings
+  if (e.key === 's') {
+    this._boolShowVideoOptions = !this._boolShowVideoOptions;
     this.updateFromDynamicState();
     return true;
   }
