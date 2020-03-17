@@ -58,6 +58,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
     video_labels_path = None
     sequence_path = None
     sequence_labels_path = None
+    gallery_path = None
+    gallery_labels_path = None
     default_delay = 0
     delays = {}
 
@@ -226,6 +228,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
             return self.sequence_path
         elif filename == "frames.json":
             return self.sequence_labels_path
+        elif filename == "mixedtest.zip":
+            return self.gallery_path
+        elif filename == "gallerytest.json":
+            return self.gallery_labels_path
         path = self.serve_path
         for word in words:
             drive, word = splitdrive(word)
@@ -278,6 +284,12 @@ def main(args=None):
     parser.add_argument("--sequence-labels-path", "--sequence-labels",
         default=os.path.join(DATA_DIR, "test", "data", "frames.json"),
         help="Path to test image sequence labels")
+    parser.add_argument("--gallery-path", "--gallery",
+        default=os.path.join(DATA_DIR, "test", "data", "mixedtest.zip"),
+        help="Path to test image gallery zip")
+    parser.add_argument("--gallery-labels-path", "--gallery-labels",
+        default=os.path.join(DATA_DIR, "test", "data", "gallerytest.json"),
+        help="Path to test image gallery labels")
     delay_group = parser.add_argument_group("delays")
     delay_group.add_argument("-d", "--delay", type=float, default=0,
         help="Time to wait before serving any request")
@@ -292,6 +304,8 @@ def main(args=None):
     RequestHandler.video_labels_path = args.video_labels_path
     RequestHandler.sequence_path = args.sequence_path
     RequestHandler.sequence_labels_path = args.sequence_labels_path
+    RequestHandler.gallery_path = args.gallery_path
+    RequestHandler.gallery_labels_path = args.gallery_labels_path
     RequestHandler.default_delay = args.delay
     if args.video_delay:
         RequestHandler.delays["video.mp4"] = args.video_delay
