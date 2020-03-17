@@ -89,13 +89,8 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
   const self = this;
 
 
-  this.elePlayPauseButton.addEventListener('click', function() {
-    self._boolPlaying = !self._boolPlaying;
-    self.updateFromDynamicState();
-    if (self._boolPlaying) {
-      self.timerCallback();
-    }
-  });
+  this.elePlayPauseButton.addEventListener('click',
+      this.togglePlayPause.bind(this));
 
   this.eleSeekBar.addEventListener('mousedown', function() {
     self._boolPlayingBeforeSeek = self._boolPlaying;
@@ -160,6 +155,35 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 };
 
 
+ImageSequenceRenderer.prototype._handleKeyboardEvent = function(e) {
+  Renderer.prototype._handleKeyboardEvent.call(this, e);
+  if (e.keyCode === 32) { // space
+    this.togglePlayPause();
+    return true;
+  }
+  // navigating frame-by-frame with arrow keys
+  if (!this._boolPlaying && (e.keyCode === 37 || e.keyCode === 39)) {
+    if (e.keyCode === 37) { // left arrow
+      this._frameNumber = Math.max(1, this._frameNumber - 1);
+    } else { // right arrow
+      this._frameNumber = Math.min(
+          this._totalNumberOfFrames, this._frameNumber + 1);
+    }
+    this.updateStateFromTimeChange();
+    return true;
+  }
+};
+
+
+ImageSequenceRenderer.prototype.togglePlayPause = function() {
+  this._boolPlaying = !this._boolPlaying;
+  this.updateFromDynamicState();
+  if (this._boolPlaying) {
+    this.timerCallback();
+  }
+};
+
+
 /**
  * This function is a controller
  * The dynamic state of the player has changed and various settings have to be
@@ -172,16 +196,6 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
     return;
   }
 
-  if (this._boolPlaying) {
-    // Update slider value
-    const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
-    this.eleSeekBar.value = value;
-  } else {
-    if (this._frameNumber === this._totalNumberOfFrames) {
-      // Reset
-      this._frameNumber = 1;
-    }
-  }
   this.updatePlayButton(this._boolPlaying);
   this.updateControlsDisplayState();
 };
@@ -252,9 +266,16 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  */
 ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
+  if (this._frameNumber > this._totalNumberOfFrames) {
+    this._frameNumber = 1;
+  }
   if (this._frameNumber === this._totalNumberOfFrames) {
     this._boolPlaying = false;
   }
+
+  const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
+  this.eleSeekBar.value = value;
+
   this.updateFromDynamicState();
   this.insertFrame(this._frameNumber);
   this.processFrame();
