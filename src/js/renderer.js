@@ -48,6 +48,7 @@ function Renderer(media, overlay) {
   this.parent = undefined;
   this.media = media;
   this.frameOverlay = {};
+  this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Player state attributes

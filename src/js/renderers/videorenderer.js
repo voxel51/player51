@@ -50,7 +50,6 @@ function VideoRenderer(media, overlay, fps) {
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1 / this.frameRate;
-  this.frameZeroOffset = 1;
 
   this._overlayCanBePrepared = false; // need to wait for video metadata
   this._isVideoMetadataLoaded = false;

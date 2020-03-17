@@ -104,8 +104,10 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 
   this.eleSeekBar.addEventListener('change', function() {
     // Calculate new frame
-    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100) *
-      self._totalNumberOfFrames);
+    self._frameNumber = Math.round(
+        (self.eleSeekBar.valueAsNumber / 100) *
+            (self._totalNumberOfFrames - self.frameZeroOffset),
+    ) + self.frameZeroOffset;
     if (!self._boolPlaying) {
       self.updateStateFromTimeChange();
     }
@@ -273,7 +275,8 @@ ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
     this._boolPlaying = false;
   }
 
-  const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
+  const value = ((this._frameNumber - this.frameZeroOffset) /
+      (this._totalNumberOfFrames - this.frameZeroOffset)) * 100;
   this.eleSeekBar.value = value;
 
   this.updateFromDynamicState();
