@@ -583,7 +583,15 @@ Renderer.prototype._handleMouseEvent = function(e) {
   // rescale to canvas width/height
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
+
   const overlayObj = this._findOverlayAt({x, y});
+  if (e.type.toLowerCase() === 'click' &&
+      overlayObj &&
+      overlayObj.constructor === ObjectOverlay &&
+      overlayObj.index === undefined) {
+    // disallow clicking on objects without IDs
+    return;
+  }
 
   if (this.setFocus(overlayObj, {x, y})) {
     this.processFrame();
