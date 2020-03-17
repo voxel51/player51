@@ -362,9 +362,7 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
  */
 ImageSequenceRenderer.prototype.clearState = function() {
   URL.revokeObjectURL(this._currentImageURL);
-  // Clear canvas
-  const context = this.setupCanvasContext();
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  this.clearCanvas();
 };
 
 

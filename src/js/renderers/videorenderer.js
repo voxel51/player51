@@ -288,9 +288,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (self.player._boolThumbnailMode) {
       self._boolPlaying = false;
       // clear things we do not want to render any more
-      self.setupCanvasContext().clearRect(0, 0, self
-          .canvasWidth, self
-          .canvasHeight);
+      self.clearCanvas();
     } else {
       hideControls();
       self.clearTimeout('hideControls');
@@ -481,12 +479,7 @@ hasMediaFragment: ${this._hasMediaFragment}
  * @param {context} context
  */
 VideoRenderer.prototype.customDraw = function(context) {
-  // Since we are rendering on a transparent canvas, we need to clean it
-  // every time.
   // @todo double-buffering
-  context.clearRect(
-      0, 0, this.canvasWidth, this.canvasHeight);
-
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.player.boolDrawFrameNumber) {

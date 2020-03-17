@@ -127,8 +127,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
       return;
     }
     if (self.player._boolThumbnailMode) {
-      self.setupCanvasContext().clearRect(0, 0, self
-          .canvasWidth, self.canvasHeight);
+      self.clearCanvas();
     } else {
       hideControls();
       self.clearTimeout('hideControls');
@@ -228,7 +227,6 @@ isPreparingOverlay: ${this._isPreparingOverlay}
  * @param {context} context
  */
 ImageRenderer.prototype.customDraw = function(context) {
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 };
 
 ImageRenderer.prototype.hasFrameNumbers = function() {

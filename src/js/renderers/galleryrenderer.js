@@ -288,6 +288,5 @@ GalleryRenderer.prototype.clearState = function() {
       delete this.frameOverlay[key];
     }
   }
-  const context = this.setupCanvasContext();
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  this.clearCanvas();
 };

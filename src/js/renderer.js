@@ -495,6 +495,7 @@ Renderer.prototype.processFrame = function() {
   if (!this._isReadyProcessFrames) {
     return;
   }
+  this.clearCanvas();
   const context = this.setupCanvasContext();
   this.customDraw(context);
   if (this._isOverlayPrepared) {
@@ -520,6 +521,11 @@ Renderer.prototype.processFrame = function() {
       }
     }
   }
+};
+
+Renderer.prototype.clearCanvas = function() {
+  this.eleCanvas.getContext('2d').clearRect(
+      0, 0, this.canvasWidth, this.canvasHeight);
 };
 
 Renderer.prototype._renderRest = function() {
