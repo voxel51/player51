@@ -608,12 +608,14 @@ Renderer.prototype._handleKeyboardEvent = function(e) {
   // esc: hide settings
   if (e.keyCode === 27 && this._boolShowVideoOptions) {
     this._boolShowVideoOptions = false;
+    this._repositionOptionsPanel();
     this.updateFromDynamicState();
     return true;
   }
   // s: toggle settings
   if (e.key === 's') {
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
+    this._repositionOptionsPanel();
     this.updateFromDynamicState();
     return true;
   }
@@ -1083,7 +1085,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   parent.appendChild(this.eleDivVideoOpts);
 };
 
-Renderer.prototype._repositionOptionsPanel = function(target) {
+Renderer.prototype._repositionOptionsPanel = function() {
   // account for control bar height and any padding
   this.eleDivVideoOpts.style.bottom = this.eleDivVideoControls.clientHeight +
     parseInt(this.paddingBottom) + 4 + 'px';
@@ -1095,7 +1097,7 @@ Renderer.prototype._repositionOptionsPanel = function(target) {
 Renderer.prototype.initPlayerOptionsControls = function() {
   this.eleOptionsButton.addEventListener('click', (e) => {
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
-    this._repositionOptionsPanel(e.target);
+    this._repositionOptionsPanel();
     this.updateFromDynamicState();
   });
 
