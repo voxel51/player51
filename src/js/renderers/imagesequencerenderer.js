@@ -36,7 +36,7 @@ function ImageSequenceRenderer(media, overlay, fps) {
   this._frameNumber = 1;
   this._boolShowControls = false;
   this._boolPlaying = false;
-  this._boolPaused = true;
+  this._boolPlayingBeforeSeek = false;
   this._boolManualSeek = true;
   // Data structures
   this.imageFiles = {};
@@ -90,26 +90,21 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 
 
   this.elePlayPauseButton.addEventListener('click', function() {
-    if (self._boolPlaying !== true) {
-      self._boolPlaying = true;
-      self._boolPaused = false;
-      self.timerCallback();
-    } else {
-      self._boolPlaying = false;
-      self._boolPaused = true;
-    }
+    self._boolPlaying = !self._boolPlaying;
     self.updateFromDynamicState();
+    if (self._boolPlaying) {
+      self.timerCallback();
+    }
   });
 
   this.eleSeekBar.addEventListener('mousedown', function() {
+    self._boolPlayingBeforeSeek = self._boolPlaying;
     self._boolPlaying = false;
   });
 
   this.eleSeekBar.addEventListener('mouseup', function() {
-    self._boolPlaying = true;
-    if (self._boolPaused) {
-      self._boolPlaying = false;
-    }
+    self._boolPlaying = self._boolPlayingBeforeSeek;
+    self._boolPlayingBeforeSeek = false;
   });
 
   this.eleSeekBar.addEventListener('change', function() {
