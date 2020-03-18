@@ -260,14 +260,12 @@
 .p51-label input[type=radio]:checked ~ .p51-radio {
   background: rgb(225, 100, 40);
 }
-.p51-radio:after,
-.p51-checkbox:after {
+.p51-radio:after {
   content: "";
   position: relative;
   display: none;
 }
-.p51-label input[type=radio]:checked ~ .p51-radio:after,
-.p51-label input[type=checkbox]:checked ~ .p51-checkbox:after {
+.p51-label input[type=radio]:checked ~ .p51-radio:after {
   display: block;
 }
 
