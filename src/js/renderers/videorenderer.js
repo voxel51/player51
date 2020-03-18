@@ -45,12 +45,10 @@ function VideoRenderer(media, overlay, fps) {
   this._boolPlaying = false;
   this._boolManualSeek = false;
   this._boolShowControls = false;
-  this._boolShowVideoOptions = false;
   this._boolSingleFrame = false;
   // Content Attributes
   this.frameRate = fps;
   this.frameDuration = 1 / this.frameRate;
-  this.frameZeroOffset = 1;
 
   this._overlayCanBePrepared = false; // need to wait for video metadata
   this._isVideoMetadataLoaded = false;
@@ -235,15 +233,24 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener('mouseup', function() {
+  this.eleSeekBar.addEventListener('mouseup', function(e) {
     self._boolManualSeek = false;
     if (self._boolPlaying && self.eleVideo.paused) {
-      self.eleVideo.currentTime = self.clampTimeToFrameStart();
+      // Calculate the new time
+      const seekRect = self.eleSeekBar.getBoundingClientRect();
+      const time = self.eleVideo.duration *
+          ((e.clientX - seekRect.left) / seekRect.width);
+      // Update the video time
+      self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
+      self.eleSeekBar.value = time / self.eleVideo.duration * self.seekBarMax;
       self.eleVideo.play();
     }
   });
 
   const hideControls = function() {
+    if (self._boolShowVideoOptions) {
+      return;
+    }
     self._boolShowControls = false;
     self.updateFromDynamicState();
   };
@@ -288,9 +295,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (self.player._boolThumbnailMode) {
       self._boolPlaying = false;
       // clear things we do not want to render any more
-      self.setupCanvasContext().clearRect(0, 0, self
-          .canvasWidth, self
-          .canvasHeight);
+      self.clearCanvas();
     } else {
       hideControls();
       self.clearTimeout('hideControls');
@@ -310,16 +315,15 @@ VideoRenderer.prototype._handleKeyboardEvent = function(e) {
     return true;
   }
   // navigating frame-by-frame with arrow keys
-  if (this.eleVideo.paused) {
+  if (this.eleVideo.paused && this.hasFrameNumbers() &&
+      (e.keyCode === 37 || e.keyCode === 39)) {
     if (e.keyCode === 37) { // left arrow
       this.eleVideo.currentTime = Math.max(
           0, this.computeFrameTime() - this.frameDuration);
-    } else if (e.keyCode === 39) { // right arrow
+    } else { // right arrow
       this.eleVideo.currentTime = Math.min(
           this.eleVideo.duration,
           this.computeFrameTime() + this.frameDuration);
-    } else {
-      return false;
     }
     this.updateStateFromTimeChange();
     return true;
@@ -407,7 +411,9 @@ VideoRenderer.prototype.updateFromLoadingState = function() {
 
   if (this._overlayCanBePrepared) {
     this.prepareOverlay(this._overlayData);
+  }
 
+  if (this._isOverlayPrepared) {
     if ((!isFinite(this.frameRate) || !isFinite(this.frameDuration)) &&
         isFinite(this.eleVideo.duration)) {
       // FPS wasn't provided, so guess it from the labels. If we don't have
@@ -480,12 +486,7 @@ hasMediaFragment: ${this._hasMediaFragment}
  * @param {context} context
  */
 VideoRenderer.prototype.customDraw = function(context) {
-  // Since we are rendering on a transparent canvas, we need to clean it
-  // every time.
   // @todo double-buffering
-  context.clearRect(
-      0, 0, this.canvasWidth, this.canvasHeight);
-
   // @todo give a css class to the frame number so its positioning and format
   // can be controlled easily from the css
   if (this.player.boolDrawFrameNumber) {
@@ -497,7 +498,7 @@ VideoRenderer.prototype.customDraw = function(context) {
   if (this.overlayOptions.showFrameCount) {
     const frame = this.currentFrameStamp();
     const total = this.totalFrameStamp();
-    this.updateTimeStamp(`${frame}/${total}`);
+    this.updateTimeStamp(`${frame} / ${total}`);
   } else {
     hhmmss = this.currentTimestamp();
     const duration = this.durationStamp();
@@ -514,7 +515,7 @@ VideoRenderer.prototype.customDraw = function(context) {
       fontheight = 8 * this.canvasMultiplier;
     }
     fontheight = this.checkFontHeight(fontheight);
-    context.font = `${fontheight}px Palanquin, sans-serif`;
+    context.font = `${fontheight}px Arial, sans-serif`;
     if (hhmmss === undefined) {
       hmmss = this.currentTimestamp();
     }

@@ -35,7 +35,6 @@ function ImageRenderer(media, overlay) {
   Renderer.call(this, media, overlay);
   this._frameNumber = 1;
   this._boolShowControls = false;
-  this._boolShowVideoOptions = false;
 }
 ImageRenderer.prototype = Object.create(Renderer.prototype);
 ImageRenderer.prototype.constructor = ImageRenderer;
@@ -94,6 +93,9 @@ ImageRenderer.prototype.initPlayerControls = function() {
   });
 
   const hideControls = function() {
+    if (self._boolShowVideoOptions) {
+      return;
+    }
     self._boolShowControls = false;
     self.updateFromDynamicState();
   };
@@ -127,8 +129,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
       return;
     }
     if (self.player._boolThumbnailMode) {
-      self.setupCanvasContext().clearRect(0, 0, self
-          .canvasWidth, self.canvasHeight);
+      self.clearCanvas();
     } else {
       hideControls();
       self.clearTimeout('hideControls');
@@ -228,5 +229,8 @@ isPreparingOverlay: ${this._isPreparingOverlay}
  * @param {context} context
  */
 ImageRenderer.prototype.customDraw = function(context) {
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+};
+
+ImageRenderer.prototype.hasFrameNumbers = function() {
+  return false;
 };

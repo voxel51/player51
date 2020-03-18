@@ -208,7 +208,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
 
   this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
-  this.font = `${this.attrFontHeight}px Palanquin, sans-serif`;
+  this.font = `${this.attrFontHeight}px Arial, sans-serif`;
   if (typeof(context) === 'undefined') {
     return;
   }
@@ -476,7 +476,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
     canvasHeight) {
-  context.font = `${this.headerFontHeight}px Palanquin, sans-serif`;
+  context.font = `${this.headerFontHeight}px Arial, sans-serif`;
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
 
@@ -494,7 +494,7 @@ ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
 };
 
 ObjectOverlay.prototype._setupAttrFont = function(context) {
-  this.attrFont = `${this.attrFontHeight}px Palanquin, sans-serif`;
+  this.attrFont = `${this.attrFontHeight}px Arial, sans-serif`;
   context.font = this.attrFont;
 };
 
@@ -605,7 +605,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     context.fillRect(this.x, this.y - this.headerHeight,
         this.headerWidth, this.headerHeight);
 
-    context.font = `${this.headerFontHeight}px Palanquin, sans-serif`;
+    context.font = `${this.headerFontHeight}px Arial, sans-serif`;
     context.fillStyle = colorGenerator.white;
     context.fillText(this.labelUpper,
         this.x + this.textPadder, this.y - this.textPadder);

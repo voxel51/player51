@@ -112,7 +112,6 @@ function Player51(options, ...args) {
     delete options.src;
     delete options.type;
   }
-  /* eslint-disable-next-line no-unused-vars */
   for (let [index, name] of Object.entries(['overlay', 'fps', 'isSequence'])) {
     index = Number(index);
     if (args[index] !== undefined) {

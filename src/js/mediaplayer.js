@@ -320,6 +320,9 @@ MediaPlayer._handleGlobalClick = function(e) {
       return;
     }
   }
+  if (MediaPlayer._focusedInstance) {
+    MediaPlayer._focusedInstance.renderer._handleFocusLost();
+  }
   MediaPlayer._focusedInstance = null;
 };
 

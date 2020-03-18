@@ -17,6 +17,7 @@ import {
   ObjectOverlay,
 } from './overlay.js';
 import {
+  ICONS,
   rescale,
   recursiveMap,
 } from './util.js';
@@ -48,6 +49,7 @@ function Renderer(media, overlay) {
   this.parent = undefined;
   this.media = media;
   this.frameOverlay = {};
+  this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = '../src/js/zipreader/';
   // Player state attributes
@@ -77,13 +79,21 @@ function Renderer(media, overlay) {
     attrRenderBox: true,
     action: this._actionOptions.click,
   };
-  this._attrRenderModeOptions = ['value', 'attr-value'];
+  this._attrRenderModeOptions = [{
+    name: 'Value',
+    value: 'value',
+  }, {
+    name: 'Attribute: Value',
+    value: 'attr-value',
+  }];
+  this._boolShowVideoOptions = false;
   this._focusIndex = -1;
   this.seekBarMax = 100;
   // Loading state attributes
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
   this._isDataLoaded = false;
+  this._hasOverlay = Boolean(overlay);
   this._overlayCanBePrepared = true;
   this._isOverlayPrepared = false;
   this._isPreparingOverlay = false;
@@ -262,7 +272,7 @@ Renderer.prototype.handleBlob = function() {
  * @param {string} overlay of overlay JSON
  */
 Renderer.prototype.handleOverlay = function(overlay) {
-  if ((overlay === null) || (typeof(overlay) === 'undefined')) {
+  if (!overlay) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
     this._isOverlayPrepared = true;
@@ -270,7 +280,7 @@ Renderer.prototype.handleOverlay = function(overlay) {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === 'object') && (overlay != null) &&
+  } else if ((typeof(overlay) === 'object') &&
       Object.keys(overlay).length > 0) {
     this._overlayURL = null;
     this._overlayData = overlay;
@@ -323,7 +333,6 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   if (typeof(rawjson.frames) !== 'undefined') {
     const context = this.setupCanvasContext();
     const frameKeys = Object.keys(rawjson.frames);
-    /* eslint-disable-next-line no-unused-vars */
     for (const frameKeyI in frameKeys) {
       if (frameKeyI) {
         const frameKey = frameKeys[frameKeyI];
@@ -489,6 +498,7 @@ Renderer.prototype.processFrame = function() {
   if (!this._isReadyProcessFrames) {
     return;
   }
+  this.clearCanvas();
   const context = this.setupCanvasContext();
   this.customDraw(context);
   if (this._isOverlayPrepared) {
@@ -514,6 +524,11 @@ Renderer.prototype.processFrame = function() {
       }
     }
   }
+};
+
+Renderer.prototype.clearCanvas = function() {
+  this.eleCanvas.getContext('2d').clearRect(
+      0, 0, this.canvasWidth, this.canvasHeight);
 };
 
 Renderer.prototype._renderRest = function() {
@@ -569,7 +584,15 @@ Renderer.prototype._handleMouseEvent = function(e) {
   // rescale to canvas width/height
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
+
   const overlayObj = this._findOverlayAt({x, y});
+  if (e.type.toLowerCase() === 'click' &&
+      overlayObj &&
+      overlayObj.constructor === ObjectOverlay &&
+      overlayObj.index === undefined) {
+    // disallow clicking on objects without IDs
+    return;
+  }
 
   if (this.setFocus(overlayObj, {x, y})) {
     this.processFrame();
@@ -579,14 +602,34 @@ Renderer.prototype._handleMouseEvent = function(e) {
 
 /**
  * Handle a keyboard event
+ * @param {Event} e
  * @return {boolean} true if the event was handled and should not be propagated
  */
 Renderer.prototype._handleKeyboardEvent = function(e) {
+  // esc: hide settings
   if (e.keyCode === 27 && this._boolShowVideoOptions) {
     this._boolShowVideoOptions = false;
+    this._repositionOptionsPanel();
     this.updateFromDynamicState();
     return true;
   }
+  // s: toggle settings
+  if (e.key === 's') {
+    this._boolShowVideoOptions = !this._boolShowVideoOptions;
+    this._repositionOptionsPanel();
+    this.updateFromDynamicState();
+    return true;
+  }
+};
+
+
+/**
+ * Called when the player loses focus
+ */
+Renderer.prototype._handleFocusLost = function() {
+  this._boolShowVideoOptions = false;
+  this._boolShowControls = false;
+  this.updateFromDynamicState();
 };
 
 
@@ -858,12 +901,10 @@ Renderer.prototype.initPlayerControlHTML = function(parent, sequence=true) {
 };
 
 Renderer.prototype.initPlayerControlsPlayButtonHTML = function(parent) {
-  this.playSVG = 'data:image/svg+xml,%0A%3Csvg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"%3E%3Cpath fill="rgb(238, 238, 238)" d="M8 5v14l11-7z"/%3E%3Cpath d="M0 0h24v24H0z" fill="none"/%3E%3C/svg%3E';
-  this.pauseSVG = 'data:image/svg+xml,%0A%3Csvg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"%3E%3Cpath fill="rgb(238, 238, 238)" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/%3E%3Cpath d="M0 0h24v24H0z" fill="none"/%3E%3C/svg%3E';
   this.elePlayPauseButton = document.createElement('img');
   this.elePlayPauseButton.className = 'p51-clickable';
-  this.elePlayPauseButton.src = this.playSVG;
   this.elePlayPauseButton.style.gridArea = '2 / 2 / 2 / 2';
+  this.updatePlayButton(false);
   parent.appendChild(this.elePlayPauseButton);
 };
 
@@ -886,10 +927,10 @@ Renderer.prototype.initTimeStampHTML = function(parent) {
 };
 
 Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
-  this.optionsSVG = 'data:image/svg+xml,%0A%3Csvg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"%3E%3Cg%3E%3Cpath d="M0,0h24v24H0V0z" fill="none"/%3E%3Cpath fill="rgb(238, 238, 238)" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/%3E%3C/g%3E%3C/svg%3E';
   this.eleOptionsButton = document.createElement('img');
   this.eleOptionsButton.className = 'p51-clickable';
-  this.eleOptionsButton.src = this.optionsSVG;
+  this.eleOptionsButton.src = ICONS.options;
+  this.eleOptionsButton.title = 'Settings (s)';
   this.eleOptionsButton.style.gridArea = '2 / 5 / 2 / 5';
   parent.appendChild(this.eleOptionsButton);
 };
@@ -897,12 +938,19 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.innerHTML = 'DISPLAY OPTIONS';
+  this.eleDivVideoOpts.innerHTML = '<b>DISPLAY OPTIONS</b>';
+
+  const makeSectionHeader = function(text) {
+    const header = document.createElement('b');
+    header.className = 'p51-section-header';
+    header.innerText = text;
+    return header;
+  };
 
   const makeWrapper = function(children) {
     const wrapper = document.createElement('div');
     wrapper.className = 'p51-video-opt-input';
-    for (const child of children) { // eslint-disable-line no-unused-vars
+    for (const child of children) {
       wrapper.appendChild(child);
     }
     return wrapper;
@@ -926,7 +974,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox to show frames instead of time
   const eleOptCtlFrameCountRow = makeCheckboxRow(
-      'Show Frame Number', this.overlayOptions.showFrameCount);
+      'Show frame number', this.overlayOptions.showFrameCount);
   this.eleOptCtlShowFrameCount =
       eleOptCtlFrameCountRow.querySelector('input[type=checkbox]');
   this.eleOptCtlShowFrameCountWrapper = makeWrapper([
@@ -947,10 +995,9 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleActionCtlOptForm = document.createElement('form');
   this.eleActionCtlOptForm.className = 'p51-video-opt-input';
   const actionFormTitle = document.createElement('div');
-  actionFormTitle.innerHTML = '<u>Select mode</u>:';
+  actionFormTitle.appendChild(makeSectionHeader('Object selection mode'));
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
-  // eslint-disable-next-line no-unused-vars
   for (const obj of Object.values(this._actionOptions)) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
@@ -987,7 +1034,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox for rendering background for attr text
   const eleOptCtlAttrBoxRow = makeCheckboxRow(
-      'Attribute background', this.overlayOptions.attrRenderBox);
+      'Show attribute background', this.overlayOptions.attrRenderBox);
   this.eleOptCtlShowAttrBox =
       eleOptCtlAttrBoxRow.querySelector('input[type=checkbox]');
   this.eleOptCtlAttrBoxWrapper = makeWrapper([
@@ -998,18 +1045,17 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlAttrOptForm = document.createElement('form');
   this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
   const formTitle = document.createElement('div');
-  formTitle.innerHTML = '<u>Attribute rendering mode</u>:';
+  formTitle.appendChild(makeSectionHeader('Object attribute mode'));
   this.eleOptCtlAttrOptForm.appendChild(formTitle);
   this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
-  // eslint-disable-next-line no-unused-vars
-  for (const val of this._attrRenderModeOptions) {
+  for (const item of this._attrRenderModeOptions) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
     radio.name = 'attrRenderOpt';
-    radio.value = val;
-    radio.checked = this.overlayOptions.attrRenderMode === val;
+    radio.value = item.value;
+    radio.checked = this.overlayOptions.attrRenderMode === item.value;
     const label = document.createElement('label');
-    label.innerHTML = val;
+    label.innerHTML = item.name;
     label.className = 'p51-label';
     label.appendChild(radio);
     const span = document.createElement('span');
@@ -1018,7 +1064,9 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
 
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
+  if (this.hasFrameNumbers()) {
+    this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
+  }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
@@ -1035,30 +1083,19 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   parent.appendChild(this.eleDivVideoOpts);
 };
 
-Renderer.prototype._repositionOptionsPanel = function(target) {
-  // Position options panel relative to location of options button
-  // Display invisibly to get width and height
-  this.eleDivVideoOpts.style.opacity = '0.0';
-  this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.style.left = (
-    target.offsetLeft -
-    this.eleDivVideoOpts.offsetWidth +
-    target.offsetWidth
-  ) + 'px';
-  // Parse any padding to deal with offset from parent container
-  const paddingTxt = this.eleDivVideoControls.parentElement.style.paddingTop;
-  const topPad = parseInt(paddingTxt.replace('px', ''));
-  this.eleDivVideoOpts.style.bottom = (
-    this.eleDivVideoOpts.offsetHeight -
-    this.eleDivVideoControls.offsetTop + topPad + 12
-  ) + 'px';
+Renderer.prototype._repositionOptionsPanel = function() {
+  // account for control bar height and any padding
+  this.eleDivVideoOpts.style.bottom = this.eleDivVideoControls.clientHeight +
+    parseInt(this.paddingBottom) + 4 + 'px';
+  this.eleDivVideoOpts.style.right =
+    parseInt(this.paddingRight) + 'px';
 };
 
 
 Renderer.prototype.initPlayerOptionsControls = function() {
   this.eleOptionsButton.addEventListener('click', (e) => {
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
-    this._repositionOptionsPanel(e.target);
+    this._repositionOptionsPanel();
     this.updateFromDynamicState();
   });
 
@@ -1189,10 +1226,10 @@ Renderer.prototype._updateOptionsDisplayState = function() {
   }
   if (this._boolShowVideoOptions && this._boolShowControls) {
     this.eleDivVideoOpts.style.opacity = '0.9';
-    this.eleDivVideoOpts.className = 'p51-video-options-panel';
+    this.eleDivVideoOpts.classList.remove('p51-display-none');
   } else {
     this.eleDivVideoOpts.style.opacity = '0.0';
-    this.eleDivVideoOpts.className = 'p51-display-none';
+    this.eleDivVideoOpts.classList.add('p51-display-none');
     if (this.player._boolThumbnailMode) {
       this.eleDivVideoOpts.remove();
     }
@@ -1215,12 +1252,18 @@ Renderer.prototype._setAttributeControlsDisplay = function() {
   this.attrOptsElements.forEach((e) => recursiveMap(e, func));
 };
 
+Renderer.prototype.hasFrameNumbers = function() {
+  return this._hasOverlay;
+};
+
 Renderer.prototype.updatePlayButton = function(playing) {
   if (this.elePlayPauseButton) {
     if (playing) {
-      this.elePlayPauseButton.src = this.pauseSVG;
+      this.elePlayPauseButton.src = ICONS.pause;
+      this.elePlayPauseButton.title = 'Pause (space)';
     } else {
-      this.elePlayPauseButton.src = this.playSVG;
+      this.elePlayPauseButton.src = ICONS.play;
+      this.elePlayPauseButton.title = 'Play (space)';
     }
   }
 };

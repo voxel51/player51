@@ -223,7 +223,6 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
 
   if (typeof(this._overlayData.images) !== 'undefined') {
     const frameKeys = Object.keys(this._overlayData.images);
-    /* eslint-disable-next-line no-unused-vars */
     for (const key in frameKeys) {
       if (this._overlayData.images[key].filename === filename) {
         entry = this._overlayData.images[key];
@@ -233,7 +232,6 @@ GalleryRenderer.prototype.prepareOverlay = function(filename) {
   } else if (typeof(this._overlayData.frames) !== 'undefined') {
     const frameKeys = Object.keys(this._overlayData.frames);
     const frameNumber = parseInt(filename.replace(/[^0-9]/g, ''));
-    /* eslint-disable-next-line no-unused-vars */
     for (const key in frameKeys) {
       if (parseInt(key) === frameNumber) {
         entry = this._overlayData.frames[key];
@@ -285,12 +283,10 @@ GalleryRenderer.prototype.clearState = function() {
   this._isReadyProcessFrames = false;
   URL.revokeObjectURL(this._currentImageURL);
   // Clear canvas
-  /* eslint-disable-next-line no-unused-vars */
   for (const key in this.frameOverlay) {
     if (key) {
       delete this.frameOverlay[key];
     }
   }
-  const context = this.setupCanvasContext();
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  this.clearCanvas();
 };

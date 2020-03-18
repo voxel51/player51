@@ -36,7 +36,7 @@ function ImageSequenceRenderer(media, overlay, fps) {
   this._frameNumber = 1;
   this._boolShowControls = false;
   this._boolPlaying = false;
-  this._boolPaused = true;
+  this._boolPlayingBeforeSeek = false;
   this._boolManualSeek = true;
   // Data structures
   this.imageFiles = {};
@@ -89,33 +89,25 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
   const self = this;
 
 
-  this.elePlayPauseButton.addEventListener('click', function() {
-    if (self._boolPlaying !== true) {
-      self._boolPlaying = true;
-      self._boolPaused = false;
-      self.timerCallback();
-    } else {
-      self._boolPlaying = false;
-      self._boolPaused = true;
-    }
-    self.updateFromDynamicState();
-  });
+  this.elePlayPauseButton.addEventListener('click',
+      this.togglePlayPause.bind(this));
 
   this.eleSeekBar.addEventListener('mousedown', function() {
+    self._boolPlayingBeforeSeek = self._boolPlaying;
     self._boolPlaying = false;
   });
 
   this.eleSeekBar.addEventListener('mouseup', function() {
-    self._boolPlaying = true;
-    if (self._boolPaused) {
-      self._boolPlaying = false;
-    }
+    self._boolPlaying = self._boolPlayingBeforeSeek;
+    self._boolPlayingBeforeSeek = false;
   });
 
   this.eleSeekBar.addEventListener('change', function() {
     // Calculate new frame
-    self._frameNumber = Math.round((self.eleSeekBar.valueAsNumber / 100) *
-      self._totalNumberOfFrames);
+    self._frameNumber = Math.round(
+        (self.eleSeekBar.valueAsNumber / 100) *
+            (self._totalNumberOfFrames - self.frameZeroOffset),
+    ) + self.frameZeroOffset;
     if (!self._boolPlaying) {
       self.updateStateFromTimeChange();
     }
@@ -127,7 +119,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
    * @param {bool} showControls new visibility of controls
    */
   function handleShowControls(showControls) {
-    if (!self._isFrameInserted) {
+    if (self._boolShowVideoOptions || !self._isFrameInserted) {
       return;
     }
     self._boolShowControls = showControls;
@@ -165,6 +157,35 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
 };
 
 
+ImageSequenceRenderer.prototype._handleKeyboardEvent = function(e) {
+  Renderer.prototype._handleKeyboardEvent.call(this, e);
+  if (e.keyCode === 32) { // space
+    this.togglePlayPause();
+    return true;
+  }
+  // navigating frame-by-frame with arrow keys
+  if (!this._boolPlaying && (e.keyCode === 37 || e.keyCode === 39)) {
+    if (e.keyCode === 37) { // left arrow
+      this._frameNumber = Math.max(1, this._frameNumber - 1);
+    } else { // right arrow
+      this._frameNumber = Math.min(
+          this._totalNumberOfFrames, this._frameNumber + 1);
+    }
+    this.updateStateFromTimeChange();
+    return true;
+  }
+};
+
+
+ImageSequenceRenderer.prototype.togglePlayPause = function() {
+  this._boolPlaying = !this._boolPlaying;
+  this.updateFromDynamicState();
+  if (this._boolPlaying) {
+    this.timerCallback();
+  }
+};
+
+
 /**
  * This function is a controller
  * The dynamic state of the player has changed and various settings have to be
@@ -177,16 +198,6 @@ ImageSequenceRenderer.prototype.updateFromDynamicState = function() {
     return;
   }
 
-  if (this._boolPlaying) {
-    // Update slider value
-    const value = (this._frameNumber / this._totalNumberOfFrames) * 100;
-    this.eleSeekBar.value = value;
-  } else {
-    if (this._frameNumber === this._totalNumberOfFrames) {
-      // Reset
-      this._frameNumber = 1;
-    }
-  }
   this.updatePlayButton(this._boolPlaying);
   this.updateControlsDisplayState();
 };
@@ -257,9 +268,17 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  */
 ImageSequenceRenderer.prototype.updateStateFromTimeChange = function() {
+  if (this._frameNumber > this._totalNumberOfFrames) {
+    this._frameNumber = 1;
+  }
   if (this._frameNumber === this._totalNumberOfFrames) {
     this._boolPlaying = false;
   }
+
+  const value = ((this._frameNumber - this.frameZeroOffset) /
+      (this._totalNumberOfFrames - this.frameZeroOffset)) * 100;
+  this.eleSeekBar.value = value;
+
   this.updateFromDynamicState();
   this.insertFrame(this._frameNumber);
   this.processFrame();
@@ -362,9 +381,7 @@ ImageSequenceRenderer.prototype.insertFrame = function(frameNumber) {
  */
 ImageSequenceRenderer.prototype.clearState = function() {
   URL.revokeObjectURL(this._currentImageURL);
-  // Clear canvas
-  const context = this.setupCanvasContext();
-  context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  this.clearCanvas();
 };
 
 
