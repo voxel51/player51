@@ -78,13 +78,9 @@ VideoRenderer.prototype.initPlayer = function() {
   this.eleVideo = document.createElement('video');
   this.eleVideo.className = 'p51-contained-video';
   this.eleVideo.setAttribute('preload', 'metadata');
-  this.eleVideo.muted =
-    true; // this works whereas .setAttribute does not
+  this.eleVideo.setAttribute('src', this.media.src);
+  this.eleVideo.muted = true; // this works whereas .setAttribute does not
 
-  this.eleVideoSource = document.createElement('source');
-  this.eleVideoSource.setAttribute('src', this.media.src);
-  this.eleVideoSource.setAttribute('type', this.media.type);
-  this.eleVideo.appendChild(this.eleVideoSource);
   this.eleDivVideo.appendChild(this.eleVideo);
   this.parent.appendChild(this.eleDivVideo);
 
@@ -195,7 +191,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateStateFromTimeChange();
   });
 
-  this.eleVideoSource.addEventListener('error', function() {
+  this.eleVideo.addEventListener('error', function() {
     if (self.player._boolNotFound) {
       self.eleVideo.setAttribute('poster', self.player._notFoundPosterURL);
     }
