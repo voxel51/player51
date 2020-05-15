@@ -1267,8 +1267,6 @@ Renderer.prototype.updateSizeAndPaddingByParent = function() {
   this.checkPlayer();
   this.checkParentandMedia();
   this.determineMediaDimensions();
-  //this.eleCanvas.setAttribute('width', this.mediaWidth);
-  //this.eleCanvas.setAttribute('height', this.mediaHeight);
   this.canvasWidth = this.mediaWidth;
   this.canvasHeight = this.mediaHeight;
   this._isSizePrepared = true;
@@ -1340,10 +1338,6 @@ Renderer.prototype.handleWidthAndHeight = function() {
     this.width = this.player._forcedWidth;
     this.height = this.player._forcedHeight;
   }
-
-  // Set width and height
-  //this.mediaElement.setAttribute('width', this.width);
-  //this.mediaElement.setAttribute('height', this.height);
 };
 
 

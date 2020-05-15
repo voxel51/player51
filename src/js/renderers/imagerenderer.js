@@ -190,7 +190,7 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
   }
 
   if (this._isOverlayPrepared) {
-      this.processFrame();
+    this.processFrame();
   }
 };
 
