@@ -36,6 +36,10 @@
   background-color: rgba(33, 33, 33, 0.5);
 }
 
+.p51-video-controls {
+  width: 100%;
+}
+
 .p51-video-controls * {
   color: #EEE;
 }

@@ -137,7 +137,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   });
 
-  this.updateFromLoadingState();
+  // this.updateFromLoadingState();
 };
 
 

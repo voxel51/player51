@@ -159,39 +159,6 @@ Renderer.prototype.determineMediaDimensions = function() {
  * @member resizeControls
  */
 Renderer.prototype.resizeControls = function() {
-  if (!this.eleDivVideoControls) {
-    return;
-  }
-  if (this._boolBorderBox) {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.min(60 + this.paddingBottomN, 0.1 * this.height +
-        this.paddingBottomN) + 'px'
-    );
-
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
-      2) + 'px';
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  } else {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.max(60, 0.075 * this.height) + 'px'
-    );
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = this.paddingBottom;
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  }
 };
 
 
@@ -1300,8 +1267,8 @@ Renderer.prototype.updateSizeAndPaddingByParent = function() {
   this.checkPlayer();
   this.checkParentandMedia();
   this.determineMediaDimensions();
-  this.eleCanvas.setAttribute('width', this.mediaWidth);
-  this.eleCanvas.setAttribute('height', this.mediaHeight);
+  //this.eleCanvas.setAttribute('width', this.mediaWidth);
+  //this.eleCanvas.setAttribute('height', this.mediaHeight);
   this.canvasWidth = this.mediaWidth;
   this.canvasHeight = this.mediaHeight;
   this._isSizePrepared = true;
@@ -1375,8 +1342,8 @@ Renderer.prototype.handleWidthAndHeight = function() {
   }
 
   // Set width and height
-  this.mediaElement.setAttribute('width', this.width);
-  this.mediaElement.setAttribute('height', this.height);
+  //this.mediaElement.setAttribute('width', this.width);
+  //this.mediaElement.setAttribute('height', this.height);
 };
 
 
@@ -1407,78 +1374,6 @@ Renderer.prototype.resizeCanvas = function() {
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
   this.canvasMultiplier = canvasWidth / this.width;
-
-  this.parent.setAttribute('width', this.width);
-  this.parent.setAttribute('height', this.height);
-
-  if (this._boolBorderBox) {
-    const widthstr =
-      `${this.width + this.paddingLeftN + this.paddingRightN}px`;
-    const heightstr =
-      `${this.height + this.paddingTopN + this.paddingBottomN}px`;
-
-    this.parent.style.width = widthstr;
-    this.parent.style.height = heightstr;
-
-    this.mediaDiv.style.width = widthstr;
-    this.mediaDiv.style.height = heightstr;
-    this.mediaDiv.style.paddingLeft = this.paddingLeft;
-    this.mediaDiv.style.paddingRight = this.paddingRight;
-    this.mediaDiv.style.paddingTop = this.paddingTop;
-    this.mediaDiv.style.paddingBottom = this.paddingBottom;
-
-    this.mediaElement.style.width = widthstr;
-    this.mediaElement.style.height = heightstr;
-    this.mediaElement.style.paddingLeft = this.paddingLeft;
-    this.mediaElement.style.paddingRight = this.paddingRight;
-    this.mediaElement.style.paddingTop = this.paddingTop;
-    this.mediaElement.style.paddingBottom = this.paddingBottom;
-
-    this.eleDivCanvas.style.width = widthstr;
-    this.eleDivCanvas.style.height = heightstr;
-    this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleDivCanvas.style.paddingRight = this.paddingRight;
-    this.eleDivCanvas.style.paddingTop = this.paddingTop;
-    this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
-
-    this.eleCanvas.style.width = widthstr;
-    this.eleCanvas.style.height = heightstr;
-    this.eleCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleCanvas.style.paddingRight = this.paddingRight;
-    this.eleCanvas.style.paddingTop = this.paddingTop;
-    this.eleCanvas.style.paddingBottom = this.paddingBottom;
-  } else {
-    this.parent.style.width = (this.width + 'px');
-    this.parent.style.height = (this.height + 'px');
-
-    this.mediaDiv.style.width = (this.width + 'px');
-    this.mediaDiv.style.height = (this.height + 'px');
-    this.mediaDiv.style.paddingLeft = this.paddingLeft;
-    this.mediaDiv.style.paddingRight = this.paddingRight;
-    this.mediaDiv.style.paddingTop = this.paddingTop;
-    this.mediaDiv.style.paddingBottom = this.paddingBottom;
-
-    this.mediaElement.style.width = (this.width + 'px');
-    this.mediaElement.style.height = (this.height + 'px');
-    this.mediaElement.style.paddingLeft = this.paddingLeft;
-    this.mediaElement.style.paddingRight = this.paddingRight;
-    this.mediaElement.style.paddingTop = this.paddingTop;
-    this.mediaElement.style.paddingBottom = this.paddingBottom;
-
-    this.eleDivCanvas.style.width = (this.width + 'px');
-    this.eleDivCanvas.style.height = (this.height + 'px');
-    this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleDivCanvas.style.paddingRight = this.paddingRight;
-    this.eleDivCanvas.style.paddingTop = this.paddingTop;
-    this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
-
-    this.eleCanvas.style.width = (this.width + 'px');
-    this.eleCanvas.style.height = (this.height + 'px');
-    this.eleCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleCanvas.style.paddingRight = this.paddingRight;
-    this.eleCanvas.style.paddingTop = this.paddingTop;
-    this.eleCanvas.style.paddingBottom = this.paddingBottom;
-  }
 
   this.resizeControls();
 };
