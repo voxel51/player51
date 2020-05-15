@@ -128,9 +128,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
     if (!self._isDataLoaded) {
       return;
     }
-    if (self.player._boolThumbnailMode) {
-      self.clearCanvas();
-    } else {
+    if (!self.player._boolThumbnailMode) {
       hideControls();
       self.clearTimeout('hideControls');
     }
@@ -164,9 +162,6 @@ ImageRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
-  if (this.player._boolThumbnailMode) {
-    this.processFrame();
-  }
 
   this.updateControlsDisplayState();
 };
@@ -195,9 +190,7 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
   }
 
   if (this._isOverlayPrepared) {
-    if (!this.player._boolThumbnailMode) {
       this.processFrame();
-    }
   }
 };
 

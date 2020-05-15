@@ -574,6 +574,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
   context.strokeStyle = this.color;
   context.fillStyle = this.color;
+  context.lineWidth = 8;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (this.mask) {
