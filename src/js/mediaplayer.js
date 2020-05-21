@@ -315,7 +315,7 @@ MediaPlayer.prototype.grabKeyboardFocus = function(grab=true) {
  */
 MediaPlayer._handleGlobalClick = function(e) {
   for (const player of MediaPlayer._instances) {
-    if (player.renderer.parent.contains(e.target)) {
+    if (player.renderer.parent && player.renderer.parent.contains(e.target)) {
       MediaPlayer._focusedInstance = player;
       return;
     }
