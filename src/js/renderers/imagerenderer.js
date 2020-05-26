@@ -32,6 +32,7 @@ export {
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
 function ImageRenderer(media, overlay, colorMap) {
+  this.activeLabels = {};
   Renderer.call(this, media, overlay);
   this.colorMap = colorMap;
   this._frameNumber = 1;

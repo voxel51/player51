@@ -561,7 +561,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (!this.renderer.activeLabels[this.label.split(":")[0]]) {
+  const isActive = this.renderer.activeLabels[this.label.split(":")[0]];
+  if (!isActive) {
     return;
   }
 
