@@ -157,7 +157,7 @@ MediaPlayer.prototype.thumbnailMode = function(action) {
 * @param {domElement} parentElement String id of the parentElement or
 * actual Div object.
 */
-MediaPlayer.prototype.render = function(parentElement) {
+MediaPlayer.prototype.render = function(parentElement, activeLabels) {
   this.staticRender(parentElement);
   this.dynamicRender();
 };
@@ -170,9 +170,9 @@ MediaPlayer.prototype.render = function(parentElement) {
 * @param {domElement} parentElement String id of parentElement or actual
 * Div object
 */
-MediaPlayer.prototype.staticRender = function(parentElement) {
+MediaPlayer.prototype.staticRender = function(parentElement, activeLabels) {
   this.renderer.setParentofMedia(parentElement);
-  this.renderer.initPlayer();
+  this.renderer.initPlayer(activeLabels);
   this.renderer._isRendered = true;
 };
 

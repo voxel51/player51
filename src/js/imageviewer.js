@@ -90,7 +90,8 @@ ImageViewer.prototype.resetToFragment = function() {
  * @param {function} action (optional) a callback function to associate with
  * any click on the image.
  */
-ImageViewer.prototype.thumbnailMode = function(action) {
+ImageViewer.prototype.thumbnailMode = function(action, activeLabels) {
   this._boolThumbnailMode = true;
   this._thumbnailClickAction = action;
+  this._activeLabels;
 };
