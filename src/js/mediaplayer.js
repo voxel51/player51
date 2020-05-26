@@ -158,7 +158,7 @@ MediaPlayer.prototype.thumbnailMode = function(action) {
 * actual Div object.
 */
 MediaPlayer.prototype.render = function(parentElement, activeLabels) {
-  this.staticRender(parentElement);
+  this.staticRender(parentElement, activeLabels);
   this.dynamicRender();
 };
 

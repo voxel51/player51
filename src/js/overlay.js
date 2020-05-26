@@ -561,7 +561,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (!this.renderer.activeLabels[this.label.split(":")]) {
+  if (!this.renderer.activeLabels[this.label.split(":")[0]]) {
     return;
   }
 

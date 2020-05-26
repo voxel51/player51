@@ -48,6 +48,7 @@ ImageRenderer.prototype.constructor = ImageRenderer;
  * @required setParentandMedia called beforehand
  */
 ImageRenderer.prototype.initPlayer = function(activeLabels) {
+  this.activeLabels = activeLabels;
   this.checkParentandMedia();
   this.checkBorderBox();
   this.eleDivImage = document.createElement('div');
@@ -61,7 +62,6 @@ ImageRenderer.prototype.initPlayer = function(activeLabels) {
   this.initPlayerControlHTML(this.parent, false);
   this.mediaElement = this.eleImage;
   this.mediaDiv = this.eleDivImage;
-  this.activeLabels = activeLabels;
   this.initCanvas();
 };
 

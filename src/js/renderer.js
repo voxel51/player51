@@ -461,10 +461,11 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
  * canvas to avoid flickering.
  * @member processFrame
  */
-Renderer.prototype.processFrame = function() {
+Renderer.prototype.processFrame = function(activeLabels) {
   if (!this._isReadyProcessFrames) {
     return;
   }
+  if (activeLabels) this.activeLabels = activeLabels;
   this.clearCanvas();
   const context = this.setupCanvasContext();
   this.customDraw(context);
