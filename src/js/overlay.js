@@ -398,6 +398,8 @@ function ObjectOverlay(d, renderer) {
   if (this.index != null) {
     this.indexStr = `${this.index}`;
   }
+  this.color = renderer.colorMap[this.label];
+  this.rawColor = renderer.colorMap[this.label];
 
   this.frame_number = d.frame_number;
   this.bounding_box = d.bounding_box;
@@ -454,8 +456,6 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
       .x) * canvasWidth;
   this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
       .y) * canvasHeight;
-  this.color = colorGenerator.color(this.index);
-  this.rawColor = colorGenerator.rawColor(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
@@ -574,7 +574,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
   context.strokeStyle = this.color;
   context.fillStyle = this.color;
-  context.lineWidth = 4;
+  context.lineWidth = 6;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (this.mask) {

@@ -31,8 +31,9 @@ export {
  * @param {string} overlay is data that should be overlayed on the image.
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
-function ImageRenderer(media, overlay) {
+function ImageRenderer(media, overlay, colorMap) {
   Renderer.call(this, media, overlay);
+  this.colorMap = colorMap;
   this._frameNumber = 1;
   this._boolShowControls = false;
 }
