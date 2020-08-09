@@ -1,14 +1,21 @@
+# NOTE
+
+This project is a core component of the
+[FiftyOne](https://github.com/voxel51/fiftyone) App. Its exact future is to be
+determined, but it will continue to be actively developed. If one is
+determined to contribute to this project, please refer to the FiftyOne
+[CONTRIBUTING](https://github.com/voxel51/fiftyone/blob/develop/CONTRIBUTING.md)
+and make a best effort to follow them.
+
 # Player51
 
 Player51 is a client-side JavaScript media player that can render metadata
 overlays on images and video.
 
-
 ## Browser support
 
 Player51 implements ES6 modules. However, we do support older browsers through
 iife and CommonJS via [rollup.js](https://rollupjs.org).
-
 
 ## Installation and setup
 
@@ -59,7 +66,6 @@ export NODE_PATH=/usr/local/lib/node_modules:/usr/local/lib/node_modules/npm/nod
 
 However, without the `--global` option, the node_modules are stored locally.
 
-
 ## Building
 
 A `build.bash` script is included that executes the various scripts necessary
@@ -71,20 +77,19 @@ bash build.bash
 ```
 
 This creates a folder `build` with the following contents:
+
 - cjs -- CommonJS build
 - css -- Minified CSS
 - iife -- Standard JS immediate execution build
 
 Note that the `build.bash` script sets a variable `NODE_ENV` to `prod` which
-forces the minimification of the code.  If you do not want to minify the code,
+forces the minimification of the code. If you do not want to minify the code,
 then you should change that to `dev`.
-
 
 ## Notes
 
 - Background information on rollup: https://code.lengstorf.com/learn-rollup-js
 - The container div must be set to `position: relative`.
-
 
 ## Testing
 
@@ -121,7 +126,6 @@ python test/httpdtester.py
 
 and point your browser to http://0.0.0.0:8000/test/simple.html.
 
-
 ### React test server
 
 To set up Player51 for a React test, you need a new Node.js (6+) and npm (5.2+)
@@ -147,7 +151,6 @@ client.
 > @todo figure out how to do this from react/npm
 
 Then you can point your browser to `http://localhost:3000`.
-
 
 ## Copyright
 
