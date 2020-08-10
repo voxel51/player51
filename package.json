@@ -30,8 +30,8 @@
     "type": "git",
     "url": "git+ssh://git@github.com/voxel51/player51.git"
   },
-  "author": "Jason Corso",
-  "license": "UNLICENSED",
+  "author": "Voxel51, Inc.",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/voxel51/player51/issues"
   },
