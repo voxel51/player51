@@ -198,7 +198,7 @@ FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
 FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
     canvasHeight) {
   if (typeof(this.attrs) !== undefined) {
-    this._parseAttrs();
+    this._updateAttrs();
   }
   this.textPadder = 10;
   if (this.x === null || this.y === null) {
@@ -213,11 +213,6 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
     return;
   }
   context.font = this.font;
-  // this is *0.4 instead of / 2 because it looks better
-  const bbox = computeBBoxForTextOverlay(
-      context, this.attrText, this.attrFontHeight, this.textPadder);
-  this.w = bbox.width;
-  this.h = bbox.height;
 };
 
 
@@ -225,17 +220,12 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  * Private method to parse the attributes objects provided at creation and set
  * them up as renderable strings for the overlay.
  *
- * @method _parseAttrs
+ * @method _updateAttrs
  */
-FrameAttributesOverlay.prototype._parseAttrs = function() {
-  if (this.attrText === null) {
-    this.attrText = new Array(this.attrs.length);
-  }
-
-  for (let len = this.attrs.length, a = 0; a < len; a++) {
-    const at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
-    this.attrText[a] = at.replace(new RegExp('_', 'g'), ' ');
-  }
+FrameAttributesOverlay.prototype._updateAttrs = function() {
+  this.attrText = this.attrs
+    .filter((attr) => this.renderer.activeLabels[attr.name])
+    .map((attr) => `${attr.name}: ${attr.value}`);
 };
 
 /**
@@ -253,19 +243,21 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
   }
   if (this.w === null) {
     this.setup(context, canvasWidth, canvasHeight);
-    if (this.w <= 0 || this.h <= 0) {
-      return;
-    }
   }
 
   if (!this.renderer.player._boolThumbnailMode) {
+    this._updateAttrs();
+    context.font = this.font;
+    const bbox = computeBBoxForTextOverlay(
+        context, this.attrText, this.attrFontHeight, this.textPadder);
+    this.w = bbox.width;
+    this.h = bbox.height;
     context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(this.x, this.y, this.w, this.h);
-    context.font = this.font;
-    context.fillStyle = colorGenerator.white;
 
     // Rendering y is at the baseline of the text.  Handle this by padding
     // one row (attrFontHeight and textPadder)
+    context.fillStyle = colorGenerator.white;
     for (let a = 0; a < this.attrText.length; a++) {
       context.fillText(this.attrText[a],
           this.x + this.textPadder,
