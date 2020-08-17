@@ -32,8 +32,8 @@ export {
  * @param {string} overlay is data that should be overlayed on the image.
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
  */
-function ImageViewer(media, overlay) {
-  MediaPlayer.call(this, 'image', media, overlay, null);
+function ImageViewer(media, overlay, colorMap) {
+  MediaPlayer.call(this, 'image', media, overlay, null, colorMap);
 }
 ImageViewer.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer.prototype.constructor = ImageViewer;

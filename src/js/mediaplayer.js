@@ -42,14 +42,14 @@ export {
  * @param {int} fps is frames per second
  *
  */
-function MediaPlayer(type, media, overlay, fps) {
+function MediaPlayer(type, media, overlay, fps, colorMap) {
   if (this.constructor === MediaPlayer) {
     throw new TypeError('Cannot instantiate abstract class.');
   }
   if (type === 'video') {
     this.renderer = new VideoRenderer(media, overlay, fps);
   } else if (type === 'image') {
-    this.renderer = new ImageRenderer(media, overlay);
+    this.renderer = new ImageRenderer(media, overlay, colorMap);
   } else if (type == 'gallery') {
     this.renderer = new GalleryRenderer(media, overlay);
   } else if (type == 'imagesequence') {

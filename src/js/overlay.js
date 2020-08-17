@@ -419,6 +419,8 @@ function ObjectOverlay(d, renderer) {
   this.y = null;
   this.w = null;
   this.h = null;
+  this.color = renderer.colorMap[this.label];
+  this.rawColor = renderer.colorMap[this.label];
 
   // this is the height of the header box into which we draw the label
   this.headerHeight = null;
@@ -559,8 +561,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  const color = this.renderer.activeLabels[this.label.split(":")[0]];
-  if (!Boolean(color)) {
+  const isActive = this.renderer.activeLabels[this.label.split(":")[0]];
+  if (!isActive) {
     return;
   }
 
@@ -573,8 +575,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   if (this.labelTextWidth === null) {
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  context.strokeStyle = color;
-  context.fillStyle = color;
+  context.strokeStyle = this.color;
+  context.fillStyle = this.color;
   context.lineWidth = 6;
   context.strokeRect(this.x, this.y, this.w, this.h);
 

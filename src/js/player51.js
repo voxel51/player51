@@ -128,14 +128,14 @@ function Player51(options, ...args) {
     options.overlay = null;
   }
 
-  const {media, overlay, fps} = options;
+  const {media, overlay, fps, colorMap} = options;
   const mimetype = options.media.type.toLowerCase();
 
   // Load correct player
   if (mimetype.startsWith('video/')) {
     return new VideoPlayer(media, overlay, fps);
   } else if (mimetype.startsWith('image/')) {
-    return new ImageViewer(media, overlay);
+    return new ImageViewer(media, overlay, colorMap);
   } else if (mimetype === 'application/zip') {
     if (options.isSequence) {
       return new ImageSequence(media, overlay, fps);
