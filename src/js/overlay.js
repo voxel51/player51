@@ -438,9 +438,7 @@ ObjectOverlay.prototype.constructor = ObjectOverlay;
  * @param {int} canvasHeight
  */
 ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-  if (this.hasAttrs()) {
-    this._parseAttrs();
-  }
+  this._parseAttrs();
   this.x = this.bounding_box.top_left.x * canvasWidth;
   this.y = this.bounding_box.top_left.y * canvasHeight;
   this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left
