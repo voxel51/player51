@@ -563,8 +563,8 @@ Renderer.prototype._handleMouseEvent = function(e) {
       overlayObj &&
       overlayObj.constructor === ObjectOverlay &&
       overlayObj.index === undefined) {
-    // disallow clicking on objects without IDs
-    return;
+    // for now, allow clicking on objects without IDs
+    // @todo only allow this for images?
   }
 
   if (this.setFocus(overlayObj, {x, y})) {
