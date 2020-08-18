@@ -438,7 +438,7 @@ ObjectOverlay.prototype.constructor = ObjectOverlay;
  * @param {int} canvasHeight
  */
 ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-  if (typeof(this._attrs) !== undefined) {
+  if (this.hasAttrs()) {
     this._parseAttrs();
   }
   this.x = this.bounding_box.top_left.x * canvasWidth;
@@ -463,6 +463,15 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   }
   this._setupFontWidths(context, canvasWidth, canvasHeight);
 };
+
+
+/**
+ * Checks whether the object has attributes
+ * @return {boolean}
+ */
+ObjectOverlay.prototype.hasAttrs = function() {
+  return this._attrs !== undefined;
+}
 
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,

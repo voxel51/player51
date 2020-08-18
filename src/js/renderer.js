@@ -99,6 +99,7 @@ function Renderer(media, overlay) {
   this._isPreparingOverlay = false;
   this._overlayData = null;
   this._overlayURL = null;
+  this._overlayHasObjectAttrs = false;
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
@@ -411,9 +412,13 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
   if (typeof(objects.length) === 'undefined') {
     objects = objects.objects;
   }
+  this._overlayHasObjectAttrs = false;
   for (let len = objects.length, i = 0; i < len; i++) {
     const o = new ObjectOverlay(objects[i], this);
     o.setup(context, this.canvasWidth, this.canvasHeight);
+    if (o.hasAttrs()) {
+      this._overlayHasObjectAttrs = true;
+    }
     if (frameFlag) {
       this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
     } else {
@@ -1037,10 +1042,12 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
+  if (this._overlayHasObjectAttrs) {
+    this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
+    this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+    this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
+    this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
+  }
 
   this.attrOptsElements = [
     this.eleOptCtlAttrOptForm,
