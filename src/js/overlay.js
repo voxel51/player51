@@ -247,6 +247,9 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
 
   if (!this.renderer.player._boolThumbnailMode) {
     this._updateAttrs();
+    if (!this.attrText.length) {
+      return;
+    }
     context.font = this.font;
     const bbox = computeBBoxForTextOverlay(
         context, this.attrText, this.attrFontHeight, this.textPadder);
