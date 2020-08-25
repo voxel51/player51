@@ -383,6 +383,7 @@ function ObjectOverlay(d, renderer) {
 
   this._cache_options = Object.assign({}, this.options);
   this.name = d.name;
+  this.confidence = d.confidence;
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
   this.index = d.index;
