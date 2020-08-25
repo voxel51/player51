@@ -250,8 +250,8 @@ Renderer.prototype.handleOverlay = function(overlay) {
     this.loadOverlay(overlay);
   } else if ((typeof(overlay) === 'object') &&
       Object.keys(overlay).length > 0) {
-    this._overlayURL = null;
     this._overlayData = overlay;
+    this._overlayURL = null;
   }
 };
 
@@ -286,7 +286,9 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
  * @param {json} rawjson
  */
 Renderer.prototype.prepareOverlay = function(rawjson) {
+  console.log("in");
   if ((this._isOverlayPrepared) || (this._isPreparingOverlay) || !rawjson) {
+    console.log("out")
     return;
   }
   this._isPreparingOverlay = true;
@@ -466,11 +468,12 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
  * canvas to avoid flickering.
  * @member processFrame
  */
-Renderer.prototype.processFrame = function(activeLabels) {
+Renderer.prototype.processFrame = function(activeLabels, filter) {
   if (!this._isReadyProcessFrames) {
     return;
   }
   if (activeLabels) this.activeLabels = activeLabels;
+  if (filter) this.filter = filter;
   this.clearCanvas();
   const context = this.setupCanvasContext();
   this.customDraw(context);

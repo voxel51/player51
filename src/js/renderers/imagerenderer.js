@@ -48,7 +48,8 @@ ImageRenderer.prototype.constructor = ImageRenderer;
  * @member initPlayer
  * @required setParentandMedia called beforehand
  */
-ImageRenderer.prototype.initPlayer = function(activeLabels) {
+ImageRenderer.prototype.initPlayer = function(activeLabels, filter) {
+  this.filter = filter;
   this.activeLabels = activeLabels;
   this.checkParentandMedia();
   this.checkBorderBox();
