@@ -224,7 +224,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
   this.attrText = this.attrs
-    .filter((attr) => this.renderer.activeLabels[attr.name])
+    .filter((attr) => this.renderer.activeLabels[attr.name] && this.renderer.filter[attr.name](attr, true))
     .map((attr) => `${attr.name}: ${attr.value}`);
 };
 
@@ -382,7 +382,7 @@ function ObjectOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
   this._cache_options = Object.assign({}, this.options);
-
+  this.name = d.name;
   this.label = d.label;
   this.labelUpper = this.label.toUpperCase();
   this.index = d.index;
@@ -560,8 +560,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  const isActive = this.renderer.activeLabels[this.label];
-  if (!isActive || !this._filter[this.label](this)) {
+  const isActive = this.renderer.activeLabels[this.name];
+  if (!isActive || !this.renderer.filter[this.name](this, true)) {
     return;
   }
 

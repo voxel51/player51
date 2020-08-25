@@ -33,6 +33,7 @@ export {
  */
 function ImageRenderer(media, overlay, colorMap) {
   this.activeLabels = {};
+  this.filter = {};
   Renderer.call(this, media, overlay);
   this.colorMap = colorMap;
   this._frameNumber = 1;
