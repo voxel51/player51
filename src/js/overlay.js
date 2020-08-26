@@ -121,6 +121,12 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
 // Instantiate one colorGenerator for global use
 const colorGenerator = new ColorGenerator();
 
+function _isAttrShown(filter, attr. useValue=false) {
+  return filter && attr.name && filter[attr.name] && filter[attr.name].call
+    ? filter[attr.name](attr, useValue)
+    : true;
+}
+
 
 /**
  * A Class defining the generic interface for how to render overlays on the
@@ -224,7 +230,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
   this.attrText = this.attrs
-    .filter((attr) => this.renderer.activeLabels[attr.name] && this.renderer.filter[attr.name](attr, true))
+    .filter((attr) => this.renderer.activeLabels[attr.name] && _isAttrShown(this.renderer.filter, attr, true))
     .map((attr) => `${attr.name}: ${attr.value}`);
 };
 
@@ -564,9 +570,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  const isDisabled = !this.renderer.activeLabels[this.name];
-  const isFiltered = this.renderer.filter && (this.renderer.filter[this.name] === false || !this.renderer.filter[this.name](this, false));
-  if (isDisabled || isFiltered) {
+  const isDisabled = this.renderer.activeLabels[this.name] === false;
+  if (isDisabled || !_isAttrShown(this.renderer.filter, this)) {
     return;
   }
 
