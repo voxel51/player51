@@ -121,7 +121,7 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
 // Instantiate one colorGenerator for global use
 const colorGenerator = new ColorGenerator();
 
-function _isAttrShown(filter, attr. useValue=false) {
+function _isAttrShown(filter, attr, useValue=false) {
   return filter && attr.name && filter[attr.name] && filter[attr.name].call
     ? filter[attr.name](attr, useValue)
     : true;
