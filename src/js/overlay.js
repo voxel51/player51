@@ -564,7 +564,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  const isDisabled = this.renderer.activeLabels[this.name];
+  const isDisabled = !this.renderer.activeLabels[this.name];
   const isFiltered = !this.renderer.filter[this.name] || !this.renderer.filter[this.name](this, true);
   if (isDisabled || isFiltered) {
     return;
