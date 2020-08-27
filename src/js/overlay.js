@@ -230,8 +230,15 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
   this.attrText = this.attrs
-    .filter((attr) => this.renderer.options.activeLabels[attr.name] && _isAttrShown(this.renderer.options.filter, attr, true))
-    .map((attr) => `${attr.name}: ${attr.value}`);
+    .filter((attr) => this.renderer.options.activeLabels[attr.name] &&
+        _isAttrShown(this.renderer.options.filter, attr, true))
+    .map((attr) => {
+      let s = `${attr.name}: ${attr.value}`;
+      if (this.options.showConfidence && !isNaN(attr.confidence)) {
+        s += ` (${Number(attr.confidence).toFixed(2)})`;
+      }
+      return s;
+    });
 };
 
 /**
