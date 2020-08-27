@@ -76,6 +76,7 @@ function Renderer(media, overlay, options) {
     showFrameCount: false,
     labelsOnlyOnClick: false,
     attrsOnlyOnClick: false,
+    showConfidence: true,
     showAttrs: true,
     attrRenderMode: 'value',
     attrRenderBox: true,
@@ -988,6 +989,15 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     this.eleActionCtlOptForm.appendChild(label);
   }
 
+  // Checkbox for show confidence
+  const eleOptCtlShowConfidenceRow = makeCheckboxRow(
+      'Show confidence', this.overlayOptions.showConfidence);
+  this.eleOptCtlShowConfidence =
+      eleOptCtlShowConfidenceRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowConfidenceWrapper = makeWrapper([
+    eleOptCtlShowConfidenceRow,
+  ]);
+
   // Checkbox for show attrs
   const eleOptCtlShowAttrRow = makeCheckboxRow(
       'Show attributes', this.overlayOptions.showAttrs);
@@ -1043,6 +1053,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowConfidenceWrapper);
   if (this._overlayHasObjectAttrs) {
     this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
     this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
@@ -1083,6 +1094,12 @@ Renderer.prototype.initPlayerOptionsControls = function() {
   this.eleOptCtlShowLabel.addEventListener('change', () => {
     this.overlayOptions.labelsOnlyOnClick =
         this.eleOptCtlShowLabel.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowConfidence.addEventListener('change', () => {
+    this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
     this.processFrame();
     this.updateFromDynamicState();
   });

@@ -194,6 +194,7 @@ MediaPlayer.prototype.dynamicRender = function() {
 * Update player options - only the options passed in
 *
 * @member updateOptions
+* @param {object} options: new player options
 */
 MediaPlayer.prototype.updateOptions = function(options) {
   Object.assign(this.renderer.options, options);

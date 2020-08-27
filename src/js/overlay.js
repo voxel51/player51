@@ -392,9 +392,9 @@ function ObjectOverlay(d, renderer) {
 
   this._cache_options = Object.assign({}, this.options);
   this.name = d.name;
-  this.confidence = d.confidence;
+  this.confidence = parseFloat(d.confidence);
   this.label = d.label;
-  this.labelUpper = this.label.toUpperCase();
+  this._setupLabel();
   this.index = d.index;
   this.indexStr = '';
   if (this.index != null) {
@@ -514,6 +514,13 @@ ObjectOverlay.prototype._setupAttrBox = function(context) {
   this.attrHeight = wh.height;
 };
 
+ObjectOverlay.prototype._setupLabel = function() {
+  this.labelUpper = this.label.toUpperCase();
+  if (this.options.showConfidence && !isNaN(this.confidence)) {
+    this.labelUpper += ' (' + this.confidence.toFixed(2) + ')';
+  }
+}
+
 
 /**
  * Private method to parse the attributes objects provided at creation and set
@@ -575,13 +582,16 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
+  let optionsUpdated = false;
   if (!compareData(this._cache_options, this.options)) {
     this._cache_options = Object.assign({}, this.options);
     this._parseAttrs(this._attrs);
     this._setupAttrBox(context);
+    optionsUpdated = true;
   }
 
-  if (this.labelTextWidth === null) {
+  if (optionsUpdated || this.labelTextWidth === null) {
+    this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
   context.strokeStyle = this.color;
