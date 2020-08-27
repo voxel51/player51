@@ -399,7 +399,7 @@ function ObjectOverlay(d, renderer) {
 
   this._cache_options = Object.assign({}, this.options);
   this.name = d.name;
-  this.confidence = parseFloat(d.confidence);
+  this.confidence = d.confidence;
   this.label = d.label;
   this._setupLabel();
   this.index = d.index;
@@ -524,7 +524,7 @@ ObjectOverlay.prototype._setupAttrBox = function(context) {
 ObjectOverlay.prototype._setupLabel = function() {
   this.labelUpper = this.label.toUpperCase();
   if (this.options.showConfidence && !isNaN(this.confidence)) {
-    this.labelUpper += ' (' + this.confidence.toFixed(2) + ')';
+    this.labelUpper += ` (${Number(this.confidence).toFixed(2)})`;
   }
 }
 
