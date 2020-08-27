@@ -230,7 +230,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
   this.attrText = this.attrs
-    .filter((attr) => this.renderer.activeLabels[attr.name] && _isAttrShown(this.renderer.filter, attr, true))
+    .filter((attr) => this.renderer.options.activeLabels[attr.name] && _isAttrShown(this.renderer.options.filter, attr, true))
     .map((attr) => `${attr.name}: ${attr.value}`);
 };
 
@@ -570,8 +570,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  const isDisabled = this.renderer.activeLabels[this.name] === false;
-  if (isDisabled || !_isAttrShown(this.renderer.filter, this)) {
+  const isDisabled = this.renderer.options.activeLabels[this.name] === false;
+  if (isDisabled || !_isAttrShown(this.renderer.options.filter, this)) {
     return;
   }
 

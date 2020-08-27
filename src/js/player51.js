@@ -129,6 +129,8 @@ function Player51(options, ...args) {
   }
   // set defaults for other options
   options.colorMap = options.colorMap || {};
+  options.activeLabels = options.activeLabels || {};
+  options.filter = options.filter || {};
 
   const {media, overlay} = options;
   const mimetype = options.media.type.toLowerCase();

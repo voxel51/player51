@@ -33,8 +33,6 @@ export {
  * @param {object} options: additional player options
  */
 function ImageRenderer(media, overlay, options) {
-  this.activeLabels = {};
-  this.filter = {};
   Renderer.call(this, media, overlay, options);
   this._frameNumber = 1;
   this._boolShowControls = false;
@@ -49,9 +47,7 @@ ImageRenderer.prototype.constructor = ImageRenderer;
  * @member initPlayer
  * @required setParentandMedia called beforehand
  */
-ImageRenderer.prototype.initPlayer = function(activeLabels, filter) {
-  this.filter = filter;
-  this.activeLabels = activeLabels;
+ImageRenderer.prototype.initPlayer = function() {
   this.checkParentandMedia();
   this.checkBorderBox();
   this.eleDivImage = document.createElement('div');

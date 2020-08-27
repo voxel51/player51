@@ -157,8 +157,8 @@ MediaPlayer.prototype.thumbnailMode = function(action) {
 * @param {domElement} parentElement String id of the parentElement or
 * actual Div object.
 */
-MediaPlayer.prototype.render = function(parentElement, activeLabels, filter) {
-  this.staticRender(parentElement, activeLabels, filter);
+MediaPlayer.prototype.render = function(parentElement) {
+  this.staticRender(parentElement);
   this.dynamicRender();
 };
 
@@ -170,9 +170,9 @@ MediaPlayer.prototype.render = function(parentElement, activeLabels, filter) {
 * @param {domElement} parentElement String id of parentElement or actual
 * Div object
 */
-MediaPlayer.prototype.staticRender = function(parentElement, activeLabels, filter) {
+MediaPlayer.prototype.staticRender = function(parentElement) {
   this.renderer.setParentofMedia(parentElement);
-  this.renderer.initPlayer(activeLabels, filter);
+  this.renderer.initPlayer();
   this.renderer._isRendered = true;
 };
 
@@ -187,6 +187,17 @@ MediaPlayer.prototype.dynamicRender = function() {
   this.renderer.setPlayer(this);
   this.renderer.initSharedControls();
   this.renderer.initPlayerControls();
+};
+
+
+/**
+* Update player options - only the options passed in
+*
+* @member updateOptions
+*/
+MediaPlayer.prototype.updateOptions = function(options) {
+  Object.assign(this.renderer.options, options);
+  this.renderer.processFrame();
 };
 
 
