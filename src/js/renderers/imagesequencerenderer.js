@@ -29,10 +29,10 @@ export {
  * ex. type: "imagesequence/zip"
  * @param {string} overlay is data that should be overlayed on the psuedo video.
  * Overlay is a path to a file of eta.core.image.ImageSetLabels format.
- * @param {int} fps is the frame-rate of the media.
+ * @param {object} options: additional player options
  */
-function ImageSequenceRenderer(media, overlay, fps) {
-  Renderer.call(this, media, overlay);
+function ImageSequenceRenderer(media, overlay, options) {
+  Renderer.call(this, media, overlay, options);
   this._frameNumber = 1;
   this._boolShowControls = false;
   this._boolPlaying = false;
@@ -44,7 +44,7 @@ function ImageSequenceRenderer(media, overlay, fps) {
   // Loading state attributes
   this._isFrameInserted = false;
   // Content Attributes
-  this.frameRate = fps;
+  this.frameRate = options.fps;
   this.frameDuration = 1.0 / this.frameRate;
   this._totalNumberOfFrames = 0;
   // Initialization

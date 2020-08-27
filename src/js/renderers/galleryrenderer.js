@@ -29,9 +29,10 @@ export {
  * type must be in format gallery/<format>
  * ex. type: "gallery/jpg"
  * @param {string} overlay is data that should be overlayed on the images.
+ * @param {object} options: additional player options
  */
-function GalleryRenderer(media, overlay) {
-  Renderer.call(this, media, overlay);
+function GalleryRenderer(media, overlay, options) {
+  Renderer.call(this, media, overlay, options);
   this._frameNumber = 1;
   this._currentIndex = 0;
   this._currentKey = null;

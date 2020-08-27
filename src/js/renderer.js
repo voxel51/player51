@@ -39,8 +39,9 @@ export {
  * @abstract
  * @param {object} media
  * @param {string} overlay is the URL to overlay JSON
+ * @param {object} options: additional player options
  */
-function Renderer(media, overlay) {
+function Renderer(media, overlay, options) {
   if (this.constructor === Renderer) {
     throw new TypeError('Cannot instantiate abstract class.');
   }
@@ -48,6 +49,7 @@ function Renderer(media, overlay) {
   this.player = undefined;
   this.parent = undefined;
   this.media = media;
+  this.options = options;
   this.frameOverlay = {};
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();

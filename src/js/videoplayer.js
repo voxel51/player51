@@ -34,11 +34,10 @@ export {
  * @param {string} overlay is data that should be overlayed on the video.
  * Overlay can be empty (`null`), a string point to a single URL or
  * an object that is preloaded data.
- * @param {int} fps is the frame-rate of the media.  If it is not provided
- * then it will be guessed.
+ * @param {object} options: additional player options
  */
-function VideoPlayer(media, overlay, fps) {
-  MediaPlayer.call(this, 'video', media, overlay, fps);
+function VideoPlayer(media, overlay, options) {
+  MediaPlayer.call(this, 'video', media, overlay, options);
   // Player View Attributes
   this.boolDrawFrameNumber = false;
   this.boolDrawTimestamp = false;

@@ -34,9 +34,9 @@ export {
  * @param {string} overlay is data that should be overlayed on the video.
  * Overlay can be empty (`null`), a string point to a single URL or
  * an object that is preloaded data.
- * @param {int} fps is the frame-rate of the media.
+ * @param {object} options: additional player options
  */
-function VideoRenderer(media, overlay, fps) {
+function VideoRenderer(media, overlay, options) {
   Renderer.call(this, media, overlay);
 
   // Player State Attributes
@@ -47,7 +47,7 @@ function VideoRenderer(media, overlay, fps) {
   this._boolShowControls = false;
   this._boolSingleFrame = false;
   // Content Attributes
-  this.frameRate = fps;
+  this.frameRate = options.fps;
   this.frameDuration = 1 / this.frameRate;
 
   this._overlayCanBePrepared = false; // need to wait for video metadata

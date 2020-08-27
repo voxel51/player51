@@ -421,8 +421,8 @@ function ObjectOverlay(d, renderer) {
   this.y = null;
   this.w = null;
   this.h = null;
-  this.color = renderer.colorMap[this.name];
-  this.rawColor = renderer.colorMap[this.name];
+  this.color = renderer.options.colorMap[this.name];
+  this.rawColor = renderer.options.colorMap[this.name];
 
   // this is the height of the header box into which we draw the label
   this.headerHeight = null;

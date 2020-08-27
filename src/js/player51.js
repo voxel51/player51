@@ -127,20 +127,22 @@ function Player51(options, ...args) {
     // convert undefined and other false-y values to null for internal use
     options.overlay = null;
   }
+  // set defaults for other options
+  options.colorMap = options.colorMap || {};
 
-  const {media, overlay, fps, colorMap} = options;
+  const {media, overlay} = options;
   const mimetype = options.media.type.toLowerCase();
 
   // Load correct player
   if (mimetype.startsWith('video/')) {
-    return new VideoPlayer(media, overlay, fps);
+    return new VideoPlayer(media, overlay, options);
   } else if (mimetype.startsWith('image/')) {
-    return new ImageViewer(media, overlay, colorMap);
+    return new ImageViewer(media, overlay, options);
   } else if (mimetype === 'application/zip') {
     if (options.isSequence) {
-      return new ImageSequence(media, overlay, fps);
+      return new ImageSequence(media, overlay, options);
     }
-    return new GalleryViewer(media, overlay);
+    return new GalleryViewer(media, overlay, options);
   }
   throw new Error(`Unrecognized mime type: ${mimetype}`);
 }

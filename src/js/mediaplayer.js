@@ -39,23 +39,23 @@ export {
  * @param {string} type is the media content type
  * @param {object} media
  * @param {string} overlay is a URL to the overlay JSON
- * @param {int} fps is frames per second
+ * @param {object} options: additional player options
  *
  */
-function MediaPlayer(type, media, overlay, fps, colorMap) {
+function MediaPlayer(type, media, overlay, options) {
   if (this.constructor === MediaPlayer) {
     throw new TypeError('Cannot instantiate abstract class.');
   }
   if (type === 'video') {
-    this.renderer = new VideoRenderer(media, overlay, fps);
+    this.renderer = new VideoRenderer(media, overlay, options);
   } else if (type === 'image') {
-    this.renderer = new ImageRenderer(media, overlay, colorMap);
+    this.renderer = new ImageRenderer(media, overlay, options);
   } else if (type == 'gallery') {
-    this.renderer = new GalleryRenderer(media, overlay);
+    this.renderer = new GalleryRenderer(media, overlay, options);
   } else if (type == 'imagesequence') {
-    this.renderer = new ImageSequenceRenderer(media, overlay, fps);
+    this.renderer = new ImageSequenceRenderer(media, overlay, options);
   } else {
-    throw new Error('Renderer not initialized.');
+    throw new Error('invalid media type: ' + type);
   }
   // Player prerender attributes
   this._boolForcedMax = false;

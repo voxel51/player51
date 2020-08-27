@@ -31,10 +31,10 @@ export {
  * ex. type: "imagesequence/zip"
  * @param {string} overlay is data that should be overlayed on the psuedo video.
  * Overlay is a path to a file of eta.core.image.ImageSetLabels format.
- * @param {int} fps is the frame-rate of the media.
+ * @param {object} options: additional player options
  */
-function ImageSequence(media, overlay, fps) {
-  MediaPlayer.call(this, 'imagesequence', media, overlay, fps);
+function ImageSequence(media, overlay, options) {
+  MediaPlayer.call(this, 'imagesequence', media, overlay, options);
 }
 ImageSequence.prototype = Object.create(MediaPlayer.prototype);
 ImageSequence.prototype.constructor = ImageSequence;
