@@ -74,13 +74,13 @@ function Renderer(media, overlay, options) {
   };
   this.overlayOptions = {
     showFrameCount: false,
-    labelsOnlyOnClick: false,
+    labelsOnlyOnClick: true,
     attrsOnlyOnClick: false,
     showConfidence: true,
     showAttrs: true,
     attrRenderMode: 'value',
     attrRenderBox: true,
-    action: this._actionOptions.click,
+    action: this._actionOptions.hover,
   };
   this._attrRenderModeOptions = [{
     name: 'Value',
