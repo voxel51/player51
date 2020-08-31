@@ -1086,6 +1086,17 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.updateFromDynamicState();
   });
 
+  const hideOptions = (e) => {
+    if (this._boolShowVideoOptions &&
+        !this.eleDivVideoOpts.contains(e.target) &&
+        !this.eleOptionsButton.contains(e.target)) {
+      this._boolShowVideoOptions = false;
+      this.updateFromDynamicState();
+    }
+  };
+  this.eleDivCanvas.addEventListener('click', hideOptions);
+  this.eleDivVideoControls.addEventListener('click', hideOptions);
+
   this.eleOptCtlShowFrameCount.addEventListener('change', () => {
     this.overlayOptions.showFrameCount = this.eleOptCtlShowFrameCount.checked;
     this.processFrame();
