@@ -435,8 +435,6 @@ function ObjectOverlay(d, renderer) {
   this.y = null;
   this.w = null;
   this.h = null;
-  this.color = renderer.options.colorMap[this.name];
-  this.rawColor = renderer.options.colorMap[this.name];
 
   // this is the height of the header box into which we draw the label
   this.headerHeight = null;
@@ -618,8 +616,8 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  context.strokeStyle = this.color;
-  context.fillStyle = this.color;
+  context.strokeStyle = this.renderer.options.colorMap[this.name];
+  context.fillStyle = this.renderer.options.colorMap[this.name];
   context.lineWidth = 6;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
@@ -636,7 +634,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
     for (let i = 0; i < this.mask.data.length; i++) {
       if (this.mask.data[i]) {
-        maskImageRaw[i] = this.rawColor;
+        maskImageRaw[i] = this.renderer.options.colorMap[this.name];
       }
     }
     maskContext.putImageData(maskImage, 0, 0);
