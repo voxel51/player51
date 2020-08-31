@@ -515,6 +515,9 @@ Renderer.prototype._renderRest = function() {
 
 
 Renderer.prototype._findOverlayAt = function({x, y}) {
+  if (this.player._boolThumbnailMode) {
+    return;
+  }
   const objects = this.frameOverlay[this._frameNumber];
   if (!objects) {
     return;
