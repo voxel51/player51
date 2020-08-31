@@ -578,6 +578,17 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 };
 
 
+ObjectOverlay.prototype._isShown = function() {
+  if (this.renderer.options.activeLabels[this.name] === false) {
+    return false;
+  }
+  if (!_isAttrShown(this.renderer.options.filter, this)) {
+    return false;
+  }
+  return true;
+};
+
+
 /**
  * Basic rendering function for drawing the overlay instance.
  *
@@ -591,8 +602,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  const isDisabled = this.renderer.options.activeLabels[this.name] === false;
-  if (isDisabled || !_isAttrShown(this.renderer.options.filter, this)) {
+  if (!this._isShown()) {
     return;
   }
 
@@ -678,6 +688,9 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 };
 
 ObjectOverlay.prototype.containsPoint = function(x, y) {
+  if (!this._isShown()) {
+    return false;
+  }
   return inRect(x, y, this.x, this.y, this.w, this.h) ||
       inRect(x, y, this.x, this.y - this.headerHeight,
           this.headerWidth, this.headerHeight);
