@@ -56,7 +56,7 @@ ImageRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleImage.setAttribute('src', this.media.src);
   this.eleImage.setAttribute('type', this.media.type);
-  this.eleImage.setAttribute("loading", "lazy");
+  this.eleImage.setAttribute('loading', 'lazy');
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
   this.initPlayerControlHTML(this.parent, false);
@@ -88,7 +88,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
   this.eleImage.addEventListener('error', function() {
     if (self.player._boolNotFound) {
       const tmpImage = document.createElement('img');
-      tmpImage.setAttribute("loading", "lazy");
+      tmpImage.setAttribute('loading', 'lazy');
       tmpImage.className = 'p51-contained-image';
       tmpImage.setAttribute('src', self.player._notFoundPosterURL);
       self.parent.appendChild(tmpImage);

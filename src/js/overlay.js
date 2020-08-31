@@ -121,10 +121,17 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
 // Instantiate one colorGenerator for global use
 const colorGenerator = new ColorGenerator();
 
+/**
+ * Checks whether an attribute should be shown.
+ * @param {object} filter map of name -> filter callbacks
+ * @param {object} attr attribute object
+ * @param {boolean} useValue (passed to filter callback)
+ * @return {boolean}
+ */
 function _isAttrShown(filter, attr, useValue=false) {
-  return filter && attr.name && filter[attr.name] && filter[attr.name].call
-    ? filter[attr.name](attr, useValue)
-    : true;
+  return filter && attr.name && filter[attr.name] && filter[attr.name].call ?
+    filter[attr.name](attr, useValue) :
+    true;
 }
 
 
@@ -230,15 +237,15 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
   this.attrText = this.attrs
-    .filter((attr) => this.renderer.options.activeLabels[attr.name] &&
+      .filter((attr) => this.renderer.options.activeLabels[attr.name] &&
         _isAttrShown(this.renderer.options.filter, attr, true))
-    .map((attr) => {
-      let s = `${attr.name}: ${attr.value}`;
-      if (this.options.showConfidence && !isNaN(attr.confidence)) {
-        s += ` (${Number(attr.confidence).toFixed(2)})`;
-      }
-      return s;
-    });
+      .map((attr) => {
+        let s = `${attr.name}: ${attr.value}`;
+        if (this.options.showConfidence && !isNaN(attr.confidence)) {
+          s += ` (${Number(attr.confidence).toFixed(2)})`;
+        }
+        return s;
+      });
 };
 
 /**
@@ -486,7 +493,7 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
  */
 ObjectOverlay.prototype.hasAttrs = function() {
   return this._attrs !== undefined;
-}
+};
 
 
 ObjectOverlay.prototype._setupFontWidths = function(context, canvasWidth,
@@ -526,7 +533,7 @@ ObjectOverlay.prototype._setupLabel = function() {
   if (this.options.showConfidence && !isNaN(this.confidence)) {
     this.labelUpper += ` (${Number(this.confidence).toFixed(2)})`;
   }
-}
+};
 
 
 /**
