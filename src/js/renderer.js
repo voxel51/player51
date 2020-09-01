@@ -72,19 +72,17 @@ function Renderer(media, overlay, options) {
     hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
   };
   this.overlayOptions = Object.assign(
-    {
-      showFrameCount: false,
-      labelsOnlyOnClick: true,
-      attrsOnlyOnClick: false,
-      showConfidence: true,
-      showAttrs: true,
-      attrRenderMode: 'value',
-      attrRenderBox: true,
-    },
-    this.options.defaultOverlayOptions,
-    {
-      action: this._actionOptions.hover,
-    }
+      {
+        showFrameCount: false,
+        labelsOnlyOnClick: true,
+        attrsOnlyOnClick: false,
+        showConfidence: true,
+        showAttrs: true,
+        attrRenderMode: 'value',
+        attrRenderBox: true,
+        action: this._actionOptions.hover,
+      },
+      this.options.defaultOverlayOptions,
   );
   this._attrRenderModeOptions = [
     {
@@ -96,6 +94,7 @@ function Renderer(media, overlay, options) {
       value: 'attr-value',
     },
   ];
+  this._overlayOptionWrappers = {}; // overlayOptions key -> element
   this._boolShowVideoOptions = false;
   this._focusIndex = -1;
   this.seekBarMax = 100;
@@ -436,7 +435,7 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
     }
   }
   // we may have updated _overlayHasObjectAttrs
-  this._setAttributeControlsDisplay();
+  this._updateOverlayOptionVisibility();
 };
 
 
@@ -967,6 +966,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowFrameCountWrapper = makeWrapper([
     eleOptCtlFrameCountRow,
   ]);
+  this._overlayOptionWrappers.showFrameCount =
+      this.eleOptCtlShowFrameCountWrapper;
 
 
   // Checkbox for show label on click only
@@ -977,6 +978,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowLabelWrapper = makeWrapper([
     eleOptCtlShowLabelRow,
   ]);
+  this._overlayOptionWrappers.labelsOnlyOnClick =
+      this.eleOptCtlShowLabelWrapper;
 
   // Selection for action type
   this.eleActionCtlOptForm = document.createElement('form');
@@ -1000,6 +1003,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     label.appendChild(span);
     this.eleActionCtlOptForm.appendChild(label);
   }
+  this._overlayOptionWrappers.action = this.eleActionCtlOptForm;
 
   // Checkbox for show confidence
   const eleOptCtlShowConfidenceRow = makeCheckboxRow(
@@ -1009,6 +1013,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowConfidenceWrapper = makeWrapper([
     eleOptCtlShowConfidenceRow,
   ]);
+  this._overlayOptionWrappers.showConfidence =
+      this.eleOptCtlShowConfidenceWrapper;
 
   // Checkbox for show attrs
   const eleOptCtlShowAttrRow = makeCheckboxRow(
@@ -1018,6 +1024,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowAttrWrapper = makeWrapper([
     eleOptCtlShowAttrRow,
   ]);
+  this._overlayOptionWrappers.showAttrs =
+      this.eleOptCtlShowAttrWrapper;
 
   // Checkbox for show attrs on click only
   const eleOptCtlShowAttrClickRow = makeCheckboxRow(
@@ -1027,6 +1035,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowAttrClickWrapper = makeWrapper([
     eleOptCtlShowAttrClickRow,
   ]);
+  this._overlayOptionWrappers.attrsOnlyOnClick =
+      this.eleOptCtlShowAttrClickWrapper;
 
   // Checkbox for rendering background for attr text
   const eleOptCtlAttrBoxRow = makeCheckboxRow(
@@ -1036,6 +1046,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlAttrBoxWrapper = makeWrapper([
     eleOptCtlAttrBoxRow,
   ]);
+  this._overlayOptionWrappers.attrRenderBox =
+      this.eleOptCtlAttrBoxWrapper;
 
   // Radio for how to show attrs
   this.eleOptCtlAttrOptForm = document.createElement('form');
@@ -1059,6 +1071,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     label.appendChild(span);
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
+  this._overlayOptionWrappers.attrRenderMode = this.eleOptCtlAttrOptForm;
 
   if (this.hasFrameNumbers()) {
     this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
@@ -1080,7 +1093,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   parent.appendChild(this.eleDivVideoOpts);
 
   // set up initial visibility of attribute options
-  this._setAttributeControlsDisplay();
+  this._updateOverlayOptionVisibility();
 };
 
 Renderer.prototype._repositionOptionsPanel = function() {
@@ -1251,15 +1264,20 @@ Renderer.prototype._updateOptionsDisplayState = function() {
       this.eleDivVideoOpts.remove();
     }
   }
-  this._setAttributeControlsDisplay();
+  this._updateOverlayOptionVisibility();
 };
 
-Renderer.prototype._setAttributeControlsDisplay = function() {
+Renderer.prototype._updateOverlayOptionVisibility = function() {
   this.eleOptCtlShowAttrWrapper.classList.toggle(
       'hidden', !this._overlayHasObjectAttrs);
   this.attrOptsElements.forEach((e) => e.classList.toggle(
       'hidden',
       !this._overlayHasObjectAttrs || !this.overlayOptions.showAttrs));
+  for (const [key, wrapper] of Object.entries(this._overlayOptionWrappers)) {
+    if (this.options.enableOverlayOptions[key] === false) {
+      wrapper.classList.add('hidden');
+    }
+  }
 };
 
 Renderer.prototype.hasFrameNumbers = function() {
