@@ -1095,6 +1095,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // set up initial visibility of attribute options
   this._updateOverlayOptionVisibility();
+  this._alterOptionsLabelText();
 };
 
 Renderer.prototype._repositionOptionsPanel = function() {
