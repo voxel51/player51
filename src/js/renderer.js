@@ -74,13 +74,13 @@ function Renderer(media, overlay, options) {
   this.overlayOptions = Object.assign(
       {
         showFrameCount: false,
-        labelsOnlyOnClick: true,
+        labelsOnlyOnClick: false,
         attrsOnlyOnClick: false,
         showConfidence: true,
         showAttrs: true,
         attrRenderMode: 'value',
         attrRenderBox: true,
-        action: this._actionOptions.hover,
+        action: this._actionOptions.click,
       },
       this.options.defaultOverlayOptions,
   );
