@@ -67,10 +67,6 @@ function Renderer(media, overlay, options) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
-  this._actionOptions = {
-    click: {name: 'Click', type: 'click', labelText: 'clicked'},
-    hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
-  };
   this.overlayOptions = Object.assign(
       {
         showFrameCount: false,
@@ -80,10 +76,14 @@ function Renderer(media, overlay, options) {
         showAttrs: true,
         attrRenderMode: 'value',
         attrRenderBox: true,
-        action: this._actionOptions.click,
+        action: 'click',
       },
       this.options.defaultOverlayOptions,
   );
+  this._actionOptions = {
+    click: {name: 'Click', type: 'click', labelText: 'clicked'},
+    hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
+  };
   this._attrRenderModeOptions = [
     {
       name: 'Value',
@@ -356,7 +356,8 @@ Renderer.prototype._reBindMouseHandler = function() {
         action.type, this._mouseEventHandler);
   }
   this.eleCanvas.addEventListener(
-      this.overlayOptions.action.type, this._mouseEventHandler);
+      this._actionOptions[this.overlayOptions.action].type,
+      this._mouseEventHandler);
 };
 
 /**
@@ -487,7 +488,7 @@ Renderer.prototype.processFrame = function() {
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
-      if (this.overlayOptions.action === this._actionOptions.hover) {
+      if (this.overlayOptions.action === 'hover') {
         this.setFocus(this._findOverlayAt(this._focusPos));
       }
       const fm = this.frameOverlay[this._frameNumber];
@@ -988,12 +989,12 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   actionFormTitle.appendChild(makeSectionHeader('Object selection mode'));
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
-  for (const obj of Object.values(this._actionOptions)) {
+  for (const [key, obj] of Object.entries(this._actionOptions)) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
     radio.name = 'selectActionOpt';
-    radio.value = obj.type;
-    radio.checked = this.overlayOptions.action.type === obj.type;
+    radio.value = key;
+    radio.checked = this.overlayOptions.action === key;
     const label = document.createElement('label');
     label.innerHTML = obj.name;
     label.className = 'p51-label';
@@ -1175,8 +1176,8 @@ Renderer.prototype.initPlayerOptionsControls = function() {
 
   for (const radio of this.eleActionCtlOptForm) {
     radio.addEventListener('change', () => {
-      if (radio.value !== this.overlayOptions.action.type) {
-        this.overlayOptions.action = this._getActionByKey('type', radio.value);
+      if (radio.value !== this.overlayOptions.action) {
+        this.overlayOptions.action = radio.value;
         this._alterOptionsLabelText();
         this._reBindMouseHandler();
         this.processFrame();
@@ -1196,19 +1197,13 @@ Renderer.prototype._alterOptionsLabelText = function() {
   };
   let textNode = getTextNode(
       this.eleOptCtlShowAttrClickWrapper.querySelector('label').childNodes);
-  textNode.textContent =
-    `Only show ${this.overlayOptions.action.labelText} attributes`;
+  textNode.textContent = 'Only show ' +
+    `${this._actionOptions[this.overlayOptions.action].labelText} attributes`;
 
   textNode = getTextNode(
       this.eleOptCtlShowLabelWrapper.querySelector('label').childNodes);
-  textNode.textContent =
-    `Only show ${this.overlayOptions.action.labelText} object`;
-};
-
-Renderer.prototype._getActionByKey = function(key, val) {
-  return Object.values(this._actionOptions).find(
-      (e) => Object.entries(e).find(
-          ([k, v]) => key === k && val === v));
+  textNode.textContent = 'Only show ' +
+    `${this._actionOptions[this.overlayOptions.action].labelText} object`;
 };
 
 
