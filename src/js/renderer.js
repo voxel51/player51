@@ -71,23 +71,31 @@ function Renderer(media, overlay, options) {
     click: {name: 'Click', type: 'click', labelText: 'clicked'},
     hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
   };
-  this.overlayOptions = {
-    showFrameCount: false,
-    labelsOnlyOnClick: true,
-    attrsOnlyOnClick: false,
-    showConfidence: true,
-    showAttrs: true,
-    attrRenderMode: 'value',
-    attrRenderBox: true,
-    action: this._actionOptions.hover,
-  };
-  this._attrRenderModeOptions = [{
-    name: 'Value',
-    value: 'value',
-  }, {
-    name: 'Attribute: Value',
-    value: 'attr-value',
-  }];
+  this.overlayOptions = Object.assign(
+    {
+      showFrameCount: false,
+      labelsOnlyOnClick: true,
+      attrsOnlyOnClick: false,
+      showConfidence: true,
+      showAttrs: true,
+      attrRenderMode: 'value',
+      attrRenderBox: true,
+    },
+    this.options.defaultOverlayOptions,
+    {
+      action: this._actionOptions.hover,
+    }
+  );
+  this._attrRenderModeOptions = [
+    {
+      name: 'Value',
+      value: 'value',
+    },
+    {
+      name: 'Attribute: Value',
+      value: 'attr-value',
+    },
+  ];
   this._boolShowVideoOptions = false;
   this._focusIndex = -1;
   this.seekBarMax = 100;

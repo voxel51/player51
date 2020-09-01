@@ -131,6 +131,7 @@ function Player51(options, ...args) {
   options.colorMap = options.colorMap || {};
   options.activeLabels = options.activeLabels || {};
   options.filter = options.filter || {};
+  options.defaultOverlayOptions = options.defaultOverlayOptions || {};
 
   const {media, overlay} = options;
   const mimetype = options.media.type.toLowerCase();
