@@ -96,6 +96,10 @@
   margin: 3px;
 }
 
+.p51-video-opt-input.hidden {
+  display: none;
+}
+
 .p51-video-opt-input .p51-section-header {
   display: block;
   margin-bottom: 2px;

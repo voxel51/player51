@@ -19,7 +19,6 @@ import {
 import {
   ICONS,
   rescale,
-  recursiveMap,
 } from './util.js';
 import {
   ZipLibrary,
@@ -428,6 +427,8 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
       this._prepareOverlay_auxCheckAdd(o);
     }
   }
+  // we may have updated _overlayHasObjectAttrs
+  this._setAttributeControlsDisplay();
 };
 
 
@@ -1057,12 +1058,10 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowConfidenceWrapper);
-  if (this._overlayHasObjectAttrs) {
-    this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
-    this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
-    this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
-    this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
-  }
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
 
   this.attrOptsElements = [
     this.eleOptCtlAttrOptForm,
@@ -1071,6 +1070,9 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   ];
 
   parent.appendChild(this.eleDivVideoOpts);
+
+  // set up initial visibility of attribute options
+  this._setAttributeControlsDisplay();
 };
 
 Renderer.prototype._repositionOptionsPanel = function() {
@@ -1122,7 +1124,7 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
     this.processFrame();
     this.updateFromDynamicState();
-    this._repositionOptionsPanel(this.eleOptionsButton);
+    this._repositionOptionsPanel();
   });
 
   this.eleOptCtlShowAttrClick.addEventListener('change', () => {
@@ -1245,18 +1247,11 @@ Renderer.prototype._updateOptionsDisplayState = function() {
 };
 
 Renderer.prototype._setAttributeControlsDisplay = function() {
-  let func = (node) => {
-    node.hidden = false;
-  };
-  if (!this.overlayOptions.showAttrs) {
-    this.attrOptsElements.forEach((e) => e.className = '');
-    func = (node) => {
-      node.hidden = true;
-    };
-  } else {
-    this.attrOptsElements.forEach((e) => e.className = 'p51-video-opt-input');
-  }
-  this.attrOptsElements.forEach((e) => recursiveMap(e, func));
+  this.eleOptCtlShowAttrWrapper.classList.toggle(
+      'hidden', !this._overlayHasObjectAttrs);
+  this.attrOptsElements.forEach((e) => e.classList.toggle(
+      'hidden',
+      !this._overlayHasObjectAttrs || !this.overlayOptions.showAttrs));
 };
 
 Renderer.prototype.hasFrameNumbers = function() {
