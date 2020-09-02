@@ -925,7 +925,6 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.innerHTML = '<b>DISPLAY OPTIONS</b>';
 
   const makeSectionHeader = function(text) {
     const header = document.createElement('b');
