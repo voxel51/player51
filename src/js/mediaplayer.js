@@ -203,6 +203,30 @@ MediaPlayer.prototype.updateOptions = function(options) {
 
 
 /**
+* Get player overlay options
+*
+* @member getOverlayOptions
+* @return {object} copy of player overlay options
+*/
+MediaPlayer.prototype.getOverlayOptions = function() {
+  return Object.assign({}, this.renderer.overlayOptions);
+};
+
+
+/**
+* Update player overlay options - only the options passed in
+*
+* @member updateOverlayOptions
+* @param {object} overlayOptions: new player overlay options
+*/
+MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
+  Object.assign(this.renderer.overlayOptions, overlayOptions);
+  // todo: update checkbox states - call initPlayerOptionsPanelHTML?
+  this.renderer.processFrame();
+};
+
+
+/**
  * Forces a manual size to the video or image and canvas.
  *
  * @member forceSize
