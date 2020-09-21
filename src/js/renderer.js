@@ -243,6 +243,17 @@ Renderer.prototype.handleBlob = function() {
 
 
 /**
+ * Return the original size of the underlying content (image, video).
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined or is not applicable (e.g. for galleries)
+ */
+Renderer.prototype.getContentDimensions = function() {
+  return null;
+};
+
+
+/**
  * This function processes the overlayData
  *
  * @member handleOverlay

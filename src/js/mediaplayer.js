@@ -227,6 +227,17 @@ MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
 
 
 /**
+ * Return the original size of the underlying content (image, video).
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined or is not applicable (e.g. for galleries)
+ */
+MediaPlayer.prototype.getContentDimensions = function() {
+  return this.renderer.getContentDimensions();
+};
+
+
+/**
  * Forces a manual size to the video or image and canvas.
  *
  * @member forceSize

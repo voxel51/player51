@@ -155,6 +155,23 @@ ImageRenderer.prototype.determineMediaDimensions = function() {
 
 
 /**
+ * Return the original size of the underlying image
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined
+ */
+ImageRenderer.prototype.getContentDimensions = function() {
+  if (!this.mediaElement) {
+    return null;
+  }
+  return {
+    width: this.mediaElement.naturalWidth,
+    height: this.mediaElement.naturalHeight,
+  };
+};
+
+
+/**
  * This function is a controller
  * The dynamic state of the player has changed and various settings have to be
  * toggled.

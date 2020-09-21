@@ -340,6 +340,23 @@ VideoRenderer.prototype.determineMediaDimensions = function() {
 
 
 /**
+ * Return the original size of the underlying image
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined
+ */
+VideoRenderer.prototype.getContentDimensions = function() {
+  if (!this.mediaElement || !this._isVideoMetadataLoaded) {
+    return null;
+  }
+  return {
+    width: this.mediaElement.videoWidth,
+    height: this.mediaElement.videoHeight,
+  };
+};
+
+
+/**
  * Resizes controls
  *
  * @member resizeControls
