@@ -83,6 +83,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.setupCanvasContext();
     self._isDataLoaded = true;
     self.updateFromLoadingState();
+    self.dispatchEvent('load');
   });
 
   this.eleImage.addEventListener('error', function() {

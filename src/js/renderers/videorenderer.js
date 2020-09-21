@@ -154,6 +154,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
         ._boolAutoplay)) {
       self.processFrame();
     }
+
+    self.dispatchEvent('load');
   });
 
   this.eleVideo.addEventListener('ended', function() {

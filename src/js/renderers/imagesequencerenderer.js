@@ -235,6 +235,7 @@ ImageSequenceRenderer.prototype.updateFromLoadingState = function() {
     // Able to load first frame
     if (!this._isFrameInserted) {
       this.insertFrame(this._frameNumber);
+      this.dispatchEvent('load');
     }
     const newLength = Object.keys(this.imageFiles).length;
     if (this._totalNumberOfFrames !== newLength) {

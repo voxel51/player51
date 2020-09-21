@@ -151,6 +151,7 @@ GalleryRenderer.prototype.updateFromLoadingState = function() {
     // Able to load an image into gallery
     if (!this._isImageInserted) {
       this.insertImage(this._currentIndex);
+      this.dispatchEvent('load');
     }
   }
   // Overlay controller

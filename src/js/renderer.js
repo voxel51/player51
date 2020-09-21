@@ -47,6 +47,7 @@ function Renderer(media, overlay, options) {
   // Data structures
   this.player = undefined;
   this.parent = undefined;
+  this.eventTarget = new EventTarget();
   this.media = media;
   this.options = options;
   this.frameOverlay = {};
@@ -250,6 +251,17 @@ Renderer.prototype.handleBlob = function() {
  */
 Renderer.prototype.getContentDimensions = function() {
   return null;
+};
+
+
+/**
+ * Emit a custom event.
+ *
+ * @param {string} eventType - the type of the event
+ * @param {*} args - additional arguments to pass to the Event constructor
+ */
+Renderer.prototype.dispatchEvent = function(eventType, ...args) {
+  this.eventTarget.dispatchEvent(new Event(eventType, ...args));
 };
 
 

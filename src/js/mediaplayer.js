@@ -238,6 +238,33 @@ MediaPlayer.prototype.getContentDimensions = function() {
 
 
 /**
+ * Add a custom event handler.
+ *
+ * @param {string} eventType - the type of the event
+ * @param {string} handler - the handler to call
+ * @param {*} args - additional arguments to pass to the native
+ *   addEventListener()
+ */
+MediaPlayer.prototype.addEventListener = function(eventType, handler, ...args) {
+  this.renderer.eventTarget.addEventListener(eventType, handler, ...args);
+};
+
+
+/**
+ * Remove a custom event handler.
+ *
+ * @param {string} eventType - the type of the event
+ * @param {string} handler - the handler to remove
+ * @param {*} args - additional arguments to pass to the native
+ *   removeEventListener()
+ */
+MediaPlayer.prototype.removeEventListener = function(eventType, handler,
+    ...args) {
+  this.renderer.eventTarget.removeEventListener(eventType, handler, ...args);
+};
+
+
+/**
  * Forces a manual size to the video or image and canvas.
  *
  * @member forceSize
