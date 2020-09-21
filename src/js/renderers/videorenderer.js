@@ -37,7 +37,7 @@ export {
  * @param {object} options: additional player options
  */
 function VideoRenderer(media, overlay, options) {
-  Renderer.call(this, media, overlay);
+  Renderer.call(this, media, overlay, options);
 
   // Player State Attributes
   this._boolAutoplay = false;
