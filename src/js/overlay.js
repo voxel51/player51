@@ -577,7 +577,8 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 
 
 ObjectOverlay.prototype._isShown = function() {
-  if (this.renderer.options.activeLabels[this.name] === false) {
+  const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
+  if (this.renderer.options.activeLabels[name] === false) {
     return false;
   }
   if (!_isAttrShown(this.renderer.options.filter, this)) {
