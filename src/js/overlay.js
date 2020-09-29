@@ -616,8 +616,9 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  context.strokeStyle = this.renderer.options.colorMap[this.name];
-  context.fillStyle = this.renderer.options.colorMap[this.name];
+  const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
+  context.strokeStyle = this.renderer.options.colorMap[name];
+  context.fillStyle = this.renderer.options.colorMap[name];
   context.lineWidth = 6;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
