@@ -281,8 +281,7 @@ Renderer.prototype.handleOverlay = function(overlay) {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === 'object') &&
-      Object.keys(overlay).length > 0) {
+  } else if (typeof(overlay) === 'object') {
     this._overlayData = overlay;
     this._overlayURL = null;
   }
