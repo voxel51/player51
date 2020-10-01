@@ -197,6 +197,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (self.player._boolNotFound) {
       self.eleVideo.setAttribute('poster', self.player._notFoundPosterURL);
     }
+    self.dispatchEvent('error');
   });
 
   // Event listener for the play/pause button
