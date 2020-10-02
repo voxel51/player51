@@ -25,6 +25,7 @@ export {
 };
 
 const MASK_ALPHA = 0.6;
+const _rawColorCache = {};
 
 /**
  * A Class to encapsulate the creation of suitable colors for drawing the
@@ -619,16 +620,22 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
   const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
-  context.strokeStyle = this.renderer.options.colorMap[name];
-  context.fillStyle = this.renderer.options.colorMap[name];
+  const color = this.renderer.options.colorMap[name];
+  context.strokeStyle = color;
+  context.fillStyle = color;
   context.lineWidth = 6;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (this.mask) {
-    const rawMaskColorComponents = new Uint8Array(
-        context.getImageData(this.x, this.y, 1, 1).data.buffer);
-    rawMaskColorComponents[3] = 255 * MASK_ALPHA;
-    const rawMaskColor = (new Uint32Array(rawMaskColorComponents.buffer))[0];
+    if (_rawColorCache[color] === undefined) {
+      const rawMaskColorComponents = new Uint8Array(
+          context.getImageData(this.x, this.y, 1, 1).data.buffer);
+      rawMaskColorComponents[3] = 255 * MASK_ALPHA;
+      _rawColorCache[color] = (
+        new Uint32Array(rawMaskColorComponents.buffer)
+      )[0];
+    }
+    const rawMaskColor = _rawColorCache[color];
 
     const [maskHeight, maskWidth] = this.mask.shape;
     ensureCanvasSize(ObjectOverlay._tempMaskCanvas, {
