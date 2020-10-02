@@ -24,6 +24,7 @@ export {
   ObjectOverlay,
 };
 
+const MASK_ALPHA = 0.6;
 
 /**
  * A Class to encapsulate the creation of suitable colors for drawing the
@@ -51,7 +52,7 @@ function ColorGenerator() {
   // reduce alpha of masks
   const rawMaskColorComponents = new Uint8Array(this.rawMaskColors.buffer);
   for (let i = 3; i < rawMaskColorComponents.length; i += 4) {
-    rawMaskColorComponents[i] = Math.floor(255 * 0.6);
+    rawMaskColorComponents[i] = Math.floor(255 * MASK_ALPHA);
   }
 }
 
@@ -624,6 +625,11 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (this.mask) {
+    const rawMaskColorComponents = new Uint8Array(
+        context.getImageData(this.x, this.y, 1, 1).data.buffer);
+    rawMaskColorComponents[3] = 255 * MASK_ALPHA;
+    const rawMaskColor = (new Uint32Array(rawMaskColorComponents.buffer))[0];
+
     const [maskHeight, maskWidth] = this.mask.shape;
     ensureCanvasSize(ObjectOverlay._tempMaskCanvas, {
       width: maskWidth,
@@ -636,7 +642,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
     for (let i = 0; i < this.mask.data.length; i++) {
       if (this.mask.data[i]) {
-        maskImageRaw[i] = this.renderer.options.colorMap[this.name];
+        maskImageRaw[i] = rawMaskColor;
       }
     }
     maskContext.putImageData(maskImage, 0, 0);
