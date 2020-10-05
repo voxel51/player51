@@ -338,7 +338,15 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
         if (f && f.mask) {
-          this._prepareOverlay_auxMask(context, f.mask, frameKey);
+          this._prepareOverlay_auxMask(context, {mask: f.mask}, frameKey);
+        }
+        if (f && f.masks) {
+          for (const maskData of f.masks) {
+            this._prepareOverlay_auxMask(context, {
+              name: maskData.name,
+              mask: maskData.mask,
+            }, frameKey);
+          }
         }
         if (f && f.objects && f.objects.objects) {
           this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
@@ -357,7 +365,16 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   // Attributes and masks for images
   if (typeof(rawjson.mask) !== 'undefined') {
     const context = this.setupCanvasContext();
-    this._prepareOverlay_auxMask(context, rawjson.mask);
+    this._prepareOverlay_auxMask(context, {mask: rawjson.mask});
+  }
+  if (typeof(rawjson.masks) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    for (const maskData of rawjson.masks) {
+      this._prepareOverlay_auxMask(context, {
+        name: maskData.name,
+        mask: maskData.mask,
+      });
+    }
   }
   if (typeof(rawjson.attrs) !== 'undefined') {
     const context = this.setupCanvasContext();
@@ -412,13 +429,15 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
  * representation.
  *
  * @param {context} context
- * @param {string} mask a base64-encoded mask
+ * @param {object} maskData an object with keys:
+ *   `mask`: base64-encoded mask
+ *   `name`: a name identifying the mask
  * @param {key} frameKey the frame number of the mask (defaults to current
  *   frame)
  */
 Renderer.prototype._prepareOverlay_auxMask = function(context,
-    mask, frameKey = null) {
-  const o = new FrameMaskOverlay(mask, this);
+    maskData, frameKey = null) {
+  const o = new FrameMaskOverlay(maskData, this);
   o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));

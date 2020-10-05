@@ -296,18 +296,21 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
 /**
  * An overlay that renders frame-level masks
  *
- * @param {array} mask a base64-encoded mask
+ * @param {object} d an object with keys:
+ *   `mask`: base64-encoded mask
+ *   `name`: a name identifying the mask
  * @param {Renderer} renderer Associated renderer
  *
  */
-function FrameMaskOverlay(mask, renderer) {
+function FrameMaskOverlay(d, renderer) {
   if (!FrameMaskOverlay._tempMaskCanvas) {
     FrameMaskOverlay._tempMaskCanvas = document.createElement('canvas');
   }
 
   Overlay.call(this, renderer);
 
-  this.mask = deserialize(mask);
+  this.mask = deserialize(d.mask);
+  this.name = d.name;
   this.x = null;
   this.y = null;
   this.w = null;
