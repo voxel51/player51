@@ -348,6 +348,9 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
+  if (this.name && !this.renderer.options.activeLabels[this.name]) {
+    return;
+  }
   const [maskHeight, maskWidth] = this.mask.shape;
   ensureCanvasSize(FrameMaskOverlay._tempMaskCanvas, {
     width: maskWidth,
