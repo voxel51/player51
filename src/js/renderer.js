@@ -356,6 +356,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         if (f && f.attrs) {
           this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
+        if (f && f.keypoints && f.keypoints.keypoints) {
+          this._prepareOverlay_auxKeypoints(context, f.keypoints.keypoints,
+              frameKey);
+        }
       }
     }
   }
