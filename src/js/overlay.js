@@ -22,6 +22,7 @@ export {
   FrameAttributesOverlay,
   FrameMaskOverlay,
   ObjectOverlay,
+  KeypointsOverlay,
 };
 
 const MASK_ALPHA = 0.6;
@@ -384,6 +385,77 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   context.drawImage(FrameMaskOverlay._tempMaskCanvas,
       0, 0, maskWidth, maskHeight,
       0, 0, canvasWidth, canvasHeight);
+};
+
+
+/**
+ * An overlay that renders keypoints
+ *
+ * @param {array} d an array of ETA keypoints
+ * @param {Renderer} renderer Associated renderer
+ *
+ */
+function KeypointsOverlay(d, renderer) {
+  Overlay.call(this, renderer);
+
+  this.keypoints = d;
+}
+KeypointsOverlay.prototype = Object.create(Overlay.prototype);
+KeypointsOverlay.prototype.constructor = KeypointsOverlay;
+
+
+/**
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @method setup
+ * @constructor
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+KeypointsOverlay.prototype.setup = function(context, canvasWidth,
+    canvasHeight) {
+  this.x = 0;
+  this.y = 0;
+  this.w = canvasWidth;
+  this.h = canvasHeight;
+  this.radius = 10;
+};
+
+
+/**
+ * Basic rendering function for drawing the overlay instance.
+ *
+ * @method draw
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+KeypointsOverlay.prototype.draw = function(context, canvasWidth,
+    canvasHeight) {
+  for (const [i, obj] of Object.entries(this.keypoints)) {
+    if (this.renderer.options.activeLabels &&
+        !this.renderer.options.activeLabels[obj.name]) {
+      continue;
+    }
+    const color = (
+      this.renderer.options.colorMap &&
+        this.renderer.options.colorMap[obj.name]
+    ) || colorGenerator.color(i);
+    context.fillStyle = color;
+    context.lineWidth = 0;
+    for (const point of obj.points) {
+      context.beginPath();
+      context.arc(
+          point[0] * canvasWidth,
+          point[1] * canvasHeight,
+          this.radius,
+          0,
+          Math.PI * 2,
+      );
+      context.fill();
+    }
+  }
 };
 
 

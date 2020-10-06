@@ -15,6 +15,7 @@ import {
   FrameAttributesOverlay,
   FrameMaskOverlay,
   ObjectOverlay,
+  KeypointsOverlay,
 } from './overlay.js';
 import {
   ICONS,
@@ -381,6 +382,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
+  if (typeof(rawjson.keypoints) !== 'undefined') {
+    this._prepareOverlay_auxKeypoints(this.setupCanvasContext(),
+        rawjson.keypoints.keypoints);
+  }
 
   this._reBindMouseHandler();
 
@@ -439,6 +444,18 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
 Renderer.prototype._prepareOverlay_auxMask = function(context,
     maskData, frameKey = null) {
   const o = new FrameMaskOverlay(maskData, this);
+  o.setup(context, this.canvasWidth, this.canvasHeight);
+  if (frameKey) {
+    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+  } else {
+    this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+  }
+};
+
+
+Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
+    keypoints, frameKey = null) {
+  const o = new KeypointsOverlay(keypoints, this);
   o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
