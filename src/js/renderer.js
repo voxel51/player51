@@ -79,6 +79,7 @@ function Renderer(media, overlay, options) {
         attrRenderMode: 'value',
         attrRenderBox: true,
         action: 'click',
+        smoothMasks: true,
       },
       this.options.defaultOverlayOptions,
   );

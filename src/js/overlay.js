@@ -380,6 +380,7 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     this.mask.rendered = true;
   }
   maskContext.putImageData(maskImage, 0, 0);
+  context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
   context.drawImage(FrameMaskOverlay._tempMaskCanvas,
       0, 0, maskWidth, maskHeight,
       0, 0, canvasWidth, canvasHeight);
@@ -659,6 +660,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
       }
     }
     maskContext.putImageData(maskImage, 0, 0);
+    context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
     context.drawImage(ObjectOverlay._tempMaskCanvas,
         0, 0, maskWidth, maskHeight,
         this.x, this.y, this.w, this.h);
