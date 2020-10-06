@@ -16,6 +16,7 @@ import {
   FrameMaskOverlay,
   ObjectOverlay,
   KeypointsOverlay,
+  PolylinesOverlay,
 } from './overlay.js';
 import {
   ICONS,
@@ -360,6 +361,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
           this._prepareOverlay_auxKeypoints(context, f.keypoints.keypoints,
               frameKey);
         }
+        if (f && f.polylines && f.polylines.polylines) {
+          this._prepareOverlay_auxPolylines(context, f.polylines.polylines,
+              frameKey);
+        }
       }
     }
   }
@@ -389,6 +394,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   if (typeof(rawjson.keypoints) !== 'undefined') {
     this._prepareOverlay_auxKeypoints(this.setupCanvasContext(),
         rawjson.keypoints.keypoints);
+  }
+  if (typeof(rawjson.polylines) !== 'undefined') {
+    this._prepareOverlay_auxPolylines(this.setupCanvasContext(),
+        rawjson.polylines.polylines);
   }
 
   this._reBindMouseHandler();
@@ -460,6 +469,18 @@ Renderer.prototype._prepareOverlay_auxMask = function(context,
 Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
     keypoints, frameKey = null) {
   const o = new KeypointsOverlay(keypoints, this);
+  o.setup(context, this.canvasWidth, this.canvasHeight);
+  if (frameKey) {
+    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
+  } else {
+    this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+  }
+};
+
+
+Renderer.prototype._prepareOverlay_auxPolylines = function(context,
+    polylines, frameKey = null) {
+  const o = new PolylinesOverlay(polylines, this);
   o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));

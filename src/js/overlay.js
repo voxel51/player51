@@ -23,6 +23,7 @@ export {
   FrameMaskOverlay,
   ObjectOverlay,
   KeypointsOverlay,
+  PolylinesOverlay,
 };
 
 const MASK_ALPHA = 0.6;
@@ -455,6 +456,82 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
           Math.PI * 2,
       );
       context.fill();
+    }
+  }
+};
+
+
+/**
+ * An overlay that renders polylines
+ *
+ * @param {array} d an array of ETA polylines
+ * @param {Renderer} renderer Associated renderer
+ *
+ */
+function PolylinesOverlay(d, renderer) {
+  Overlay.call(this, renderer);
+
+  this.polylines = d;
+}
+PolylinesOverlay.prototype = Object.create(Overlay.prototype);
+PolylinesOverlay.prototype.constructor = PolylinesOverlay;
+
+
+/**
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @method setup
+ * @constructor
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+PolylinesOverlay.prototype.setup = function(context, canvasWidth,
+    canvasHeight) {
+  this.x = 0;
+  this.y = 0;
+  this.w = canvasWidth;
+  this.h = canvasHeight;
+};
+
+
+/**
+ * Basic rendering function for drawing the overlay instance.
+ *
+ * @method draw
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+PolylinesOverlay.prototype.draw = function(context, canvasWidth,
+    canvasHeight) {
+  for (const [i, obj] of Object.entries(this.polylines)) {
+    if (this.renderer.options.activeLabels &&
+        !this.renderer.options.activeLabels[obj.name]) {
+      continue;
+    }
+    const color = (
+      this.renderer.options.colorMap &&
+        this.renderer.options.colorMap[obj.name]
+    ) || colorGenerator.color(i);
+    context.fillStyle = color;
+    context.strokeStyle = color;
+    context.lineWidth = LINE_WIDTH;
+    context.beginPath();
+    for (const [pidx, point] of Object.entries(obj.points)) {
+      if (pidx > 0) {
+        context.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
+      } else {
+        context.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+      }
+    }
+    if (obj.closed) {
+      context.closePath();
+    }
+    if (obj.filled) {
+      context.fill();
+    } else {
+      context.stroke();
     }
   }
 };
