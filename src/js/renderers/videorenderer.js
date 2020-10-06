@@ -132,14 +132,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
     //  (the player itself will handle the autoplaying)
     if (self._boolAutoplay) {
       self._boolPlaying = true;
-    } else if (self.player._boolHasPoster) {
-      if (self._hasMediaFragment) {
+    } else if (self._hasMediaFragment) {
         self.eleVideo.currentTime = self._mfBeginT;
         self._frameNumber = self._mfBeginF;
-      } else {
-        self.eleVideo.currentTime = 0;
-        self._frameNumber = 1;
-      }
+    } else {
+	self.eleVideo.currentTime = 0;
+	self._frameNumber = 1;
     }
 
     self.updateFromLoadingState();
@@ -150,8 +148,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
 
     // so that we see overlay and time stamp now that we are ready
-    if ((!self.player._boolThumbnailMode) && (!self
-        ._boolAutoplay)) {
+    if (!self._boolAutoplay) {
       self.processFrame();
     }
 
