@@ -176,6 +176,16 @@ Overlay.prototype._isShown = function(name) {
   }
   return true;
 };
+Overlay.prototype._getColor = function(name, index) {
+  if (this.renderer.mediaType === 'video') {
+    // todo: support toggling individual objects in video frames
+    name = 'frames';
+  }
+  if (this.renderer.options.colorMap && this.renderer.options.colorMap[name]) {
+    return this.renderer.options.colorMap[name];
+  }
+  return colorGenerator.color(index);
+};
 
 Overlay.prototype.hasFocus = function() {
   return this.renderer.isFocus(this);
@@ -454,10 +464,7 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
     if (!this._isShown(obj.name)) {
       continue;
     }
-    const color = (
-      this.renderer.options.colorMap &&
-        this.renderer.options.colorMap[obj.name]
-    ) || colorGenerator.color(i);
+    const color = this._getColor(obj.name, i);
     context.fillStyle = color;
     context.lineWidth = 0;
     for (const point of obj.points) {
@@ -523,10 +530,7 @@ PolylinesOverlay.prototype.draw = function(context, canvasWidth,
     if (!this._isShown(obj.name)) {
       continue;
     }
-    const color = (
-      this.renderer.options.colorMap &&
-        this.renderer.options.colorMap[obj.name]
-    ) || colorGenerator.color(i);
+    const color = this._getColor(obj.name, i);
     context.fillStyle = color;
     context.strokeStyle = color;
     context.lineWidth = LINE_WIDTH;
@@ -779,7 +783,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
   const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
-  const color = this.renderer.options.colorMap[name];
+  const color = this._getColor(name, this.index);
   context.strokeStyle = color;
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;
