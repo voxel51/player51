@@ -133,11 +133,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (self._boolAutoplay) {
       self._boolPlaying = true;
     } else if (self._hasMediaFragment) {
-        self.eleVideo.currentTime = self._mfBeginT;
-        self._frameNumber = self._mfBeginF;
+      self.eleVideo.currentTime = self._mfBeginT;
+      self._frameNumber = self._mfBeginF;
     } else {
-	self.eleVideo.currentTime = 0;
-	self._frameNumber = 1;
+      self.eleVideo.currentTime = 0;
+      self._frameNumber = 1;
     }
 
     self.updateFromLoadingState();
