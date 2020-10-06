@@ -354,9 +354,6 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         if (f && f.objects && f.objects.objects) {
           this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
         }
-        if (f && f.attrs) {
-          this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
-        }
         if (f && f.keypoints && f.keypoints.keypoints) {
           this._prepareOverlay_auxKeypoints(context, f.keypoints.keypoints,
               frameKey);
@@ -364,6 +361,10 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         if (f && f.polylines && f.polylines.polylines) {
           this._prepareOverlay_auxPolylines(context, f.polylines.polylines,
               frameKey);
+        }
+        // add all other overlays above so that this one renders on top
+        if (f && f.attrs) {
+          this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
       }
     }
@@ -387,10 +388,6 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
       });
     }
   }
-  if (typeof(rawjson.attrs) !== 'undefined') {
-    const context = this.setupCanvasContext();
-    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
-  }
   if (typeof(rawjson.keypoints) !== 'undefined') {
     this._prepareOverlay_auxKeypoints(this.setupCanvasContext(),
         rawjson.keypoints.keypoints);
@@ -398,6 +395,11 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   if (typeof(rawjson.polylines) !== 'undefined') {
     this._prepareOverlay_auxPolylines(this.setupCanvasContext(),
         rawjson.polylines.polylines);
+  }
+  // add all other overlays above so that this one renders on top
+  if (typeof(rawjson.attrs) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
 
   this._reBindMouseHandler();
