@@ -402,6 +402,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
   this.updatePlayButton(this._boolPlaying);
   this.updateControlsDisplayState();
+  this.processFrame();
 };
 
 /**
