@@ -528,10 +528,11 @@ PolylinesOverlay.prototype.draw = function(context, canvasWidth,
     if (obj.closed) {
       context.closePath();
     }
+    context.stroke();
     if (obj.filled) {
+      context.globalAlpha = MASK_ALPHA;
       context.fill();
-    } else {
-      context.stroke();
+      context.globalAlpha = 1;
     }
   }
 };
