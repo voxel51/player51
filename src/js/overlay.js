@@ -26,6 +26,8 @@ export {
 };
 
 const MASK_ALPHA = 0.6;
+const LINE_WIDTH = 6;
+const POINT_RADIUS = 6;
 const _rawColorCache = {};
 
 /**
@@ -419,7 +421,6 @@ KeypointsOverlay.prototype.setup = function(context, canvasWidth,
   this.y = 0;
   this.w = canvasWidth;
   this.h = canvasHeight;
-  this.radius = 10;
 };
 
 
@@ -449,7 +450,7 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
       context.arc(
           point[0] * canvasWidth,
           point[1] * canvasHeight,
-          this.radius,
+          POINT_RADIUS,
           0,
           Math.PI * 2,
       );
@@ -702,7 +703,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   const color = this.renderer.options.colorMap[name];
   context.strokeStyle = color;
   context.fillStyle = color;
-  context.lineWidth = 6;
+  context.lineWidth = LINE_WIDTH;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
   if (this.mask) {
