@@ -162,6 +162,21 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   console.log('ERROR: setup called on abstract type');
 };
 
+Overlay.prototype._isShown = function(name) {
+  if (this.renderer.mediaType === 'video') {
+    // todo: support toggling individual objects in video frames
+    name = 'frames';
+  }
+  if (this.renderer.options.activeLabels &&
+      this.renderer.options.activeLabels[name] === false) {
+    return false;
+  }
+  if (!_isAttrShown(this.renderer.options.filter, this)) {
+    return false;
+  }
+  return true;
+};
+
 Overlay.prototype.hasFocus = function() {
   return this.renderer.isFocus(this);
 };
@@ -352,7 +367,7 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
-  if (this.name && !this.renderer.options.activeLabels[this.name]) {
+  if (this.name && !this._isShown(this.name)) {
     return;
   }
   const [maskHeight, maskWidth] = this.mask.shape;
@@ -436,8 +451,7 @@ KeypointsOverlay.prototype.setup = function(context, canvasWidth,
 KeypointsOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
   for (const [i, obj] of Object.entries(this.keypoints)) {
-    if (this.renderer.options.activeLabels &&
-        !this.renderer.options.activeLabels[obj.name]) {
+    if (!this._isShown(obj.name)) {
       continue;
     }
     const color = (
@@ -506,8 +520,7 @@ PolylinesOverlay.prototype.setup = function(context, canvasWidth,
 PolylinesOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
   for (const [i, obj] of Object.entries(this.polylines)) {
-    if (this.renderer.options.activeLabels &&
-        !this.renderer.options.activeLabels[obj.name]) {
+    if (!this._isShown(obj.name)) {
       continue;
     }
     const color = (
@@ -736,18 +749,6 @@ ObjectOverlay.prototype._parseAttrs = function(attrs) {
 };
 
 
-ObjectOverlay.prototype._isShown = function() {
-  const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
-  if (this.renderer.options.activeLabels[name] === false) {
-    return false;
-  }
-  if (!_isAttrShown(this.renderer.options.filter, this)) {
-    return false;
-  }
-  return true;
-};
-
-
 /**
  * Basic rendering function for drawing the overlay instance.
  *
@@ -761,7 +762,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
-  if (!this._isShown()) {
+  if (!this._isShown(this.name)) {
     return;
   }
 
