@@ -195,6 +195,10 @@ Overlay.prototype.containsPoint = function(x, y) {
   return false;
 };
 
+Overlay.prototype.isSelectable = function() {
+  return this.id !== undefined;
+};
+
 
 /**
  * An overlay that renders frame-level attributes
@@ -599,6 +603,7 @@ function ObjectOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
   this._cache_options = Object.assign({}, this.options);
+  this.id = d._id;
   this.name = d.name;
   this.confidence = d.confidence;
   this.label = d.label;

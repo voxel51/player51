@@ -119,7 +119,7 @@ function Renderer(media, overlay, options) {
   this._timeouts = {};
   this._focusPos = {x: -1, y: -1};
   this.handleOverlay(overlay);
-  this._mouseEventHandler = this._handleMouseEvent.bind(this);
+  this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
 
 
@@ -263,9 +263,12 @@ Renderer.prototype.getContentDimensions = function() {
  *
  * @param {string} eventType - the type of the event
  * @param {*} args - additional arguments to pass to the Event constructor
+ * @return {boolean} false if the event was cancelled
  */
-Renderer.prototype.dispatchEvent = function(eventType, ...args) {
-  this.eventTarget.dispatchEvent(new Event(eventType, ...args));
+Renderer.prototype.dispatchEvent = function(eventType, {data, ...args} = {}) {
+  const e = new Event(eventType, args);
+  e.data = data;
+  return this.eventTarget.dispatchEvent(e);
 };
 
 
@@ -414,11 +417,13 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 Renderer.prototype._reBindMouseHandler = function() {
   for (const action of Object.values(this._actionOptions)) {
     this.eleCanvas.removeEventListener(
-        action.type, this._mouseEventHandler);
+        action.type, this._handleMouseEvent);
   }
-  this.eleCanvas.addEventListener(
-      this._actionOptions[this.overlayOptions.action].type,
-      this._mouseEventHandler);
+  const eventType = this._actionOptions[this.overlayOptions.action].type;
+  this.eleCanvas.addEventListener(eventType, this._handleMouseEvent);
+  if (eventType !== 'click') {
+    this.eleCanvas.addEventListener('click', this._handleMouseEvent);
+  }
 };
 
 /**
@@ -648,6 +653,7 @@ Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
 
 
 Renderer.prototype._handleMouseEvent = function(e) {
+  const eventType = e.type.toLowerCase();
   const rect = e.target.getBoundingClientRect();
   // calculate relative to top left of canvas
   let x = e.clientX - rect.left;
@@ -657,12 +663,19 @@ Renderer.prototype._handleMouseEvent = function(e) {
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
 
   const overlayObj = this._findOverlayAt({x, y});
-  if (e.type.toLowerCase() === 'click' &&
+  if (eventType === 'click' &&
       overlayObj &&
       overlayObj.constructor === ObjectOverlay &&
       overlayObj.index === undefined) {
     // for now, allow clicking on objects without IDs
     // @todo only allow this for images?
+  }
+  if (eventType === 'click' && overlayObj && overlayObj.isSelectable()) {
+    this.dispatchEvent('select', {
+      data: {
+        id: overlayObj.id,
+      },
+    });
   }
 
   if (this.setFocus(overlayObj, {x, y})) {
