@@ -543,13 +543,10 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
     fn = this._frameNumber;
   }
   if (fn in this.frameOverlay) {
-    const thelist = this.frameOverlay[fn];
-    thelist.push(o);
-    this.frameOverlay[fn] = thelist;
+    this.frameOverlay[fn].push(o);
   } else {
     // this the first time we are seeing the frame
-    const newlist = [o];
-    this.frameOverlay[fn] = newlist;
+    this.frameOverlay[fn] = [o];
   }
 };
 
