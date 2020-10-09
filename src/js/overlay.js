@@ -513,6 +513,24 @@ PolylinesOverlay.prototype.setup = function(context, canvasWidth,
   this.y = 0;
   this.w = canvasWidth;
   this.h = canvasHeight;
+
+  this._context = context;
+  this.polylines = this.polylines.map(function(obj) {
+    const path = new Path2D();
+    for (const [pidx, point] of Object.entries(obj.points)) {
+      if (pidx > 0) {
+        path.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
+      } else {
+        path.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+      }
+    }
+    if (obj.closed) {
+      path.closePath();
+    }
+    return Object.assign({}, obj, {
+      _path: path,
+    });
+  });
 };
 
 
@@ -534,26 +552,25 @@ PolylinesOverlay.prototype.draw = function(context, canvasWidth,
     context.fillStyle = color;
     context.strokeStyle = color;
     context.lineWidth = LINE_WIDTH;
-    context.beginPath();
-    for (const [pidx, point] of Object.entries(obj.points)) {
-      if (pidx > 0) {
-        context.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
-      } else {
-        context.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
-      }
-    }
-    if (obj.closed) {
-      context.closePath();
-    }
-    context.stroke();
+    context.stroke(obj._path);
     if (obj.filled) {
       context.globalAlpha = MASK_ALPHA;
-      context.fill();
+      context.fill(obj._path);
       context.globalAlpha = 1;
     }
   }
 };
 
+
+PolylinesOverlay.prototype.containsPoint = function(x, y) {
+  for (const obj of this.polylines) {
+    if ((obj.closed || obj.filled) &&
+        this._context.isPointInPath(obj._path, x, y)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 /**
  * A Class for rendering an Overlay on the Video
