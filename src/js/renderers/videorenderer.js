@@ -253,6 +253,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.parent.addEventListener('mouseenter', function() {
     // Two different behaviors.
+    // 1.  Custom onMouseEnter callback defined in defaultOverlayOptions
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
     // 3.  Single Frame Mode: annotate
@@ -260,7 +261,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
       return;
     }
 
-    if (self.player._boolThumbnailMode) {
+    const {onMouseEnter} = self.options.defaultOverlayOptions;
+    if (onMouseEnter) {
+	onMouseEnter(self);
+	return;
+    } else if (self.player._boolThumbnailMode) {
       self._boolPlaying = true;
       if (self._boolSingleFrame) {
         self.processFrame();
