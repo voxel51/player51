@@ -261,7 +261,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
       return;
     }
 
-    const {onMouseEnter} = self.options.defaultOverlayOptions;
+    const {onMouseEnter} = self.options;
     if (onMouseEnter) {
 	onMouseEnter(self);
 	return;
