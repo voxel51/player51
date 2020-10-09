@@ -263,8 +263,8 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
     const {onMouseEnter} = self.options.defaultOverlayOptions;
     if (onMouseEnter) {
-	onMouseEnter(self);
-	return;
+      onMouseEnter(self);
+      return;
     } else if (self.player._boolThumbnailMode) {
       self._boolPlaying = true;
       if (self._boolSingleFrame) {
