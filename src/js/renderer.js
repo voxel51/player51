@@ -51,7 +51,6 @@ function Renderer(media, overlay, options) {
   this.parent = undefined;
   this.eventTarget = new EventTarget();
   this.media = media;
-  this.mediaType = this.media.type.startsWith('video/') ? 'video' : 'image';
   this.options = options;
   this.frameOverlay = {};
   this.frameZeroOffset = 1;

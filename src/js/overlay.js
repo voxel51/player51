@@ -163,10 +163,6 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 };
 
 Overlay.prototype._isShown = function(name) {
-  if (this.renderer.mediaType === 'video') {
-    // todo: support toggling individual objects in video frames
-    name = 'frames';
-  }
   if (this.renderer.options.activeLabels &&
       this.renderer.options.activeLabels[name] === false) {
     return false;
@@ -177,10 +173,6 @@ Overlay.prototype._isShown = function(name) {
   return true;
 };
 Overlay.prototype._getColor = function(name, index) {
-  if (this.renderer.mediaType === 'video') {
-    // todo: support toggling individual objects in video frames
-    name = 'frames';
-  }
   if (this.renderer.options.colorMap && this.renderer.options.colorMap[name]) {
     return this.renderer.options.colorMap[name];
   }
@@ -804,8 +796,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
-  const color = this._getColor(name, this.index);
+  const color = this._getColor(this.name, this.index);
   context.strokeStyle = color;
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;
