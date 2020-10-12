@@ -257,6 +257,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
     // 3.  Single Frame Mode: annotate
+    self.player._boolHovering = true;
     if (!self._isDataLoaded) {
       return;
     }
@@ -289,6 +290,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    self.player._boolHovering = false;
     if (!self._isDataLoaded) {
       return;
     }

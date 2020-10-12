@@ -68,6 +68,7 @@ function MediaPlayer(type, media, overlay, options) {
   this._boolNotFound = false;
   this._loadingPosterURL = '';
   this._notFoundPosterURL = '';
+  this._boolHovering = false;
   MediaPlayer._installEventHandlers();
   if (!MediaPlayer._instances) {
     MediaPlayer._instances = [];
