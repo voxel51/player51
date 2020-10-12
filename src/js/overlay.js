@@ -423,14 +423,17 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
 /**
  * An overlay that renders keypoints
  *
- * @param {array} d an array of ETA keypoints
+ * @param {array} d an ETA Keypoints object
  * @param {Renderer} renderer Associated renderer
  *
  */
 function KeypointsOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
-  this.keypoints = d;
+  this.name = d.name;
+  this.label = d.label;
+  this.index = d.index;
+  this.points = d.points;
 }
 KeypointsOverlay.prototype = Object.create(Overlay.prototype);
 KeypointsOverlay.prototype.constructor = KeypointsOverlay;
@@ -464,24 +467,22 @@ KeypointsOverlay.prototype.setup = function(context, canvasWidth,
  */
 KeypointsOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
-  for (const [i, obj] of Object.entries(this.keypoints)) {
-    if (!this._isShown(obj.name)) {
-      continue;
-    }
-    const color = this._getColor(obj.name, i);
-    context.fillStyle = color;
-    context.lineWidth = 0;
-    for (const point of obj.points) {
-      context.beginPath();
-      context.arc(
-          point[0] * canvasWidth,
-          point[1] * canvasHeight,
-          POINT_RADIUS,
-          0,
-          Math.PI * 2,
-      );
-      context.fill();
-    }
+  if (!this._isShown(this.name)) {
+    return;
+  }
+  const color = this._getColor(this.name, this.index);
+  context.fillStyle = color;
+  context.lineWidth = 0;
+  for (const point of this.points) {
+    context.beginPath();
+    context.arc(
+        point[0] * canvasWidth,
+        point[1] * canvasHeight,
+        POINT_RADIUS,
+        0,
+        Math.PI * 2,
+    );
+    context.fill();
   }
 };
 
@@ -489,7 +490,7 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 /**
  * An overlay that renders polylines
  *
- * @param {array} d an array of ETA polylines
+ * @param {array} d an ETA Polyline object
  * @param {Renderer} renderer Associated renderer
  *
  */
