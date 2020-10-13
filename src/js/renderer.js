@@ -496,7 +496,8 @@ Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
     const o = new KeypointsOverlay(k, this);
     o.setup(context, this.canvasWidth, this.canvasHeight);
     this._prepareOverlay_auxCheckAdd(o, frameKey);
-  }};
+  }
+};
 
 
 Renderer.prototype._prepareOverlay_auxPolylines = function(context,
