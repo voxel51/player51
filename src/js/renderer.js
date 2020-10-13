@@ -322,7 +322,7 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
  * @param {object} overlayData
  */
 Renderer.prototype.updateOverlay = function(overlayData) {
-  Object.assign(this._overlayData, overlayData);
+  this._overlayData = JSON.parse(JSON.stringify(overlayData));
   this._isOverlayPrepared = false;
   this.prepareOverlay(this._overlayData);
   if (this._boolSingleFrame) {
