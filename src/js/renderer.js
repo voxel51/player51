@@ -319,10 +319,10 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
  * Supports 2 formats, object and frame based.
  *
  * @member updateOverlay
- * @param {json} rawjson
+ * @param {object} overlayData
  */
-Renderer.prototype.updateOverlay = function(rawjson) {
-  this._overlayData = rawjson;
+Renderer.prototype.updateOverlay = function(overlayData) {
+  Object.assign(this._overlayData, overlayData);
   this._isOverlayPrepared = false;
   this.prepareOverlay(this._overlayData);
   if (this._boolSingleFrame) {

@@ -231,7 +231,7 @@ MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
  * Update the player's overlay
  *
  * @member updateOverlay
- * @param {overlayData} overlayData: the new overlayData
+ * @param {overlayData} overlayData: new overlayData
  */
 MediaPlayer.prototype.updateOverlay = function(overlayData) {
   this.renderer.updateOverlay(overlayData);
