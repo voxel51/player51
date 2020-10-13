@@ -332,7 +332,9 @@ img.p51-contained-image {
 }
 
 div.p51-contained-image {
+  position: absolute;
   width: 100%;
+  top: 0;
 }
 
 .p51-contained-canvas {
