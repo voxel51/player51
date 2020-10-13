@@ -70,6 +70,40 @@ VideoPlayer.prototype.loop = function(boolLoop = true) {
 
 
 /**
+ * Play the video, if it is not already playing.
+ *
+ * @member play
+ */
+VideoPlayer.prototype.play = function() {
+  this.renderer._boolPlaying = true;
+  this.renderer.updateFromDynamicState();
+};
+
+
+/**
+ * Pause the video, if it is not already paused.
+ *
+ * @member pause
+ */
+VideoPlayer.prototype.pause = function() {
+  this.renderer._boolPlaying = false;
+  this.renderer.updateFromDynamicState();
+};
+
+
+/**
+ * Returns true if the mouse is hovering over the player, and false, if not.
+ *
+ * @member isHovering
+ *
+ * @return {bool} if the mouse is hovering over the player
+ */
+VideoPlayer.prototype.isHovering = function() {
+  return this._boolHovering;
+};
+
+
+/**
  * Force the video to autoplay when rendered.
  *
  * @member autoplay

@@ -315,6 +315,23 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
 
 
 /**
+ * This function updates the overlay data and prepares it for rendering.
+ * Supports 2 formats, object and frame based.
+ *
+ * @member updateOverlay
+ * @param {json} rawjson
+ */
+Renderer.prototype.updateOverlay = function(rawjson) {
+  this._overlayData = rawjson;
+  this._isOverlayPrepared = false;
+  this.prepareOverlay(this._overlayData);
+  if (this._boolSingleFrame) {
+    this.processFrame();
+  }
+};
+
+
+/**
  * This function processes the overlay code and creates frame objects to be
  * drawn onto the screen.
  * Supports 2 formats, object and frame based.

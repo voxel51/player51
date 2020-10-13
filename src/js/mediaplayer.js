@@ -228,6 +228,17 @@ MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
 
 
 /**
+ * Update the player's overlay
+ *
+ * @member updateOverlay
+ * @param {overlayData} overlayData: the new overlayData
+ */
+MediaPlayer.prototype.updateOverlay = function(overlayData) {
+  this.renderer.updateOverlay(overlayData);
+};
+
+
+/**
  * Return the original size of the underlying content (image, video).
  *
  * @return {object|null} with keys `width` and `height`, or null if the content

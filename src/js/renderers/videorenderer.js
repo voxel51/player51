@@ -262,7 +262,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
       return;
     }
 
-    const eventArgs = {cancelable: true, data: {renderer: self}};
+    const eventArgs = {cancelable: true, data: {player: self.player}};
     if (!self.dispatchEvent('mouseenter', eventArgs)) {
       return;
     } else if (self.player._boolThumbnailMode) {
@@ -294,7 +294,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (!self._isDataLoaded) {
       return;
     }
-    if (self.player._boolThumbnailMode) {
+
+    const eventArgs = {cancelable: true, data: {player: self.player}};
+    if (!self.dispatchEvent('mouseleave', eventArgs)) {
+      return;
+    } else if (self.player._boolThumbnailMode) {
       self._boolPlaying = false;
       // clear things we do not want to render any more
       self.clearCanvas();
