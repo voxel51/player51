@@ -23,7 +23,7 @@ export {
   FrameMaskOverlay,
   ObjectOverlay,
   KeypointsOverlay,
-  PolylinesOverlay,
+  PolylineOverlay,
 };
 
 const MASK_ALPHA = 0.6;
@@ -415,14 +415,17 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
 /**
  * An overlay that renders keypoints
  *
- * @param {array} d an array of ETA keypoints
+ * @param {array} d an ETA Keypoints object
  * @param {Renderer} renderer Associated renderer
  *
  */
 function KeypointsOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
-  this.keypoints = d;
+  this.name = d.name;
+  this.label = d.label;
+  this.index = d.index;
+  this.points = d.points;
 }
 KeypointsOverlay.prototype = Object.create(Overlay.prototype);
 KeypointsOverlay.prototype.constructor = KeypointsOverlay;
@@ -456,24 +459,22 @@ KeypointsOverlay.prototype.setup = function(context, canvasWidth,
  */
 KeypointsOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
-  for (const [i, obj] of Object.entries(this.keypoints)) {
-    if (!this._isShown(obj.name)) {
-      continue;
-    }
-    const color = this._getColor(obj.name, i);
-    context.fillStyle = color;
-    context.lineWidth = 0;
-    for (const point of obj.points) {
-      context.beginPath();
-      context.arc(
-          point[0] * canvasWidth,
-          point[1] * canvasHeight,
-          POINT_RADIUS,
-          0,
-          Math.PI * 2,
-      );
-      context.fill();
-    }
+  if (!this._isShown(this.name)) {
+    return;
+  }
+  const color = this._getColor(this.name, this.index);
+  context.fillStyle = color;
+  context.lineWidth = 0;
+  for (const point of this.points) {
+    context.beginPath();
+    context.arc(
+        point[0] * canvasWidth,
+        point[1] * canvasHeight,
+        POINT_RADIUS,
+        0,
+        Math.PI * 2,
+    );
+    context.fill();
   }
 };
 
@@ -481,17 +482,23 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 /**
  * An overlay that renders polylines
  *
- * @param {array} d an array of ETA polylines
+ * @param {array} d an ETA Polyline object
  * @param {Renderer} renderer Associated renderer
  *
  */
-function PolylinesOverlay(d, renderer) {
+function PolylineOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
-  this.polylines = d;
+  this.id = d._id;
+  this.name = d.name;
+  this.label = d.label;
+  this.index = d.index;
+  this.points = d.points;
+  this.closed = d.closed;
+  this.filled = d.filled;
 }
-PolylinesOverlay.prototype = Object.create(Overlay.prototype);
-PolylinesOverlay.prototype.constructor = PolylinesOverlay;
+PolylineOverlay.prototype = Object.create(Overlay.prototype);
+PolylineOverlay.prototype.constructor = PolylineOverlay;
 
 
 /**
@@ -503,7 +510,7 @@ PolylinesOverlay.prototype.constructor = PolylinesOverlay;
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-PolylinesOverlay.prototype.setup = function(context, canvasWidth,
+PolylineOverlay.prototype.setup = function(context, canvasWidth,
     canvasHeight) {
   this.x = 0;
   this.y = 0;
@@ -511,22 +518,18 @@ PolylinesOverlay.prototype.setup = function(context, canvasWidth,
   this.h = canvasHeight;
 
   this._context = context;
-  this.polylines = this.polylines.map(function(obj) {
-    const path = new Path2D();
-    for (const [pidx, point] of Object.entries(obj.points)) {
-      if (pidx > 0) {
-        path.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
-      } else {
-        path.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
-      }
+
+  this.path = new Path2D();
+  for (const [pidx, point] of Object.entries(this.points)) {
+    if (pidx > 0) {
+      this.path.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
+    } else {
+      this.path.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
     }
-    if (obj.closed) {
-      path.closePath();
-    }
-    return Object.assign({}, obj, {
-      _path: path,
-    });
-  });
+  }
+  if (this.closed) {
+    this.path.closePath();
+  }
 };
 
 
@@ -538,34 +541,27 @@ PolylinesOverlay.prototype.setup = function(context, canvasWidth,
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-PolylinesOverlay.prototype.draw = function(context, canvasWidth,
+PolylineOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
-  for (const [i, obj] of Object.entries(this.polylines)) {
-    if (!this._isShown(obj.name)) {
-      continue;
-    }
-    const color = this._getColor(obj.name, i);
-    context.fillStyle = color;
-    context.strokeStyle = color;
-    context.lineWidth = LINE_WIDTH;
-    context.stroke(obj._path);
-    if (obj.filled) {
-      context.globalAlpha = MASK_ALPHA;
-      context.fill(obj._path);
-      context.globalAlpha = 1;
-    }
+  if (!this._isShown(this.name)) {
+    return;
+  }
+  const color = this._getColor(this.name, this.index);
+  context.fillStyle = color;
+  context.strokeStyle = color;
+  context.lineWidth = LINE_WIDTH;
+  context.stroke(this.path);
+  if (this.filled) {
+    context.globalAlpha = MASK_ALPHA;
+    context.fill(this.path);
+    context.globalAlpha = 1;
   }
 };
 
 
-PolylinesOverlay.prototype.containsPoint = function(x, y) {
-  for (const obj of this.polylines) {
-    if ((obj.closed || obj.filled) &&
-        this._context.isPointInPath(obj._path, x, y)) {
-      return true;
-    }
-  }
-  return false;
+PolylineOverlay.prototype.containsPoint = function(x, y) {
+  return (this.closed || this.filled) &&
+      this._context.isPointInPath(this.path, x, y);
 };
 
 /**

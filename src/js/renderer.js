@@ -16,7 +16,7 @@ import {
   FrameMaskOverlay,
   ObjectOverlay,
   KeypointsOverlay,
-  PolylinesOverlay,
+  PolylineOverlay,
 } from './overlay.js';
 import {
   ICONS,
@@ -491,24 +491,21 @@ Renderer.prototype._prepareOverlay_auxMask = function(context,
 
 Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
     keypoints, frameKey = null) {
-  const o = new KeypointsOverlay(keypoints, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight);
-  if (frameKey) {
-    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
-  } else {
-    this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
-  }
-};
+  frameKey = parseInt(frameKey) || this._frameNumber;
+  for (const k of keypoints) {
+    const o = new KeypointsOverlay(k, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this._prepareOverlay_auxCheckAdd(o, frameKey);
+  }};
 
 
 Renderer.prototype._prepareOverlay_auxPolylines = function(context,
     polylines, frameKey = null) {
-  const o = new PolylinesOverlay(polylines, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight);
-  if (frameKey) {
-    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
-  } else {
-    this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+  frameKey = parseInt(frameKey) || this._frameNumber;
+  for (const p of polylines) {
+    const o = new PolylineOverlay(p, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this._prepareOverlay_auxCheckAdd(o, frameKey);
   }
 };
 
