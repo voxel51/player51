@@ -520,15 +520,19 @@ PolylineOverlay.prototype.setup = function(context, canvasWidth,
   this._context = context;
 
   this.path = new Path2D();
-  for (const [pidx, point] of Object.entries(this.points)) {
-    if (pidx > 0) {
-      this.path.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
-    } else {
-      this.path.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+  for (const shape of this.points) {
+    const shapePath = new Path2D();
+    for (const [pidx, point] of Object.entries(shape)) {
+      if (pidx > 0) {
+        shapePath.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
+      } else {
+        shapePath.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+      }
     }
-  }
-  if (this.closed) {
-    this.path.closePath();
+    if (this.closed) {
+      shapePath.closePath();
+    }
+    this.path.addPath(shapePath);
   }
 };
 
