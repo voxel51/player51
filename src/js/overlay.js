@@ -29,6 +29,8 @@ export {
 const MASK_ALPHA = 0.6;
 const LINE_WIDTH = 6;
 const POINT_RADIUS = 6;
+const DASH_LENGTH = 10;
+const DASH_COLOR = '#ffffff';
 const _rawColorCache = {};
 
 /**
@@ -189,6 +191,11 @@ Overlay.prototype.containsPoint = function(x, y) {
 
 Overlay.prototype.isSelectable = function() {
   return this.id !== undefined;
+};
+
+Overlay.prototype.isSelected = function() {
+  return this.isSelectable() &&
+      this.renderer.options.selectedObjects.includes(this.id);
 };
 
 
@@ -555,6 +562,13 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
   context.strokeStyle = color;
   context.lineWidth = LINE_WIDTH;
   context.stroke(this.path);
+  if (this.isSelected()) {
+    context.strokeStyle = DASH_COLOR;
+    context.setLineDash([DASH_LENGTH]);
+    context.stroke(this.path);
+    context.strokeStyle = color;
+    context.setLineDash([]);
+  }
   if (this.filled) {
     context.globalAlpha = MASK_ALPHA;
     context.fill(this.path);
@@ -801,6 +815,14 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;
   context.strokeRect(this.x, this.y, this.w, this.h);
+
+  if (this.isSelected()) {
+    context.strokeStyle = DASH_COLOR;
+    context.setLineDash([DASH_LENGTH]);
+    context.strokeRect(this.x, this.y, this.w, this.h);
+    context.strokeStyle = color;
+    context.setLineDash([]);
+  }
 
   if (this.mask) {
     if (_rawColorCache[color] === undefined) {

@@ -133,6 +133,7 @@ function Player51(options, ...args) {
   options.filter = options.filter || {};
   options.enableOverlayOptions = options.enableOverlayOptions || {};
   options.defaultOverlayOptions = options.defaultOverlayOptions || {};
+  options.selectedObjects = options.selectedObjects || [];
 
   const {media, overlay} = options;
   const mimetype = options.media.type.toLowerCase();
