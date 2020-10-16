@@ -51,7 +51,6 @@ function Renderer(media, overlay, options) {
   this.parent = undefined;
   this.eventTarget = new EventTarget();
   this.media = media;
-  this.mediaType = this.media.type.startsWith('video/') ? 'video' : 'image';
   this.options = options;
   this.frameOverlay = {};
   this.frameZeroOffset = 1;
@@ -316,6 +315,24 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
 
 
 /**
+ * This function updates the overlay data and prepares it for rendering.
+ * Supports 2 formats, object and frame based.
+ *
+ * @member updateOverlay
+ * @param {object} overlayData
+ */
+Renderer.prototype.updateOverlay = function(overlayData) {
+  this.frameOverlay = {};
+  this._overlayData = JSON.parse(JSON.stringify(overlayData));
+  this._isOverlayPrepared = false;
+  this.prepareOverlay(this._overlayData);
+  if (this._boolSingleFrame) {
+    this.processFrame();
+  }
+};
+
+
+/**
  * This function processes the overlay code and creates frame objects to be
  * drawn onto the screen.
  * Supports 2 formats, object and frame based.
@@ -480,7 +497,8 @@ Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
     const o = new KeypointsOverlay(k, this);
     o.setup(context, this.canvasWidth, this.canvasHeight);
     this._prepareOverlay_auxCheckAdd(o, frameKey);
-  }};
+  }
+};
 
 
 Renderer.prototype._prepareOverlay_auxPolylines = function(context,

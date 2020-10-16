@@ -127,6 +127,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
   }
 
   this.parent.addEventListener('mouseenter', function() {
+    self.player._boolHovering = true;
     handleShowControls(true);
     self.setTimeout('hideControls', () => handleShowControls(false),
         2.5 * 1000);
@@ -143,6 +144,7 @@ ImageSequenceRenderer.prototype.initPlayerControls = function() {
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    self.player._boolHovering = false;
     handleShowControls(false);
     self.clearTimeout('hideControls');
   });

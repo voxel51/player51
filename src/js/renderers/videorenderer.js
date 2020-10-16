@@ -257,11 +257,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
     // 3.  Single Frame Mode: annotate
+    self.player._boolHovering = true;
     if (!self._isDataLoaded) {
       return;
     }
 
-    const eventArgs = {cancelable: true, data: {renderer: self}};
+    const eventArgs = {cancelable: true, data: {player: self.player}};
     if (!self.dispatchEvent('mouseenter', eventArgs)) {
       return;
     } else if (self.player._boolThumbnailMode) {
@@ -289,10 +290,15 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    self.player._boolHovering = false;
     if (!self._isDataLoaded) {
       return;
     }
-    if (self.player._boolThumbnailMode) {
+
+    const eventArgs = {cancelable: true, data: {player: self.player}};
+    if (!self.dispatchEvent('mouseleave', eventArgs)) {
+      return;
+    } else if (self.player._boolThumbnailMode) {
       self._boolPlaying = false;
       // clear things we do not want to render any more
       self.clearCanvas();

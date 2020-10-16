@@ -163,10 +163,6 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
 };
 
 Overlay.prototype._isShown = function(name) {
-  if (this.renderer.mediaType === 'video') {
-    // todo: support toggling individual objects in video frames
-    name = 'frames';
-  }
   if (this.renderer.options.activeLabels &&
       this.renderer.options.activeLabels[name] === false) {
     return false;
@@ -177,10 +173,6 @@ Overlay.prototype._isShown = function(name) {
   return true;
 };
 Overlay.prototype._getColor = function(name, index) {
-  if (this.renderer.mediaType === 'video') {
-    // todo: support toggling individual objects in video frames
-    name = 'frames';
-  }
   if (this.renderer.options.colorMap && this.renderer.options.colorMap[name]) {
     return this.renderer.options.colorMap[name];
   }
@@ -528,15 +520,19 @@ PolylineOverlay.prototype.setup = function(context, canvasWidth,
   this._context = context;
 
   this.path = new Path2D();
-  for (const [pidx, point] of Object.entries(this.points)) {
-    if (pidx > 0) {
-      this.path.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
-    } else {
-      this.path.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+  for (const shape of this.points) {
+    const shapePath = new Path2D();
+    for (const [pidx, point] of Object.entries(shape)) {
+      if (pidx > 0) {
+        shapePath.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
+      } else {
+        shapePath.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+      }
     }
-  }
-  if (this.closed) {
-    this.path.closePath();
+    if (this.closed) {
+      shapePath.closePath();
+    }
+    this.path.addPath(shapePath);
   }
 };
 
@@ -800,8 +796,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  const name = this.renderer.mediaType === 'video' ? 'frames' : this.name;
-  const color = this._getColor(name, this.index);
+  const color = this._getColor(this.name, this.index);
   context.strokeStyle = color;
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;

@@ -68,6 +68,7 @@ function MediaPlayer(type, media, overlay, options) {
   this._boolNotFound = false;
   this._loadingPosterURL = '';
   this._notFoundPosterURL = '';
+  this._boolHovering = false;
   MediaPlayer._installEventHandlers();
   if (!MediaPlayer._instances) {
     MediaPlayer._instances = [];
@@ -223,6 +224,17 @@ MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
   Object.assign(this.renderer.overlayOptions, overlayOptions);
   // todo: update checkbox states - call initPlayerOptionsPanelHTML?
   this.renderer.processFrame();
+};
+
+
+/**
+ * Update the player's overlay
+ *
+ * @member updateOverlay
+ * @param {overlayData} overlayData: new overlayData
+ */
+MediaPlayer.prototype.updateOverlay = function(overlayData) {
+  this.renderer.updateOverlay(overlayData);
 };
 
 

@@ -106,6 +106,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
 
 
   this.parent.addEventListener('mouseenter', function() {
+    self.player._boolHovering = true;
     if (!self._isDataLoaded) {
       return;
     }
@@ -129,6 +130,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    self.player._boolHovering = false;
     if (!self._isDataLoaded) {
       return;
     }
