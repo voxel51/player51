@@ -11,6 +11,7 @@
 
 import {
   inRect,
+  distance,
   compareData,
   computeBBoxForTextOverlay,
 } from './util.js';
@@ -429,6 +430,7 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
 function KeypointsOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
+  this.id = d._id;
   this.name = d.name;
   this.label = d.label;
   this.index = d.index;
@@ -470,19 +472,45 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
     return;
   }
   const color = this._getColor(this.name, this.index);
-  context.fillStyle = color;
   context.lineWidth = 0;
+  const isSelected = this.isSelected();
+
   for (const point of this.points) {
+    context.fillStyle = color;
     context.beginPath();
     context.arc(
         point[0] * canvasWidth,
         point[1] * canvasHeight,
-        POINT_RADIUS,
+        isSelected ? POINT_RADIUS * 2 : POINT_RADIUS,
         0,
         Math.PI * 2,
     );
     context.fill();
+
+    if (isSelected) {
+      context.fillStyle = DASH_COLOR;
+      context.beginPath();
+      context.arc(
+          point[0] * canvasWidth,
+          point[1] * canvasHeight,
+          POINT_RADIUS,
+          0,
+          Math.PI * 2,
+      );
+      context.fill();
+    }
   }
+};
+
+
+KeypointsOverlay.prototype.containsPoint = function(x, y) {
+  for (const point of this.points) {
+    if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
+        2 * POINT_RADIUS) {
+      return true;
+    }
+  }
+  return false;
 };
 
 

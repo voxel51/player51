@@ -68,6 +68,20 @@ export function inRect(x, y, rectX, rectY, rectW, rectH) {
 
 
 /**
+ * Calculates the distance between two points.
+ *
+ * @param {number} x1 point 1 X coordinate
+ * @param {number} y1 point 1 Y coordinate
+ * @param {number} x2 point 2 X coordinate
+ * @param {number} y2 point 2 Y coordinate
+ * @return {number} distance
+ */
+export function distance(x1, y1, x2, y2) {
+  return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+}
+
+
+/**
  * Recursively map a function to all nodes in a tree
  * @param {Object} node - an object with children accessed by .childNodes
  * @param {Function} func - function that takes node as an argument
