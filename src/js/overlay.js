@@ -504,6 +504,9 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 
 
 KeypointsOverlay.prototype.containsPoint = function(x, y) {
+  if (!this._isShown()) {
+    return false;
+  }
   for (const point of this.points) {
     if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
         2 * POINT_RADIUS) {
@@ -606,7 +609,7 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
 
 
 PolylineOverlay.prototype.containsPoint = function(x, y) {
-  return (this.closed || this.filled) &&
+  return this._isShown() && (this.closed || this.filled) &&
       this._context.isPointInPath(this.path, x, y);
 };
 
