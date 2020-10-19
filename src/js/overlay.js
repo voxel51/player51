@@ -12,6 +12,7 @@
 import {
   inRect,
   distance,
+  distanceFromLineSegment,
   compareData,
   computeBBoxForTextOverlay,
 } from './util.js';
@@ -609,8 +610,28 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
 
 
 PolylineOverlay.prototype.containsPoint = function(x, y) {
-  return this._isShown() && (this.closed || this.filled) &&
-      this._context.isPointInPath(this.path, x, y);
+  if (!this._isShown()) {
+    return false;
+  }
+  if (this.closed || this.filled) {
+    return this._context.isPointInPath(this.path, x, y);
+  }
+  // open and non-filled: calculate distance from each line segment
+  for (const shape of this.points) {
+    for (let i = 0; i < shape.length - 1; i++) {
+      if (distanceFromLineSegment(
+          x,
+          y,
+          this.w * shape[i][0],
+          this.h * shape[i][1],
+          this.w * shape[i + 1][0],
+          this.h * shape[i + 1][1],
+      ) <= LINE_WIDTH * 2) {
+        return true;
+      }
+    }
+  }
+  return false;
 };
 
 /**

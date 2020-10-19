@@ -82,6 +82,74 @@ export function distance(x1, y1, x2, y2) {
 
 
 /**
+ * Calculates the dot product of two 2D vectors.
+ *
+ * @param {number} ax vector 1 X coordinate
+ * @param {number} ay vector 1 Y coordinate
+ * @param {number} bx vector 2 X coordinate
+ * @param {number} by vector 2 Y coordinate
+ * @return {number} dot product
+ */
+export function dot2d(ax, ay, bx, by) {
+  return (ax * bx) + (ay * by);
+}
+
+
+/**
+ * Projects a point onto a line defined by two other points.
+ *
+ * @param {number} px point X coordinate
+ * @param {number} py point Y coordinate
+ * @param {number} ax line point 1 X coordinate
+ * @param {number} ay line point 1 Y coordinate
+ * @param {number} bx line point 2 X coordinate
+ * @param {number} by line point 2 Y coordinate
+ * @return {array} projected [x, y] coordinates
+ */
+export function project2d(px, py, ax, ay, bx, by) {
+  // line vector - this is relative to (0, 0), so coordinates of p need to be
+  // transformed accordingly
+  const vx = bx - ax;
+  const vy = by - ay;
+  const projMagnitude = dot2d(px - ax, py - ay, vx, vy) / dot2d(vx, vy, vx, vy);
+  const projX = projMagnitude * vx + ax;
+  const projY = projMagnitude * vy + ay;
+  return [projX, projY];
+}
+
+
+/**
+ * Calculates the distance from a point to a line segment defined by two other
+ * points.
+ *
+ * @param {number} px point X coordinate
+ * @param {number} py point Y coordinate
+ * @param {number} ax line point 1 X coordinate
+ * @param {number} ay line point 1 Y coordinate
+ * @param {number} bx line point 2 X coordinate
+ * @param {number} by line point 2 Y coordinate
+ * @return {number} distance
+ */
+export function distanceFromLineSegment(px, py, ax, ay, bx, by) {
+  const segmentLength = distance(ax, ay, bx, by);
+  const [projX, projY] = project2d(px, py, ax, ay, bx, by);
+  if (distance(ax, ay, projX, projY) < segmentLength &&
+      distance(bx, by, projX, projY) < segmentLength) {
+    // The projected point is between the two endpoints, so it is on the segment
+    // - return the distance from the projected point.
+    return distance(px, py, projX, projY);
+  } else {
+    // The projected point lies outside the segment, so return the distance from
+    // the closest endpoint.
+    return Math.min(
+        distance(px, py, ax, ay),
+        distance(px, py, bx, by),
+    );
+  }
+}
+
+
+/**
  * Recursively map a function to all nodes in a tree
  * @param {Object} node - an object with children accessed by .childNodes
  * @param {Function} func - function that takes node as an argument

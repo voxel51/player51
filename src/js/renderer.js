@@ -1242,7 +1242,7 @@ Renderer.prototype.initPlayerOptionsControls = function() {
 
   const enableFocus = () => {
     this._canFocus = true;
-  }
+  };
   const disableFocus = () => {
     this._canFocus = false;
     this.setFocus(undefined);
