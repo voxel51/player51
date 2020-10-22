@@ -693,6 +693,7 @@ Renderer.prototype._handleMouseEvent = function(e) {
     this.dispatchEvent('select', {
       data: {
         id: overlayObj.id,
+        name: overlayObj.name,
       },
     });
   }
