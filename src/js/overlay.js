@@ -187,8 +187,21 @@ Overlay.prototype.hasFocus = function() {
   return this.renderer.isFocus(this);
 };
 
+// in numerical order (CONTAINS_BORDER takes precedence over CONTAINS_CONTENT)
+Overlay.CONTAINS_NONE = 0;
+Overlay.CONTAINS_CONTENT = 1;
+Overlay.CONTAINS_BORDER = 2;
+
+/**
+ * Checks whether the given point (in canvas coordinates) is contained by the
+ * object, and if so, what part of the object contains it.
+ *
+ * @param {number} x canvas x coordinate
+ * @param {number} y canvas y coordinate
+ * @return {number} an Overlay.CONTAINS_* constant
+ */
 Overlay.prototype.containsPoint = function(x, y) {
-  return false;
+  return Overlay.CONTAINS_NONE;
 };
 
 Overlay.prototype.isSelectable = function() {
@@ -506,15 +519,15 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 
 KeypointsOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
-    return false;
+    return Overlay.CONTAINS_NONE;
   }
   for (const point of this.points) {
     if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
         2 * POINT_RADIUS) {
-      return true;
+      return Overlay.CONTAINS_BORDER;
     }
   }
-  return false;
+  return Overlay.CONTAINS_NONE;
 };
 
 
@@ -611,10 +624,12 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
 
 PolylineOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
-    return false;
+    return Overlay.CONTAINS_NONE;
   }
   if (this.closed || this.filled) {
-    return this._context.isPointInPath(this.path, x, y);
+    return this._context.isPointInPath(this.path, x, y) ?
+      Overlay.CONTAINS_CONTENT :
+      Overlay.CONTAINS_NONE;
   }
   // open and non-filled: calculate distance from each line segment
   for (const shape of this.points) {
@@ -627,11 +642,11 @@ PolylineOverlay.prototype.containsPoint = function(x, y) {
           this.w * shape[i + 1][0],
           this.h * shape[i + 1][1],
       ) <= LINE_WIDTH * 2) {
-        return true;
+        return Overlay.CONTAINS_BORDER;
       }
     }
   }
-  return false;
+  return Overlay.CONTAINS_NONE;
 };
 
 /**
@@ -953,11 +968,15 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
 ObjectOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
-    return false;
+    return Overlay.CONTAINS_NONE;
   }
-  return inRect(x, y, this.x, this.y, this.w, this.h) ||
-      inRect(x, y, this.x, this.y - this.headerHeight,
-          this.headerWidth, this.headerHeight);
+  if (inRect(x, y, this.x, this.y - this.headerHeight,
+      this.headerWidth, this.headerHeight)) {
+    return Overlay.CONTAINS_BORDER;
+  }
+  if (inRect(x, y, this.x, this.y, this.w, this.h)) {
+    return Overlay.CONTAINS_CONTENT;
+  }
 };
 
 /**

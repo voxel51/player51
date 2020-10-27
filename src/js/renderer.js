@@ -14,6 +14,7 @@ import {
   ColorGenerator,
   FrameAttributesOverlay,
   FrameMaskOverlay,
+  Overlay,
   ObjectOverlay,
   KeypointsOverlay,
   PolylineOverlay,
@@ -636,12 +637,20 @@ Renderer.prototype._findOverlayAt = function({x, y}) {
   if (!objects) {
     return;
   }
+  let bestObject = undefined;
+  let bestContainsMode = Overlay.CONTAINS_NONE;
   for (let i = objects.length - 1; i >= 0; i--) {
     const object = objects[i];
-    if (object.containsPoint(x, y)) {
-      return object;
+    const mode = object.containsPoint(x, y);
+    if (mode > bestContainsMode) {
+      bestObject = object;
+      bestContainsMode = mode;
+      if (mode >= Overlay.CONTAINS_BORDER) { // maximum possible
+        break;
+      }
     }
   }
+  return bestObject;
 };
 
 
