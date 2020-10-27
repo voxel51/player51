@@ -11,6 +11,8 @@
 
 import {
   inRect,
+  distance,
+  distanceFromLineSegment,
   compareData,
   computeBBoxForTextOverlay,
 } from './util.js';
@@ -29,6 +31,8 @@ export {
 const MASK_ALPHA = 0.6;
 const LINE_WIDTH = 6;
 const POINT_RADIUS = 6;
+const DASH_LENGTH = 10;
+const DASH_COLOR = '#ffffff';
 const _rawColorCache = {};
 
 /**
@@ -189,6 +193,11 @@ Overlay.prototype.containsPoint = function(x, y) {
 
 Overlay.prototype.isSelectable = function() {
   return this.id !== undefined;
+};
+
+Overlay.prototype.isSelected = function() {
+  return this.isSelectable() &&
+      this.renderer.options.selectedObjects.includes(this.id);
 };
 
 
@@ -422,6 +431,7 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
 function KeypointsOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
+  this.id = d._id;
   this.name = d.name;
   this.label = d.label;
   this.index = d.index;
@@ -463,19 +473,48 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
     return;
   }
   const color = this._getColor(this.name, this.index);
-  context.fillStyle = color;
   context.lineWidth = 0;
+  const isSelected = this.isSelected();
+
   for (const point of this.points) {
+    context.fillStyle = color;
     context.beginPath();
     context.arc(
         point[0] * canvasWidth,
         point[1] * canvasHeight,
-        POINT_RADIUS,
+        isSelected ? POINT_RADIUS * 2 : POINT_RADIUS,
         0,
         Math.PI * 2,
     );
     context.fill();
+
+    if (isSelected) {
+      context.fillStyle = DASH_COLOR;
+      context.beginPath();
+      context.arc(
+          point[0] * canvasWidth,
+          point[1] * canvasHeight,
+          POINT_RADIUS,
+          0,
+          Math.PI * 2,
+      );
+      context.fill();
+    }
   }
+};
+
+
+KeypointsOverlay.prototype.containsPoint = function(x, y) {
+  if (!this._isShown()) {
+    return false;
+  }
+  for (const point of this.points) {
+    if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
+        2 * POINT_RADIUS) {
+      return true;
+    }
+  }
+  return false;
 };
 
 
@@ -555,6 +594,13 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
   context.strokeStyle = color;
   context.lineWidth = LINE_WIDTH;
   context.stroke(this.path);
+  if (this.isSelected()) {
+    context.strokeStyle = DASH_COLOR;
+    context.setLineDash([DASH_LENGTH]);
+    context.stroke(this.path);
+    context.strokeStyle = color;
+    context.setLineDash([]);
+  }
   if (this.filled) {
     context.globalAlpha = MASK_ALPHA;
     context.fill(this.path);
@@ -564,8 +610,28 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
 
 
 PolylineOverlay.prototype.containsPoint = function(x, y) {
-  return (this.closed || this.filled) &&
-      this._context.isPointInPath(this.path, x, y);
+  if (!this._isShown()) {
+    return false;
+  }
+  if (this.closed || this.filled) {
+    return this._context.isPointInPath(this.path, x, y);
+  }
+  // open and non-filled: calculate distance from each line segment
+  for (const shape of this.points) {
+    for (let i = 0; i < shape.length - 1; i++) {
+      if (distanceFromLineSegment(
+          x,
+          y,
+          this.w * shape[i][0],
+          this.h * shape[i][1],
+          this.w * shape[i + 1][0],
+          this.h * shape[i + 1][1],
+      ) <= LINE_WIDTH * 2) {
+        return true;
+      }
+    }
+  }
+  return false;
 };
 
 /**
@@ -801,6 +867,14 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;
   context.strokeRect(this.x, this.y, this.w, this.h);
+
+  if (this.isSelected()) {
+    context.strokeStyle = DASH_COLOR;
+    context.setLineDash([DASH_LENGTH]);
+    context.strokeRect(this.x, this.y, this.w, this.h);
+    context.strokeStyle = color;
+    context.setLineDash([]);
+  }
 
   if (this.mask) {
     if (_rawColorCache[color] === undefined) {

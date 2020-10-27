@@ -180,6 +180,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
         .currentTime;
     // Update the slider value
     self.eleSeekBar.value = value;
+    self.dispatchEvent('timeupdate', {
+      data: {
+        frame_number: self.computeFrameNumber(),
+      },
+    });
   });
 
   this.eleVideo.addEventListener('play', function() {

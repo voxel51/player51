@@ -116,6 +116,7 @@ function Renderer(media, overlay, options) {
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
+  this._canFocus = true;
   this._focusPos = {x: -1, y: -1};
   this.handleOverlay(overlay);
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
@@ -650,6 +651,9 @@ Renderer.prototype.isFocus = function(overlayObj) {
 };
 
 Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
+  if (!this._canFocus) {
+    overlayObj = position = undefined;
+  }
   if (position) {
     this._focusPos = position;
   }
@@ -689,6 +693,7 @@ Renderer.prototype._handleMouseEvent = function(e) {
     this.dispatchEvent('select', {
       data: {
         id: overlayObj.id,
+        name: overlayObj.name,
       },
     });
   }
@@ -1235,6 +1240,20 @@ Renderer.prototype.initPlayerOptionsControls = function() {
   };
   this.eleDivCanvas.addEventListener('click', hideOptions);
   this.eleDivVideoControls.addEventListener('click', hideOptions);
+
+  const enableFocus = () => {
+    this._canFocus = true;
+  };
+  const disableFocus = () => {
+    this._canFocus = false;
+    this.setFocus(undefined);
+    this.processFrame();
+  };
+  this.eleCanvas.addEventListener('mouseenter', enableFocus);
+  this.eleDivCanvas.addEventListener('mouseenter', enableFocus);
+  this.eleCanvas.addEventListener('mouseleave', disableFocus);
+  this.eleDivCanvas.addEventListener('mouseleave', disableFocus);
+  this.eleDivVideoControls.addEventListener('mouseenter', disableFocus);
 
   this.eleOptCtlShowFrameCount.addEventListener('change', () => {
     this.overlayOptions.showFrameCount = this.eleOptCtlShowFrameCount.checked;
