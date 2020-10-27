@@ -187,8 +187,21 @@ Overlay.prototype.hasFocus = function() {
   return this.renderer.isFocus(this);
 };
 
+// in numerical order (CONTAINS_BORDER takes precedence over CONTAINS_CONTENT)
+Overlay.CONTAINS_NONE = 0;
+Overlay.CONTAINS_CONTENT = 1;
+Overlay.CONTAINS_BORDER = 2;
+
+/**
+ * Checks whether the given point (in canvas coordinates) is contained by the
+ * object, and if so, what part of the object contains it.
+ *
+ * @param {number} x canvas x coordinate
+ * @param {number} y canvas y coordinate
+ * @return {number} an Overlay.CONTAINS_* constant
+ */
 Overlay.prototype.containsPoint = function(x, y) {
-  return false;
+  return Overlay.CONTAINS_NONE;
 };
 
 Overlay.prototype.isSelectable = function() {
@@ -506,15 +519,15 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 
 KeypointsOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
-    return false;
+    return Overlay.CONTAINS_NONE;
   }
   for (const point of this.points) {
     if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
         2 * POINT_RADIUS) {
-      return true;
+      return Overlay.CONTAINS_BORDER;
     }
   }
-  return false;
+  return Overlay.CONTAINS_NONE;
 };
 
 
@@ -611,12 +624,10 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
 
 PolylineOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
-    return false;
+    return Overlay.CONTAINS_NONE;
   }
-  if (this.closed || this.filled) {
-    return this._context.isPointInPath(this.path, x, y);
-  }
-  // open and non-filled: calculate distance from each line segment
+  const tolerance = LINE_WIDTH * 1.5;
+  // calculate distance from each line segment
   for (const shape of this.points) {
     for (let i = 0; i < shape.length - 1; i++) {
       if (distanceFromLineSegment(
@@ -626,12 +637,28 @@ PolylineOverlay.prototype.containsPoint = function(x, y) {
           this.h * shape[i][1],
           this.w * shape[i + 1][0],
           this.h * shape[i + 1][1],
-      ) <= LINE_WIDTH * 2) {
-        return true;
+      ) <= tolerance) {
+        return Overlay.CONTAINS_BORDER;
       }
     }
+    // also check final line segment if closed
+    if (this.closed && distanceFromLineSegment(
+        x,
+        y,
+        this.w * shape[0][0],
+        this.h * shape[0][1],
+        this.w * shape[shape.length - 1][0],
+        this.h * shape[shape.length - 1][1],
+    ) <= tolerance) {
+      return Overlay.CONTAINS_BORDER;
+    }
   }
-  return false;
+  if (this.closed || this.filled) {
+    return this._context.isPointInPath(this.path, x, y) ?
+      Overlay.CONTAINS_CONTENT :
+      Overlay.CONTAINS_NONE;
+  }
+  return Overlay.CONTAINS_NONE;
 };
 
 /**
@@ -953,11 +980,40 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
 ObjectOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
-    return false;
+    return Overlay.CONTAINS_NONE;
   }
-  return inRect(x, y, this.x, this.y, this.w, this.h) ||
-      inRect(x, y, this.x, this.y - this.headerHeight,
-          this.headerWidth, this.headerHeight);
+  // the header takes up an extra LINE_WIDTH / 2 on each side due to its border
+  if (inRect(x, y,
+      this.x - LINE_WIDTH / 2,
+      this.y - this.headerHeight - LINE_WIDTH / 2,
+      this.headerWidth + LINE_WIDTH,
+      this.headerHeight + LINE_WIDTH,
+  )) {
+    return Overlay.CONTAINS_BORDER;
+  }
+  // the distance from the box contents to the edge of the line segment is
+  // LINE_WIDTH / 2, so this gives a tolerance of an extra LINE_WIDTH on either
+  // side of the border
+  const tolerance = LINE_WIDTH * 1.5;
+  if (
+    distanceFromLineSegment(
+        x, y, this.x, this.y, this.x + this.w, this.y,
+    ) <= tolerance ||
+    distanceFromLineSegment(
+        x, y, this.x, this.y, this.x, this.y + this.h,
+    ) <= tolerance ||
+    distanceFromLineSegment(x, y,
+        this.x + this.w, this.y + this.h, this.x + this.w, this.y,
+    ) <= tolerance ||
+    distanceFromLineSegment(
+        x, y, this.x + this.w, this.y + this.h, this.x, this.y + this.h,
+    ) <= tolerance
+  ) {
+    return Overlay.CONTAINS_BORDER;
+  }
+  if (inRect(x, y, this.x, this.y, this.w, this.h)) {
+    return Overlay.CONTAINS_CONTENT;
+  }
 };
 
 /**
