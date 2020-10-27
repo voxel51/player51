@@ -626,12 +626,8 @@ PolylineOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
-  if (this.closed || this.filled) {
-    return this._context.isPointInPath(this.path, x, y) ?
-      Overlay.CONTAINS_CONTENT :
-      Overlay.CONTAINS_NONE;
-  }
-  // open and non-filled: calculate distance from each line segment
+  const tolerance = LINE_WIDTH * 1.5;
+  // calculate distance from each line segment
   for (const shape of this.points) {
     for (let i = 0; i < shape.length - 1; i++) {
       if (distanceFromLineSegment(
@@ -641,10 +637,26 @@ PolylineOverlay.prototype.containsPoint = function(x, y) {
           this.h * shape[i][1],
           this.w * shape[i + 1][0],
           this.h * shape[i + 1][1],
-      ) <= LINE_WIDTH * 2) {
+      ) <= tolerance) {
         return Overlay.CONTAINS_BORDER;
       }
     }
+    // also check final line segment if closed
+    if (this.closed && distanceFromLineSegment(
+        x,
+        y,
+        this.w * shape[0][0],
+        this.h * shape[0][1],
+        this.w * shape[shape.length - 1][0],
+        this.h * shape[shape.length - 1][1],
+    ) <= tolerance) {
+      return Overlay.CONTAINS_BORDER;
+    }
+  }
+  if (this.closed || this.filled) {
+    return this._context.isPointInPath(this.path, x, y) ?
+      Overlay.CONTAINS_CONTENT :
+      Overlay.CONTAINS_NONE;
   }
   return Overlay.CONTAINS_NONE;
 };
