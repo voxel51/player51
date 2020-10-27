@@ -974,6 +974,26 @@ ObjectOverlay.prototype.containsPoint = function(x, y) {
       this.headerWidth, this.headerHeight)) {
     return Overlay.CONTAINS_BORDER;
   }
+  // the distance from the box contents to the edge of the line segment is
+  // LINE_WIDTH / 2, so this gives a tolerance of an extra LINE_WIDTH on either
+  // side of the border
+  const tolerance = LINE_WIDTH * 1.5;
+  if (
+    distanceFromLineSegment(
+        x, y, this.x, this.y, this.x + this.w, this.y,
+    ) <= tolerance ||
+    distanceFromLineSegment(
+        x, y, this.x, this.y, this.x, this.y + this.h,
+    ) <= tolerance ||
+    distanceFromLineSegment(x, y,
+        this.x + this.w, this.y + this.h, this.x + this.w, this.y,
+    ) <= tolerance ||
+    distanceFromLineSegment(
+        x, y, this.x + this.w, this.y + this.h, this.x, this.y + this.h,
+    ) <= tolerance
+  ) {
+    return Overlay.CONTAINS_BORDER;
+  }
   if (inRect(x, y, this.x, this.y, this.w, this.h)) {
     return Overlay.CONTAINS_CONTENT;
   }
