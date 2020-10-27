@@ -982,8 +982,13 @@ ObjectOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
-  if (inRect(x, y, this.x, this.y - this.headerHeight,
-      this.headerWidth, this.headerHeight)) {
+  // the header takes up an extra LINE_WIDTH / 2 on each side due to its border
+  if (inRect(x, y,
+      this.x - LINE_WIDTH / 2,
+      this.y - this.headerHeight - LINE_WIDTH / 2,
+      this.headerWidth + LINE_WIDTH,
+      this.headerHeight + LINE_WIDTH,
+  )) {
     return Overlay.CONTAINS_BORDER;
   }
   // the distance from the box contents to the edge of the line segment is
