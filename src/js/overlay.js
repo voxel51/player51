@@ -176,11 +176,13 @@ Overlay.prototype._isShown = function(name) {
   }
   return true;
 };
-Overlay.prototype._getColor = function(name, index) {
+Overlay.prototype._getColor = function(name, label, index) {
   const hasColor = this.renderer.options.colorMap && this.renderer.options.colorMap[name];
   const useColorMap = !this.renderer.options.coloredByLabel[name];
   if (hasColor && useColorMap) {
     return this.renderer.options.colorMap[name];
+  } else if (hasColor && !useColorMap) {
+    return colorGenerator.color(label);
   }
   return colorGenerator.color(index);
 };
@@ -487,7 +489,7 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
   if (!this._isShown(this.name)) {
     return;
   }
-  const color = this._getColor(this.name, this.index);
+  const color = this._getColor(this.name, this.label, this.index);
   context.lineWidth = 0;
   const isSelected = this.isSelected();
 
@@ -604,7 +606,7 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
   if (!this._isShown(this.name)) {
     return;
   }
-  const color = this._getColor(this.name, this.index);
+  const color = this._getColor(this.name, this.label, this.index);
   context.fillStyle = color;
   context.strokeStyle = color;
   context.lineWidth = LINE_WIDTH;
@@ -891,7 +893,7 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  const color = this._getColor(this.name, this.index);
+  const color = this._getColor(this.name, this.label, this.index);
   context.strokeStyle = color;
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;
