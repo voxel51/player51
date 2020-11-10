@@ -129,7 +129,7 @@ function Player51(options, ...args) {
   }
   // set defaults for other options
   options.colorMap = options.colorMap || {};
-  options.coloredByLabel = options.coloredByLabel || {};
+  options.colorByLabel = options.coloredByLabel || false;
   options.activeLabels = options.activeLabels || {};
   options.filter = options.filter || {};
   options.enableOverlayOptions = options.enableOverlayOptions || {};

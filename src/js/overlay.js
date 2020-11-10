@@ -178,7 +178,7 @@ Overlay.prototype._isShown = function(name) {
 };
 Overlay.prototype._getColor = function(name, label, index) {
   const hasColor = this.renderer.options.colorMap && this.renderer.options.colorMap[name];
-  const useColorMap = !this.renderer.options.coloredByLabel[name];
+  const useColorMap = !this.renderer.options.colorByLabel;
   if (hasColor && useColorMap) {
     return this.renderer.options.colorMap[name];
   } else if (hasColor && !useColorMap) {
