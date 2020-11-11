@@ -177,10 +177,11 @@ Overlay.prototype._isShown = function(name) {
   return true;
 };
 Overlay.prototype._getColor = function(name, label, index) {
-  const hasColor = this.renderer.options.colorMap && this.renderer.options.colorMap[name];
-  const useColorMap = !this.renderer.options.colorByLabel;
+  const options = this.renderer.options;
+  const hasColor = options.colorMap && options.colorMap[name];
+  const useColorMap = !options.colorByLabel;
   if (hasColor && useColorMap) {
-    return this.renderer.options.colorMap[name];
+    return options.colorMap[name];
   } else if (hasColor && !useColorMap) {
     return colorGenerator.color(label);
   }
