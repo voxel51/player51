@@ -272,7 +272,8 @@ MediaPlayer.prototype.addEventListener = function(eventType, handler, ...args) {
  */
 MediaPlayer.prototype.removeEventListener = function(eventType, handler,
     ...args) {
-  this.renderer && this.renderer.eventTarget.removeEventListener(eventType, handler, ...args);
+  this.renderer &&
+    this.renderer.eventTarget.removeEventListener(eventType, handler, ...args);
 };
 
 
