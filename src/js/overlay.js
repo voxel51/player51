@@ -19,6 +19,7 @@ import {
 import {deserialize} from './numpy.js';
 
 export {
+  colorGenerator,
   ColorGenerator,
   Overlay,
   FrameAttributesOverlay,
