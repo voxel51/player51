@@ -396,7 +396,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
-  if (this.frameRate !== this.options.fps) {
+  if (this.options.fps && this.frameRate !== this.options.fps) {
     this.frameRate = this.options.fps;
     this.frameDuration = 1 / this.frameRate;
   }
