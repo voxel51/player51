@@ -9,7 +9,7 @@
  * Copyright 2017-2020, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
-
+import EventTarget from '@ungap/event-target';
 import {
   ColorGenerator,
   FrameAttributesOverlay,

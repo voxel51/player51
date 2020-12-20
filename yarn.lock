@@ -1209,6 +1209,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ungap/event-target@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@ungap/event-target@npm:0.2.2"
+  checksum: 7b0dd978778b50c7ec5a48441dd1b8cbced2df107681cbcfa1e7e6f1ea0c4b13a749928802caa5e2d01014e15e5a4f92446c808f44b891436d398921fffd0cde
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:1":
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
@@ -2336,6 +2343,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"event-target@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "event-target@npm:1.2.3"
+  checksum: 8383728ec2b4acf21db3d40e7065eb98ba44f49135d686fde206dd20d030450e975c70c31be836de21e6b584ce08d790f810ddb3a98e1619e7e3637588694d42
+  languageName: node
+  linkType: hard
+
 "extend@npm:~3.0.2":
   version: 3.0.2
   resolution: "extend@npm:3.0.2"
@@ -2508,7 +2522,7 @@ __metadata:
 
 "fsevents@patch:fsevents@~2.1.2#builtin<compat/fsevents>":
   version: 2.1.3
-  resolution: "fsevents@patch:fsevents@npm%3A2.1.3#builtin<compat/fsevents>::version=2.1.3&hash=127e8e"
+  resolution: "fsevents@patch:fsevents@npm%3A2.1.3#builtin<compat/fsevents>::version=2.1.3&hash=11e9ea"
   dependencies:
     node-gyp: latest
   checksum: e2b8c379340e21a786d32c653854c8876f94eb1202dd5be378fd42c062bc123aab5051c32bf0011865257c85982c41ded203f9fe8c9f9c8f8c84dc4672abc0e0
@@ -3705,10 +3719,12 @@ fsevents@~2.1.2:
   dependencies:
     "@babel/core": ^7.8.4
     "@babel/preset-env": ^7.8.4
+    "@ungap/event-target": ^0.2.2
     babel-plugin-external-helpers: ^6.22.0
     cssnano: ^4.1.7
     eslint: ^6.8.0
     eslint-config-google: ^0.14.0
+    event-target: ^1.2.3
     postcss-cli: ^7.1.0
     rollup: ^1.31.0
     rollup-plugin-babel: ^4.0.3
