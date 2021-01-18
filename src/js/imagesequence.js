@@ -7,7 +7,7 @@
  * sequence of images and render annotations and markup overlayed on top while
  * playing through like a video.
  *
- * Copyright 2017-2020, Voxel51, Inc.
+ * Copyright 2017-2021, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
 */
 

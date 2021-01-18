@@ -6,7 +6,7 @@
  * @desc Renderer is an abstract class that defines the features child
  * renderers should be able to support.
  *
- * Copyright 2017-2020, Voxel51, Inc.
+ * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
 import EventTarget from '@ungap/event-target';

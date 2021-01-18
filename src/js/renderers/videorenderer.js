@@ -6,7 +6,7 @@
  * @desc VideoRenderer is a class that controls the creation and viewing of
  * videoplayer.
  *
- * Copyright 2017-2020, Voxel51, Inc.
+ * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
 
