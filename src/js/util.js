@@ -2,7 +2,7 @@
  * @module util.js
  * @summary Utilities for player51
  *
- * Copyright 2020, Voxel51, Inc.
+ * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
 

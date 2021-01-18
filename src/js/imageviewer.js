@@ -7,7 +7,7 @@
  * render available annotations and markup overlayed on top of the
  * image.
  *
- * Copyright 2017-2020, Voxel51, Inc.
+ * Copyright 2017-2021, Voxel51, Inc.
  * Kevin Qi, kevin@voxel51.com
  */
 

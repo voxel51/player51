@@ -2,7 +2,7 @@
  * @module numpy.js
  * @summary Utilities to parse serialized numpy arrays
  *
- * Copyright 2020, Voxel51, Inc.
+ * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
 
