@@ -222,7 +222,8 @@ MediaPlayer.prototype.getOverlayOptions = function() {
 */
 MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
   Object.assign(this.renderer.overlayOptions, overlayOptions);
-  // todo: update checkbox states - call initPlayerOptionsPanelHTML?
+  this.renderer.eleOptCtlShowAttr.checked = overlayOptions.showAttrs;
+  this.renderer.eleOptCtlShowConfidence.checked = overlayOptions.showConfidence;
   this.renderer.processFrame();
 };
 
