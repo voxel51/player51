@@ -210,6 +210,15 @@ Overlay.prototype.containsPoint = function(x, y) {
   return Overlay.CONTAINS_NONE;
 };
 
+Overlay.prototype.getPointInfo = function(x, y) {
+  return {
+    color: this._getColor(this.name, this.label, this.index),
+    label: this.label,
+    name: this.name,
+    index: this.index,
+  };
+}
+
 Overlay.prototype.isSelectable = function() {
   return this.id !== undefined;
 };
@@ -404,6 +413,7 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   if (this.name && !this._isShown(this.name)) {
     return;
   }
+
   const [maskHeight, maskWidth] = this.mask.shape;
   ensureCanvasSize(FrameMaskOverlay._tempMaskCanvas, {
     width: maskWidth,
