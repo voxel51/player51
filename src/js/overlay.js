@@ -377,6 +377,7 @@ function FrameMaskOverlay(d, renderer) {
   this.y = null;
   this.w = null;
   this.h = null;
+  this.renderer = renderer;
 }
 FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
 FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
@@ -425,6 +426,7 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   if (this.mask.rendered) {
     imageColors.set(this.mask.data);
   } else {
+    this.mask.targets = new Uint32Array(this.mask.data);
     const index = this.renderer.frameMaskIndex;
     if (index) {
       for (let i = 0; i < this.mask.data.length; i++) {
@@ -447,8 +449,31 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   context.drawImage(FrameMaskOverlay._tempMaskCanvas,
       0, 0, maskWidth, maskHeight,
       0, 0, canvasWidth, canvasHeight);
+  this.h = canvasHeight;
+  this.w = canvasWidth;
 };
 
+FrameMaskOverlay.prototype.containsPoint = function(x, y) {
+  return Overlay.CONTAINS_CONTENT;
+};
+
+
+FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
+  const [h, w] = this.mask.shape;
+  const sourceX = Math.floor(x * (w / this.w));
+  const sourceY = Math.floor(y * (h / this.h));
+  const index = w * sourceY + sourceX;
+  const target = this.mask.targets[index];
+  const color = this.mask.data[index];
+  return {
+    color,
+    coordinates: [sourceX, sourceY],
+    label: this.renderer.options.defaultTargets[target],
+    name: this.name,
+    shape: this.mask.shape,
+    target
+  }
+}
 
 /**
  * An overlay that renders keypoints

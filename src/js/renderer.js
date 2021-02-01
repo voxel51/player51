@@ -595,7 +595,7 @@ Renderer.prototype.processFrame = function() {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
       if (this.overlayOptions.action === 'hover') {
-        this.setFocus(this._findOverlayAt(this._focusPos));
+        this.setFocus(this._findTopOverlayAt(this._focusPos));
       }
       const fm = this.frameOverlay[this._frameNumber];
       const len = fm.length;
@@ -629,7 +629,7 @@ Renderer.prototype._renderRest = function() {
 };
 
 
-Renderer.prototype._findOverlayAt = function({x, y}) {
+Renderer.prototype._findTopOverlayAt = function({x, y}) {
   if (this.player._boolThumbnailMode) {
     return;
   }
@@ -652,6 +652,25 @@ Renderer.prototype._findOverlayAt = function({x, y}) {
   }
   return bestObject;
 };
+
+
+Renderer.prototype._findOverlaysAt = function({x, y}) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return []
+  }
+  const containedOverlays = []
+  let bestContainsMode = Overlay.CONTAINS_NONE;
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
+    const mode = object.containsPoint(x, y);
+    
+    if (mode > bestContainsMode) {
+      containedOverlays.push(object);
+    }
+  }
+  return containedOverlays;
+}
 
 
 Renderer.prototype.isFocus = function(overlayObj) {
@@ -690,7 +709,7 @@ Renderer.prototype._handleMouseEvent = function(e) {
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
 
-  const overlayObj = this._findOverlayAt({x, y});
+  const overlayObj = this._findTopOverlayAt({x, y});
   if (eventType === 'click' &&
       overlayObj &&
       overlayObj.constructor === ObjectOverlay &&
@@ -704,6 +723,17 @@ Renderer.prototype._handleMouseEvent = function(e) {
         id: overlayObj.id,
         name: overlayObj.name,
       },
+    });
+  }
+
+  if (eventType === 'mousemove') {
+    const overlayPointInfos = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
+    this.dispatchEvent('tooltipinfo', {
+      data: {
+	overlays: overlayPointInfos,
+        x,
+	y
+      }
     });
   }
 
