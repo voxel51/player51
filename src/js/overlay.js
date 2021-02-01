@@ -464,11 +464,9 @@ FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
   const sourceY = Math.floor(y * (h / this.h));
   const index = w * sourceY + sourceX;
   const target = this.mask.targets[index];
-  const color = this.mask.data[index];
   return {
-    color,
+    color: colorGenerator.color(target), 
     coordinates: [sourceX, sourceY],
-    label: this.renderer.options.defaultTargets[target],
     name: this.name,
     shape: this.mask.shape,
     target

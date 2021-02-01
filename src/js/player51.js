@@ -131,7 +131,6 @@ function Player51(options, ...args) {
     options.overlay = null;
   }
   // set defaults for other options
-  options.defaultTargets = options.defaultTargets || {};
   options.colorMap = options.colorMap || {};
   options.colorByLabel = options.coloredByLabel || false;
   options.activeLabels = options.activeLabels || {};
