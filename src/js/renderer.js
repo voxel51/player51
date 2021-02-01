@@ -9,17 +9,19 @@
  * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
-
+import EventTarget from '@ungap/event-target';
 import {
   ColorGenerator,
   FrameAttributesOverlay,
   FrameMaskOverlay,
+  Overlay,
   ObjectOverlay,
+  KeypointsOverlay,
+  PolylineOverlay,
 } from './overlay.js';
 import {
   ICONS,
   rescale,
-  recursiveMap,
 } from './util.js';
 import {
   ZipLibrary,
@@ -39,15 +41,18 @@ export {
  * @abstract
  * @param {object} media
  * @param {string} overlay is the URL to overlay JSON
+ * @param {object} options: additional player options
  */
-function Renderer(media, overlay) {
+function Renderer(media, overlay, options) {
   if (this.constructor === Renderer) {
     throw new TypeError('Cannot instantiate abstract class.');
   }
   // Data structures
   this.player = undefined;
   this.parent = undefined;
+  this.eventTarget = new EventTarget();
   this.media = media;
+  this.options = options;
   this.frameOverlay = {};
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
@@ -66,26 +71,35 @@ function Renderer(media, overlay) {
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
+  this.overlayOptions = Object.assign(
+      {
+        showFrameCount: false,
+        labelsOnlyOnClick: false,
+        attrsOnlyOnClick: false,
+        showConfidence: true,
+        showAttrs: true,
+        attrRenderMode: 'value',
+        attrRenderBox: true,
+        action: 'click',
+        smoothMasks: true,
+      },
+      this.options.defaultOverlayOptions,
+  );
   this._actionOptions = {
     click: {name: 'Click', type: 'click', labelText: 'clicked'},
     hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
   };
-  this.overlayOptions = {
-    showFrameCount: false,
-    labelsOnlyOnClick: false,
-    attrsOnlyOnClick: false,
-    showAttrs: true,
-    attrRenderMode: 'value',
-    attrRenderBox: true,
-    action: this._actionOptions.click,
-  };
-  this._attrRenderModeOptions = [{
-    name: 'Value',
-    value: 'value',
-  }, {
-    name: 'Attribute: Value',
-    value: 'attr-value',
-  }];
+  this._attrRenderModeOptions = [
+    {
+      name: 'Value',
+      value: 'value',
+    },
+    {
+      name: 'Attribute: Value',
+      value: 'attr-value',
+    },
+  ];
+  this._overlayOptionWrappers = {}; // overlayOptions key -> element
   this._boolShowVideoOptions = false;
   this._focusIndex = -1;
   this.seekBarMax = 100;
@@ -99,12 +113,14 @@ function Renderer(media, overlay) {
   this._isPreparingOverlay = false;
   this._overlayData = null;
   this._overlayURL = null;
+  this._overlayHasObjectAttrs = false;
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
+  this._canFocus = true;
   this._focusPos = {x: -1, y: -1};
   this.handleOverlay(overlay);
-  this._mouseEventHandler = this._handleMouseEvent.bind(this);
+  this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
 
 
@@ -159,39 +175,6 @@ Renderer.prototype.determineMediaDimensions = function() {
  * @member resizeControls
  */
 Renderer.prototype.resizeControls = function() {
-  if (!this.eleDivVideoControls) {
-    return;
-  }
-  if (this._boolBorderBox) {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.min(60 + this.paddingBottomN, 0.1 * this.height +
-        this.paddingBottomN) + 'px'
-    );
-
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = (this.paddingBottomN -
-      2) + 'px';
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  } else {
-    // need to size the controls too.
-    // The controls are tuned using margins when padding exists.
-    this.eleDivVideoControls.style.width = (this.width + 'px');
-    this.eleDivVideoControls.style.height = (
-      Math.max(60, 0.075 * this.height) + 'px'
-    );
-    // controls have 0 padding because we want them only to show
-    // on the video, this impacts their left location too.
-    this.eleDivVideoControls.style.paddingLeft = 0;
-    this.eleDivVideoControls.style.paddingRight = 0;
-    this.eleDivVideoControls.style.bottom = this.paddingBottom;
-    this.eleDivVideoControls.style.left = this.paddingLeft;
-  }
 };
 
 
@@ -266,6 +249,31 @@ Renderer.prototype.handleBlob = function() {
 
 
 /**
+ * Return the original size of the underlying content (image, video).
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined or is not applicable (e.g. for galleries)
+ */
+Renderer.prototype.getContentDimensions = function() {
+  return null;
+};
+
+
+/**
+ * Emit a custom event.
+ *
+ * @param {string} eventType - the type of the event
+ * @param {*} args - additional arguments to pass to the Event constructor
+ * @return {boolean} false if the event was cancelled
+ */
+Renderer.prototype.dispatchEvent = function(eventType, {data, ...args} = {}) {
+  const e = new Event(eventType, args);
+  e.data = data;
+  return this.eventTarget.dispatchEvent(e);
+};
+
+
+/**
  * This function processes the overlayData
  *
  * @member handleOverlay
@@ -280,10 +288,9 @@ Renderer.prototype.handleOverlay = function(overlay) {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if ((typeof(overlay) === 'object') &&
-      Object.keys(overlay).length > 0) {
-    this._overlayURL = null;
+  } else if (typeof(overlay) === 'object') {
     this._overlayData = overlay;
+    this._overlayURL = null;
   }
 };
 
@@ -306,6 +313,24 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
   };
   xmlhttp.open('GET', overlayPath, true);
   xmlhttp.send();
+};
+
+
+/**
+ * This function updates the overlay data and prepares it for rendering.
+ * Supports 2 formats, object and frame based.
+ *
+ * @member updateOverlay
+ * @param {object} overlayData
+ */
+Renderer.prototype.updateOverlay = function(overlayData) {
+  this.frameOverlay = {};
+  this._overlayData = JSON.parse(JSON.stringify(overlayData));
+  this._isOverlayPrepared = false;
+  this.prepareOverlay(this._overlayData);
+  if (this._boolSingleFrame) {
+    this.processFrame();
+  }
 };
 
 
@@ -338,11 +363,28 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
         if (f && f.mask) {
-          this._prepareOverlay_auxMask(context, f.mask, frameKey);
+          this._prepareOverlay_auxMask(context, {mask: f.mask}, frameKey);
+        }
+        if (f && f.masks) {
+          for (const maskData of f.masks) {
+            this._prepareOverlay_auxMask(context, {
+              name: maskData.name,
+              mask: maskData.mask,
+            }, frameKey);
+          }
         }
         if (f && f.objects && f.objects.objects) {
           this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
         }
+        if (f && f.keypoints && f.keypoints.keypoints) {
+          this._prepareOverlay_auxKeypoints(context, f.keypoints.keypoints,
+              frameKey);
+        }
+        if (f && f.polylines && f.polylines.polylines) {
+          this._prepareOverlay_auxPolylines(context, f.polylines.polylines,
+              frameKey);
+        }
+        // add all other overlays above so that this one renders on top
         if (f && f.attrs) {
           this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
         }
@@ -357,8 +399,26 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   // Attributes and masks for images
   if (typeof(rawjson.mask) !== 'undefined') {
     const context = this.setupCanvasContext();
-    this._prepareOverlay_auxMask(context, rawjson.mask);
+    this._prepareOverlay_auxMask(context, {mask: rawjson.mask});
   }
+  if (typeof(rawjson.masks) !== 'undefined') {
+    const context = this.setupCanvasContext();
+    for (const maskData of rawjson.masks) {
+      this._prepareOverlay_auxMask(context, {
+        name: maskData.name,
+        mask: maskData.mask,
+      });
+    }
+  }
+  if (typeof(rawjson.keypoints) !== 'undefined') {
+    this._prepareOverlay_auxKeypoints(this.setupCanvasContext(),
+        rawjson.keypoints.keypoints);
+  }
+  if (typeof(rawjson.polylines) !== 'undefined') {
+    this._prepareOverlay_auxPolylines(this.setupCanvasContext(),
+        rawjson.polylines.polylines);
+  }
+  // add all other overlays above so that this one renders on top
   if (typeof(rawjson.attrs) !== 'undefined') {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
@@ -376,10 +436,13 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
 Renderer.prototype._reBindMouseHandler = function() {
   for (const action of Object.values(this._actionOptions)) {
     this.eleCanvas.removeEventListener(
-        action.type, this._mouseEventHandler);
+        action.type, this._handleMouseEvent);
   }
-  this.eleCanvas.addEventListener(
-      this.overlayOptions.action.type, this._mouseEventHandler);
+  const eventType = this._actionOptions[this.overlayOptions.action].type;
+  this.eleCanvas.addEventListener(eventType, this._handleMouseEvent);
+  if (eventType !== 'click') {
+    this.eleCanvas.addEventListener('click', this._handleMouseEvent);
+  }
 };
 
 /**
@@ -411,18 +474,42 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
  * representation.
  *
  * @param {context} context
- * @param {string} mask a base64-encoded mask
+ * @param {object} maskData an object with keys:
+ *   `mask`: base64-encoded mask
+ *   `name`: a name identifying the mask
  * @param {key} frameKey the frame number of the mask (defaults to current
  *   frame)
  */
 Renderer.prototype._prepareOverlay_auxMask = function(context,
-    mask, frameKey = null) {
-  const o = new FrameMaskOverlay(mask, this);
+    maskData, frameKey = null) {
+  const o = new FrameMaskOverlay(maskData, this);
   o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
     this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
   } else {
     this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
+  }
+};
+
+
+Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
+    keypoints, frameKey = null) {
+  frameKey = parseInt(frameKey) || this._frameNumber;
+  for (const k of keypoints) {
+    const o = new KeypointsOverlay(k, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this._prepareOverlay_auxCheckAdd(o, frameKey);
+  }
+};
+
+
+Renderer.prototype._prepareOverlay_auxPolylines = function(context,
+    polylines, frameKey = null) {
+  frameKey = parseInt(frameKey) || this._frameNumber;
+  for (const p of polylines) {
+    const o = new PolylineOverlay(p, this);
+    o.setup(context, this.canvasWidth, this.canvasHeight);
+    this._prepareOverlay_auxCheckAdd(o, frameKey);
   }
 };
 
@@ -444,15 +531,21 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
   if (typeof(objects.length) === 'undefined') {
     objects = objects.objects;
   }
+  this._overlayHasObjectAttrs = false;
   for (let len = objects.length, i = 0; i < len; i++) {
     const o = new ObjectOverlay(objects[i], this);
     o.setup(context, this.canvasWidth, this.canvasHeight);
+    if (o.hasAttrs()) {
+      this._overlayHasObjectAttrs = true;
+    }
     if (frameFlag) {
       this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
     } else {
       this._prepareOverlay_auxCheckAdd(o);
     }
   }
+  // we may have updated _overlayHasObjectAttrs
+  this._updateOverlayOptionVisibility();
 };
 
 
@@ -472,13 +565,10 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
     fn = this._frameNumber;
   }
   if (fn in this.frameOverlay) {
-    const thelist = this.frameOverlay[fn];
-    thelist.push(o);
-    this.frameOverlay[fn] = thelist;
+    this.frameOverlay[fn].push(o);
   } else {
     // this the first time we are seeing the frame
-    const newlist = [o];
-    this.frameOverlay[fn] = newlist;
+    this.frameOverlay[fn] = [o];
   }
 };
 
@@ -504,8 +594,8 @@ Renderer.prototype.processFrame = function() {
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
-      if (this.overlayOptions.action === this._actionOptions.hover) {
-        this.setFocus(this._findOverlayAt(this._focusPos));
+      if (this.overlayOptions.action === 'hover') {
+        this.setFocus(this._findTopOverlayAt(this._focusPos));
       }
       const fm = this.frameOverlay[this._frameNumber];
       const len = fm.length;
@@ -539,18 +629,48 @@ Renderer.prototype._renderRest = function() {
 };
 
 
-Renderer.prototype._findOverlayAt = function({x, y}) {
+Renderer.prototype._findTopOverlayAt = function({x, y}) {
+  if (this.player._boolThumbnailMode) {
+    return;
+  }
   const objects = this.frameOverlay[this._frameNumber];
   if (!objects) {
     return;
   }
+  let bestObject = undefined;
+  let bestContainsMode = Overlay.CONTAINS_NONE;
   for (let i = objects.length - 1; i >= 0; i--) {
     const object = objects[i];
-    if (object.containsPoint(x, y)) {
-      return object;
+    const mode = object.containsPoint(x, y);
+    if (mode > bestContainsMode) {
+      bestObject = object;
+      bestContainsMode = mode;
+      if (mode >= Overlay.CONTAINS_BORDER) { // maximum possible
+        break;
+      }
     }
   }
+  return bestObject;
 };
+
+
+Renderer.prototype._findOverlaysAt = function({x, y}) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return []
+  }
+  const containedOverlays = []
+  let bestContainsMode = Overlay.CONTAINS_NONE;
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
+    const mode = object.containsPoint(x, y);
+    
+    if (mode > bestContainsMode) {
+      containedOverlays.push(object);
+    }
+  }
+  return containedOverlays;
+}
 
 
 Renderer.prototype.isFocus = function(overlayObj) {
@@ -559,6 +679,9 @@ Renderer.prototype.isFocus = function(overlayObj) {
 };
 
 Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
+  if (!this._canFocus) {
+    overlayObj = position = undefined;
+  }
   if (position) {
     this._focusPos = position;
   }
@@ -577,6 +700,7 @@ Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
 
 
 Renderer.prototype._handleMouseEvent = function(e) {
+  const eventType = e.type.toLowerCase();
   const rect = e.target.getBoundingClientRect();
   // calculate relative to top left of canvas
   let x = e.clientX - rect.left;
@@ -585,13 +709,32 @@ Renderer.prototype._handleMouseEvent = function(e) {
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
 
-  const overlayObj = this._findOverlayAt({x, y});
-  if (e.type.toLowerCase() === 'click' &&
+  const overlayObj = this._findTopOverlayAt({x, y});
+  if (eventType === 'click' &&
       overlayObj &&
       overlayObj.constructor === ObjectOverlay &&
       overlayObj.index === undefined) {
-    // disallow clicking on objects without IDs
-    return;
+    // for now, allow clicking on objects without IDs
+    // @todo only allow this for images?
+  }
+  if (eventType === 'click' && overlayObj && overlayObj.isSelectable()) {
+    this.dispatchEvent('select', {
+      data: {
+        id: overlayObj.id,
+        name: overlayObj.name,
+      },
+    });
+  }
+
+  if (eventType === 'mousemove') {
+    const overlayPointInfos = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
+    this.dispatchEvent('tooltipinfo', {
+      data: {
+	overlays: overlayPointInfos,
+        x,
+	y
+      }
+    });
   }
 
   if (this.setFocus(overlayObj, {x, y})) {
@@ -938,7 +1081,6 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
-  this.eleDivVideoOpts.innerHTML = '<b>DISPLAY OPTIONS</b>';
 
   const makeSectionHeader = function(text) {
     const header = document.createElement('b');
@@ -980,6 +1122,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowFrameCountWrapper = makeWrapper([
     eleOptCtlFrameCountRow,
   ]);
+  this._overlayOptionWrappers.showFrameCount =
+      this.eleOptCtlShowFrameCountWrapper;
 
 
   // Checkbox for show label on click only
@@ -990,6 +1134,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowLabelWrapper = makeWrapper([
     eleOptCtlShowLabelRow,
   ]);
+  this._overlayOptionWrappers.labelsOnlyOnClick =
+      this.eleOptCtlShowLabelWrapper;
 
   // Selection for action type
   this.eleActionCtlOptForm = document.createElement('form');
@@ -998,12 +1144,12 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   actionFormTitle.appendChild(makeSectionHeader('Object selection mode'));
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
   this.eleActionCtlOptForm.appendChild(document.createElement('div'));
-  for (const obj of Object.values(this._actionOptions)) {
+  for (const [key, obj] of Object.entries(this._actionOptions)) {
     const radio = document.createElement('input');
     radio.setAttribute('type', 'radio');
     radio.name = 'selectActionOpt';
-    radio.value = obj.type;
-    radio.checked = this.overlayOptions.action.type === obj.type;
+    radio.value = key;
+    radio.checked = this.overlayOptions.action === key;
     const label = document.createElement('label');
     label.innerHTML = obj.name;
     label.className = 'p51-label';
@@ -1013,6 +1159,18 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     label.appendChild(span);
     this.eleActionCtlOptForm.appendChild(label);
   }
+  this._overlayOptionWrappers.action = this.eleActionCtlOptForm;
+
+  // Checkbox for show confidence
+  const eleOptCtlShowConfidenceRow = makeCheckboxRow(
+      'Show confidence', this.overlayOptions.showConfidence);
+  this.eleOptCtlShowConfidence =
+      eleOptCtlShowConfidenceRow.querySelector('input[type=checkbox]');
+  this.eleOptCtlShowConfidenceWrapper = makeWrapper([
+    eleOptCtlShowConfidenceRow,
+  ]);
+  this._overlayOptionWrappers.showConfidence =
+      this.eleOptCtlShowConfidenceWrapper;
 
   // Checkbox for show attrs
   const eleOptCtlShowAttrRow = makeCheckboxRow(
@@ -1022,6 +1180,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowAttrWrapper = makeWrapper([
     eleOptCtlShowAttrRow,
   ]);
+  this._overlayOptionWrappers.showAttrs =
+      this.eleOptCtlShowAttrWrapper;
 
   // Checkbox for show attrs on click only
   const eleOptCtlShowAttrClickRow = makeCheckboxRow(
@@ -1031,6 +1191,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlShowAttrClickWrapper = makeWrapper([
     eleOptCtlShowAttrClickRow,
   ]);
+  this._overlayOptionWrappers.attrsOnlyOnClick =
+      this.eleOptCtlShowAttrClickWrapper;
 
   // Checkbox for rendering background for attr text
   const eleOptCtlAttrBoxRow = makeCheckboxRow(
@@ -1040,6 +1202,8 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleOptCtlAttrBoxWrapper = makeWrapper([
     eleOptCtlAttrBoxRow,
   ]);
+  this._overlayOptionWrappers.attrRenderBox =
+      this.eleOptCtlAttrBoxWrapper;
 
   // Radio for how to show attrs
   this.eleOptCtlAttrOptForm = document.createElement('form');
@@ -1063,12 +1227,14 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
     label.appendChild(span);
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
+  this._overlayOptionWrappers.attrRenderMode = this.eleOptCtlAttrOptForm;
 
   if (this.hasFrameNumbers()) {
     this.eleDivVideoOpts.appendChild(this.eleOptCtlShowFrameCountWrapper);
   }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowConfidenceWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
@@ -1081,6 +1247,10 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   ];
 
   parent.appendChild(this.eleDivVideoOpts);
+
+  // set up initial visibility of attribute options
+  this._updateOverlayOptionVisibility();
+  this._alterOptionsLabelText();
 };
 
 Renderer.prototype._repositionOptionsPanel = function() {
@@ -1099,6 +1269,31 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.updateFromDynamicState();
   });
 
+  const hideOptions = (e) => {
+    if (this._boolShowVideoOptions &&
+        !this.eleDivVideoOpts.contains(e.target) &&
+        !this.eleOptionsButton.contains(e.target)) {
+      this._boolShowVideoOptions = false;
+      this.updateFromDynamicState();
+    }
+  };
+  this.eleDivCanvas.addEventListener('click', hideOptions);
+  this.eleDivVideoControls.addEventListener('click', hideOptions);
+
+  const enableFocus = () => {
+    this._canFocus = true;
+  };
+  const disableFocus = () => {
+    this._canFocus = false;
+    this.setFocus(undefined);
+    this.processFrame();
+  };
+  this.eleCanvas.addEventListener('mouseenter', enableFocus);
+  this.eleDivCanvas.addEventListener('mouseenter', enableFocus);
+  this.eleCanvas.addEventListener('mouseleave', disableFocus);
+  this.eleDivCanvas.addEventListener('mouseleave', disableFocus);
+  this.eleDivVideoControls.addEventListener('mouseenter', disableFocus);
+
   this.eleOptCtlShowFrameCount.addEventListener('change', () => {
     this.overlayOptions.showFrameCount = this.eleOptCtlShowFrameCount.checked;
     this.processFrame();
@@ -1111,11 +1306,17 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.updateFromDynamicState();
   });
 
+  this.eleOptCtlShowConfidence.addEventListener('change', () => {
+    this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
   this.eleOptCtlShowAttr.addEventListener('change', () => {
     this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
     this.processFrame();
     this.updateFromDynamicState();
-    this._repositionOptionsPanel(this.eleOptionsButton);
+    this._repositionOptionsPanel();
   });
 
   this.eleOptCtlShowAttrClick.addEventListener('change', () => {
@@ -1145,8 +1346,8 @@ Renderer.prototype.initPlayerOptionsControls = function() {
 
   for (const radio of this.eleActionCtlOptForm) {
     radio.addEventListener('change', () => {
-      if (radio.value !== this.overlayOptions.action.type) {
-        this.overlayOptions.action = this._getActionByKey('type', radio.value);
+      if (radio.value !== this.overlayOptions.action) {
+        this.overlayOptions.action = radio.value;
         this._alterOptionsLabelText();
         this._reBindMouseHandler();
         this.processFrame();
@@ -1166,19 +1367,13 @@ Renderer.prototype._alterOptionsLabelText = function() {
   };
   let textNode = getTextNode(
       this.eleOptCtlShowAttrClickWrapper.querySelector('label').childNodes);
-  textNode.textContent =
-    `Only show ${this.overlayOptions.action.labelText} attributes`;
+  textNode.textContent = 'Only show ' +
+    `${this._actionOptions[this.overlayOptions.action].labelText} attributes`;
 
   textNode = getTextNode(
       this.eleOptCtlShowLabelWrapper.querySelector('label').childNodes);
-  textNode.textContent =
-    `Only show ${this.overlayOptions.action.labelText} object`;
-};
-
-Renderer.prototype._getActionByKey = function(key, val) {
-  return Object.values(this._actionOptions).find(
-      (e) => Object.entries(e).find(
-          ([k, v]) => key === k && val === v));
+  textNode.textContent = 'Only show ' +
+    `${this._actionOptions[this.overlayOptions.action].labelText} object`;
 };
 
 
@@ -1234,22 +1429,20 @@ Renderer.prototype._updateOptionsDisplayState = function() {
       this.eleDivVideoOpts.remove();
     }
   }
-  this._setAttributeControlsDisplay();
+  this._updateOverlayOptionVisibility();
 };
 
-Renderer.prototype._setAttributeControlsDisplay = function() {
-  let func = (node) => {
-    node.hidden = false;
-  };
-  if (!this.overlayOptions.showAttrs) {
-    this.attrOptsElements.forEach((e) => e.className = '');
-    func = (node) => {
-      node.hidden = true;
-    };
-  } else {
-    this.attrOptsElements.forEach((e) => e.className = 'p51-video-opt-input');
+Renderer.prototype._updateOverlayOptionVisibility = function() {
+  this.eleOptCtlShowAttrWrapper.classList.toggle(
+      'hidden', !this._overlayHasObjectAttrs);
+  this.attrOptsElements.forEach((e) => e.classList.toggle(
+      'hidden',
+      !this._overlayHasObjectAttrs || !this.overlayOptions.showAttrs));
+  for (const [key, wrapper] of Object.entries(this._overlayOptionWrappers)) {
+    if (this.options.enableOverlayOptions[key] === false) {
+      wrapper.classList.add('hidden');
+    }
   }
-  this.attrOptsElements.forEach((e) => recursiveMap(e, func));
 };
 
 Renderer.prototype.hasFrameNumbers = function() {
@@ -1300,8 +1493,6 @@ Renderer.prototype.updateSizeAndPaddingByParent = function() {
   this.checkPlayer();
   this.checkParentandMedia();
   this.determineMediaDimensions();
-  this.eleCanvas.setAttribute('width', this.mediaWidth);
-  this.eleCanvas.setAttribute('height', this.mediaHeight);
   this.canvasWidth = this.mediaWidth;
   this.canvasHeight = this.mediaHeight;
   this._isSizePrepared = true;
@@ -1373,10 +1564,6 @@ Renderer.prototype.handleWidthAndHeight = function() {
     this.width = this.player._forcedWidth;
     this.height = this.player._forcedHeight;
   }
-
-  // Set width and height
-  this.mediaElement.setAttribute('width', this.width);
-  this.mediaElement.setAttribute('height', this.height);
 };
 
 
@@ -1407,78 +1594,6 @@ Renderer.prototype.resizeCanvas = function() {
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
   this.canvasMultiplier = canvasWidth / this.width;
-
-  this.parent.setAttribute('width', this.width);
-  this.parent.setAttribute('height', this.height);
-
-  if (this._boolBorderBox) {
-    const widthstr =
-      `${this.width + this.paddingLeftN + this.paddingRightN}px`;
-    const heightstr =
-      `${this.height + this.paddingTopN + this.paddingBottomN}px`;
-
-    this.parent.style.width = widthstr;
-    this.parent.style.height = heightstr;
-
-    this.mediaDiv.style.width = widthstr;
-    this.mediaDiv.style.height = heightstr;
-    this.mediaDiv.style.paddingLeft = this.paddingLeft;
-    this.mediaDiv.style.paddingRight = this.paddingRight;
-    this.mediaDiv.style.paddingTop = this.paddingTop;
-    this.mediaDiv.style.paddingBottom = this.paddingBottom;
-
-    this.mediaElement.style.width = widthstr;
-    this.mediaElement.style.height = heightstr;
-    this.mediaElement.style.paddingLeft = this.paddingLeft;
-    this.mediaElement.style.paddingRight = this.paddingRight;
-    this.mediaElement.style.paddingTop = this.paddingTop;
-    this.mediaElement.style.paddingBottom = this.paddingBottom;
-
-    this.eleDivCanvas.style.width = widthstr;
-    this.eleDivCanvas.style.height = heightstr;
-    this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleDivCanvas.style.paddingRight = this.paddingRight;
-    this.eleDivCanvas.style.paddingTop = this.paddingTop;
-    this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
-
-    this.eleCanvas.style.width = widthstr;
-    this.eleCanvas.style.height = heightstr;
-    this.eleCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleCanvas.style.paddingRight = this.paddingRight;
-    this.eleCanvas.style.paddingTop = this.paddingTop;
-    this.eleCanvas.style.paddingBottom = this.paddingBottom;
-  } else {
-    this.parent.style.width = (this.width + 'px');
-    this.parent.style.height = (this.height + 'px');
-
-    this.mediaDiv.style.width = (this.width + 'px');
-    this.mediaDiv.style.height = (this.height + 'px');
-    this.mediaDiv.style.paddingLeft = this.paddingLeft;
-    this.mediaDiv.style.paddingRight = this.paddingRight;
-    this.mediaDiv.style.paddingTop = this.paddingTop;
-    this.mediaDiv.style.paddingBottom = this.paddingBottom;
-
-    this.mediaElement.style.width = (this.width + 'px');
-    this.mediaElement.style.height = (this.height + 'px');
-    this.mediaElement.style.paddingLeft = this.paddingLeft;
-    this.mediaElement.style.paddingRight = this.paddingRight;
-    this.mediaElement.style.paddingTop = this.paddingTop;
-    this.mediaElement.style.paddingBottom = this.paddingBottom;
-
-    this.eleDivCanvas.style.width = (this.width + 'px');
-    this.eleDivCanvas.style.height = (this.height + 'px');
-    this.eleDivCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleDivCanvas.style.paddingRight = this.paddingRight;
-    this.eleDivCanvas.style.paddingTop = this.paddingTop;
-    this.eleDivCanvas.style.paddingBottom = this.paddingBottom;
-
-    this.eleCanvas.style.width = (this.width + 'px');
-    this.eleCanvas.style.height = (this.height + 'px');
-    this.eleCanvas.style.paddingLeft = this.paddingLeft;
-    this.eleCanvas.style.paddingRight = this.paddingRight;
-    this.eleCanvas.style.paddingTop = this.paddingTop;
-    this.eleCanvas.style.paddingBottom = this.paddingBottom;
-  }
 
   this.resizeControls();
 };

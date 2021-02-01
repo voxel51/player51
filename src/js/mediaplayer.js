@@ -39,24 +39,23 @@ export {
  * @param {string} type is the media content type
  * @param {object} media
  * @param {string} overlay is a URL to the overlay JSON
- * @param {int} fps is frames per second
+ * @param {object} options: additional player options
  *
  */
-function MediaPlayer(type, media, overlay, fps) {
+function MediaPlayer(type, media, overlay, options) {
   if (this.constructor === MediaPlayer) {
     throw new TypeError('Cannot instantiate abstract class.');
   }
-
   if (type === 'video') {
-    this.renderer = new VideoRenderer(media, overlay, fps);
+    this.renderer = new VideoRenderer(media, overlay, options);
   } else if (type === 'image') {
-    this.renderer = new ImageRenderer(media, overlay);
+    this.renderer = new ImageRenderer(media, overlay, options);
   } else if (type == 'gallery') {
-    this.renderer = new GalleryRenderer(media, overlay);
+    this.renderer = new GalleryRenderer(media, overlay, options);
   } else if (type == 'imagesequence') {
-    this.renderer = new ImageSequenceRenderer(media, overlay, fps);
+    this.renderer = new ImageSequenceRenderer(media, overlay, options);
   } else {
-    throw new Error('Renderer not initialized.');
+    throw new Error('invalid media type: ' + type);
   }
   // Player prerender attributes
   this._boolForcedMax = false;
@@ -69,6 +68,7 @@ function MediaPlayer(type, media, overlay, fps) {
   this._boolNotFound = false;
   this._loadingPosterURL = '';
   this._notFoundPosterURL = '';
+  this._boolHovering = false;
   MediaPlayer._installEventHandlers();
   if (!MediaPlayer._instances) {
     MediaPlayer._instances = [];
@@ -188,6 +188,93 @@ MediaPlayer.prototype.dynamicRender = function() {
   this.renderer.setPlayer(this);
   this.renderer.initSharedControls();
   this.renderer.initPlayerControls();
+};
+
+
+/**
+* Update player options - only the options passed in
+*
+* @member updateOptions
+* @param {object} options: new player options
+*/
+MediaPlayer.prototype.updateOptions = function(options) {
+  Object.assign(this.renderer.options, options);
+  this.renderer.processFrame();
+};
+
+
+/**
+* Get player overlay options
+*
+* @member getOverlayOptions
+* @return {object} copy of player overlay options
+*/
+MediaPlayer.prototype.getOverlayOptions = function() {
+  return Object.assign({}, this.renderer.overlayOptions);
+};
+
+
+/**
+* Update player overlay options - only the options passed in
+*
+* @member updateOverlayOptions
+* @param {object} overlayOptions: new player overlay options
+*/
+MediaPlayer.prototype.updateOverlayOptions = function(overlayOptions) {
+  Object.assign(this.renderer.overlayOptions, overlayOptions);
+  this.renderer.eleOptCtlShowAttr.checked = overlayOptions.showAttrs;
+  this.renderer.eleOptCtlShowConfidence.checked = overlayOptions.showConfidence;
+  this.renderer.processFrame();
+};
+
+
+/**
+ * Update the player's overlay
+ *
+ * @member updateOverlay
+ * @param {overlayData} overlayData: new overlayData
+ */
+MediaPlayer.prototype.updateOverlay = function(overlayData) {
+  this.renderer.updateOverlay(overlayData);
+};
+
+
+/**
+ * Return the original size of the underlying content (image, video).
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined or is not applicable (e.g. for galleries)
+ */
+MediaPlayer.prototype.getContentDimensions = function() {
+  return this.renderer.getContentDimensions();
+};
+
+
+/**
+ * Add a custom event handler.
+ *
+ * @param {string} eventType - the type of the event
+ * @param {string} handler - the handler to call
+ * @param {*} args - additional arguments to pass to the native
+ *   addEventListener()
+ */
+MediaPlayer.prototype.addEventListener = function(eventType, handler, ...args) {
+  this.renderer.eventTarget.addEventListener(eventType, handler, ...args);
+};
+
+
+/**
+ * Remove a custom event handler.
+ *
+ * @param {string} eventType - the type of the event
+ * @param {string} handler - the handler to remove
+ * @param {*} args - additional arguments to pass to the native
+ *   removeEventListener()
+ */
+MediaPlayer.prototype.removeEventListener = function(eventType, handler,
+    ...args) {
+  this.renderer &&
+    this.renderer.eventTarget.removeEventListener(eventType, handler, ...args);
 };
 
 
@@ -315,7 +402,7 @@ MediaPlayer.prototype.grabKeyboardFocus = function(grab=true) {
  */
 MediaPlayer._handleGlobalClick = function(e) {
   for (const player of MediaPlayer._instances) {
-    if (player.renderer.parent.contains(e.target)) {
+    if (player.renderer.parent && player.renderer.parent.contains(e.target)) {
       MediaPlayer._focusedInstance = player;
       return;
     }

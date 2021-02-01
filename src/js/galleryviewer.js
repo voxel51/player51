@@ -29,9 +29,10 @@ export {
  * type must be in format gallery/<format>
  * ex. type: "gallery/jpg"
  * @param {string} overlay is data that should be overlayed on the images.
+ * @param {object} options: additional player options
  */
-function GalleryViewer(media, overlay) {
-  MediaPlayer.call(this, 'gallery', media, overlay);
+function GalleryViewer(media, overlay, options) {
+  MediaPlayer.call(this, 'gallery', media, overlay, options);
 }
 GalleryViewer.prototype = Object.create(MediaPlayer.prototype);
 GalleryViewer.prototype.constructor = GalleryViewer;

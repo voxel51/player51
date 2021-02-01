@@ -82,6 +82,9 @@ import {
 import {
   ImageSequence,
 } from './imagesequence.js';
+import {
+  colorGenerator,
+} from './overlay.js';
 
 export default Player51;
 
@@ -127,20 +130,41 @@ function Player51(options, ...args) {
     // convert undefined and other false-y values to null for internal use
     options.overlay = null;
   }
+  // set defaults for other options
+  options.defaultTargets = options.defaultTargets || {};
+  options.colorMap = options.colorMap || {};
+  options.colorByLabel = options.coloredByLabel || false;
+  options.activeLabels = options.activeLabels || {};
+  options.filter = options.filter || {};
+  options.enableOverlayOptions = options.enableOverlayOptions || {};
+  options.defaultOverlayOptions = options.defaultOverlayOptions || {};
+  options.selectedObjects = options.selectedObjects || [];
 
-  const {media, overlay, fps} = options;
+  const {media, overlay} = options;
   const mimetype = options.media.type.toLowerCase();
 
   // Load correct player
   if (mimetype.startsWith('video/')) {
-    return new VideoPlayer(media, overlay, fps);
+    return new VideoPlayer(media, overlay, options);
   } else if (mimetype.startsWith('image/')) {
-    return new ImageViewer(media, overlay);
+    return new ImageViewer(media, overlay, options);
   } else if (mimetype === 'application/zip') {
     if (options.isSequence) {
-      return new ImageSequence(media, overlay, fps);
+      return new ImageSequence(media, overlay, options);
     }
-    return new GalleryViewer(media, overlay);
+    return new GalleryViewer(media, overlay, options);
   }
   throw new Error(`Unrecognized mime type: ${mimetype}`);
 }
+
+
+/**
+* Get a color for a key
+*
+* @param {object} key
+* @return {string} hsla color string
+*/
+export const getColor = function(key) {
+  return colorGenerator.color(key);
+};
+

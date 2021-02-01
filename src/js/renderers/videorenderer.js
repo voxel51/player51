@@ -34,10 +34,10 @@ export {
  * @param {string} overlay is data that should be overlayed on the video.
  * Overlay can be empty (`null`), a string point to a single URL or
  * an object that is preloaded data.
- * @param {int} fps is the frame-rate of the media.
+ * @param {object} options: additional player options
  */
-function VideoRenderer(media, overlay, fps) {
-  Renderer.call(this, media, overlay);
+function VideoRenderer(media, overlay, options) {
+  Renderer.call(this, media, overlay, options);
 
   // Player State Attributes
   this._boolAutoplay = false;
@@ -47,7 +47,7 @@ function VideoRenderer(media, overlay, fps) {
   this._boolShowControls = false;
   this._boolSingleFrame = false;
   // Content Attributes
-  this.frameRate = fps;
+  this.frameRate = options.fps;
   this.frameDuration = 1 / this.frameRate;
 
   this._overlayCanBePrepared = false; // need to wait for video metadata
@@ -132,14 +132,12 @@ VideoRenderer.prototype.initPlayerControls = function() {
     //  (the player itself will handle the autoplaying)
     if (self._boolAutoplay) {
       self._boolPlaying = true;
-    } else if (self.player._boolHasPoster) {
-      if (self._hasMediaFragment) {
-        self.eleVideo.currentTime = self._mfBeginT;
-        self._frameNumber = self._mfBeginF;
-      } else {
-        self.eleVideo.currentTime = 0;
-        self._frameNumber = 1;
-      }
+    } else if (self._hasMediaFragment) {
+      self.eleVideo.currentTime = self._mfBeginT;
+      self._frameNumber = self._mfBeginF;
+    } else {
+      self.eleVideo.currentTime = 0;
+      self._frameNumber = 1;
     }
 
     self.updateFromLoadingState();
@@ -150,10 +148,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
 
     // so that we see overlay and time stamp now that we are ready
-    if ((!self.player._boolThumbnailMode) && (!self
-        ._boolAutoplay)) {
+    if (!self._boolAutoplay) {
       self.processFrame();
     }
+
+    self.dispatchEvent('load');
   });
 
   this.eleVideo.addEventListener('ended', function() {
@@ -181,6 +180,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
         .currentTime;
     // Update the slider value
     self.eleSeekBar.value = value;
+    self.dispatchEvent('timeupdate', {
+      data: {
+        frame_number: self.computeFrameNumber(),
+      },
+    });
   });
 
   this.eleVideo.addEventListener('play', function() {
@@ -195,6 +199,7 @@ VideoRenderer.prototype.initPlayerControls = function() {
     if (self.player._boolNotFound) {
       self.eleVideo.setAttribute('poster', self.player._notFoundPosterURL);
     }
+    self.dispatchEvent('error');
   });
 
   // Event listener for the play/pause button
@@ -253,14 +258,19 @@ VideoRenderer.prototype.initPlayerControls = function() {
 
   this.parent.addEventListener('mouseenter', function() {
     // Two different behaviors.
+    // 1.
     // 1.  Regular Mode: show controls.
     // 2.  Thumbnail Mode: play video
     // 3.  Single Frame Mode: annotate
+    self.player._boolHovering = true;
     if (!self._isDataLoaded) {
       return;
     }
 
-    if (self.player._boolThumbnailMode) {
+    const eventArgs = {cancelable: true, data: {player: self.player}};
+    if (!self.dispatchEvent('mouseenter', eventArgs)) {
+      return;
+    } else if (self.player._boolThumbnailMode) {
       self._boolPlaying = true;
       if (self._boolSingleFrame) {
         self.processFrame();
@@ -285,10 +295,15 @@ VideoRenderer.prototype.initPlayerControls = function() {
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    self.player._boolHovering = false;
     if (!self._isDataLoaded) {
       return;
     }
-    if (self.player._boolThumbnailMode) {
+
+    const eventArgs = {cancelable: true, data: {player: self.player}};
+    if (!self.dispatchEvent('mouseleave', eventArgs)) {
+      return;
+    } else if (self.player._boolThumbnailMode) {
       self._boolPlaying = false;
       // clear things we do not want to render any more
       self.clearCanvas();
@@ -298,8 +313,6 @@ VideoRenderer.prototype.initPlayerControls = function() {
     }
     self.updateFromDynamicState();
   });
-
-  this.updateFromLoadingState();
 };
 
 
@@ -340,6 +353,23 @@ VideoRenderer.prototype.determineMediaDimensions = function() {
 
 
 /**
+ * Return the original size of the underlying image
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined
+ */
+VideoRenderer.prototype.getContentDimensions = function() {
+  if (!this.mediaElement || !this._isVideoMetadataLoaded) {
+    return null;
+  }
+  return {
+    width: this.mediaElement.videoWidth,
+    height: this.mediaElement.videoHeight,
+  };
+};
+
+
+/**
  * Resizes controls
  *
  * @member resizeControls
@@ -364,6 +394,10 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
+  if (this.options.fps && this.frameRate !== this.options.fps) {
+    this.frameRate = this.options.fps;
+    this.frameDuration = 1 / this.frameRate;
+  }
   if (this._boolAutoplay) {
     this._boolAutoplay = false;
     this._boolPlaying = true;
@@ -385,6 +419,7 @@ VideoRenderer.prototype.updateFromDynamicState = function() {
   }
   this.updatePlayButton(this._boolPlaying);
   this.updateControlsDisplayState();
+  this.processFrame();
 };
 
 /**

@@ -30,9 +30,10 @@ export {
  * ex. type: "image/jpg"
  * @param {string} overlay is data that should be overlayed on the image.
  * Overlay is a path to a file of eta.core.image.ImageLabels format.
+ * @param {object} options: additional player options
  */
-function ImageRenderer(media, overlay) {
-  Renderer.call(this, media, overlay);
+function ImageRenderer(media, overlay, options) {
+  Renderer.call(this, media, overlay, options);
   this._frameNumber = 1;
   this._boolShowControls = false;
 }
@@ -55,6 +56,7 @@ ImageRenderer.prototype.initPlayer = function() {
   this.eleImage.className = 'p51-contained-image';
   this.eleImage.setAttribute('src', this.media.src);
   this.eleImage.setAttribute('type', this.media.type);
+  this.eleImage.setAttribute('loading', 'lazy');
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
   this.initPlayerControlHTML(this.parent, false);
@@ -81,11 +83,13 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.setupCanvasContext();
     self._isDataLoaded = true;
     self.updateFromLoadingState();
+    self.dispatchEvent('load');
   });
 
   this.eleImage.addEventListener('error', function() {
     if (self.player._boolNotFound) {
       const tmpImage = document.createElement('img');
+      tmpImage.setAttribute('loading', 'lazy');
       tmpImage.className = 'p51-contained-image';
       tmpImage.setAttribute('src', self.player._notFoundPosterURL);
       self.parent.appendChild(tmpImage);
@@ -102,6 +106,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
 
 
   this.parent.addEventListener('mouseenter', function() {
+    self.player._boolHovering = true;
     if (!self._isDataLoaded) {
       return;
     }
@@ -125,19 +130,16 @@ ImageRenderer.prototype.initPlayerControls = function() {
   });
 
   this.parent.addEventListener('mouseleave', function() {
+    self.player._boolHovering = false;
     if (!self._isDataLoaded) {
       return;
     }
-    if (self.player._boolThumbnailMode) {
-      self.clearCanvas();
-    } else {
+    if (!self.player._boolThumbnailMode) {
       hideControls();
       self.clearTimeout('hideControls');
     }
     self.updateFromDynamicState();
   });
-
-  this.updateFromLoadingState();
 };
 
 
@@ -154,6 +156,23 @@ ImageRenderer.prototype.determineMediaDimensions = function() {
 
 
 /**
+ * Return the original size of the underlying image
+ *
+ * @return {object|null} with keys `width` and `height`, or null if the content
+ *   size cannot be determined
+ */
+ImageRenderer.prototype.getContentDimensions = function() {
+  if (!this.mediaElement) {
+    return null;
+  }
+  return {
+    width: this.mediaElement.naturalWidth,
+    height: this.mediaElement.naturalHeight,
+  };
+};
+
+
+/**
  * This function is a controller
  * The dynamic state of the player has changed and various settings have to be
  * toggled.
@@ -163,9 +182,6 @@ ImageRenderer.prototype.determineMediaDimensions = function() {
 ImageRenderer.prototype.updateFromDynamicState = function() {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
-  }
-  if (this.player._boolThumbnailMode) {
-    this.processFrame();
   }
 
   this.updateControlsDisplayState();
@@ -195,9 +211,7 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
   }
 
   if (this._isOverlayPrepared) {
-    if (!this.player._boolThumbnailMode) {
-      this.processFrame();
-    }
+    this.processFrame();
   }
 };
 

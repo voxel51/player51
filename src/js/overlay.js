@@ -11,19 +11,30 @@
 
 import {
   inRect,
+  distance,
+  distanceFromLineSegment,
   compareData,
   computeBBoxForTextOverlay,
 } from './util.js';
 import {deserialize} from './numpy.js';
 
 export {
+  colorGenerator,
   ColorGenerator,
   Overlay,
   FrameAttributesOverlay,
   FrameMaskOverlay,
   ObjectOverlay,
+  KeypointsOverlay,
+  PolylineOverlay,
 };
 
+const MASK_ALPHA = 0.6;
+const LINE_WIDTH = 6;
+const POINT_RADIUS = 6;
+const DASH_LENGTH = 10;
+const DASH_COLOR = '#ffffff';
+const _rawColorCache = {};
 
 /**
  * A Class to encapsulate the creation of suitable colors for drawing the
@@ -51,7 +62,7 @@ function ColorGenerator() {
   // reduce alpha of masks
   const rawMaskColorComponents = new Uint8Array(this.rawMaskColors.buffer);
   for (let i = 3; i < rawMaskColorComponents.length; i += 4) {
-    rawMaskColorComponents[i] = Math.floor(255 * 0.6);
+    rawMaskColorComponents[i] = Math.floor(255 * MASK_ALPHA);
   }
 }
 
@@ -121,6 +132,19 @@ ColorGenerator.prototype._generateColorSet = function(n = 36) {
 // Instantiate one colorGenerator for global use
 const colorGenerator = new ColorGenerator();
 
+/**
+ * Checks whether an attribute should be shown.
+ * @param {object} filter map of name -> filter callbacks
+ * @param {object} attr attribute object
+ * @param {boolean} useValue (passed to filter callback)
+ * @return {boolean}
+ */
+function _isAttrShown(filter, attr, useValue=false) {
+  return filter && attr.name && filter[attr.name] && filter[attr.name].call ?
+    filter[attr.name](attr, useValue) :
+    true;
+}
+
 
 /**
  * A Class defining the generic interface for how to render overlays on the
@@ -143,12 +167,65 @@ Overlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
   console.log('ERROR: setup called on abstract type');
 };
 
+Overlay.prototype._isShown = function(name) {
+  if (this.renderer.options.activeLabels &&
+      this.renderer.options.activeLabels[name] === false) {
+    return false;
+  }
+  if (!_isAttrShown(this.renderer.options.filter, this)) {
+    return false;
+  }
+  return true;
+};
+Overlay.prototype._getColor = function(name, label, index) {
+  const options = this.renderer.options;
+  const hasColor = options.colorMap && options.colorMap[name];
+  const useColorMap = !options.colorByLabel;
+  if (hasColor && useColorMap) {
+    return options.colorMap[name];
+  } else if (hasColor && !useColorMap) {
+    return colorGenerator.color(label);
+  }
+  return colorGenerator.color(index);
+};
+
 Overlay.prototype.hasFocus = function() {
   return this.renderer.isFocus(this);
 };
 
+// in numerical order (CONTAINS_BORDER takes precedence over CONTAINS_CONTENT)
+Overlay.CONTAINS_NONE = 0;
+Overlay.CONTAINS_CONTENT = 1;
+Overlay.CONTAINS_BORDER = 2;
+
+/**
+ * Checks whether the given point (in canvas coordinates) is contained by the
+ * object, and if so, what part of the object contains it.
+ *
+ * @param {number} x canvas x coordinate
+ * @param {number} y canvas y coordinate
+ * @return {number} an Overlay.CONTAINS_* constant
+ */
 Overlay.prototype.containsPoint = function(x, y) {
-  return false;
+  return Overlay.CONTAINS_NONE;
+};
+
+Overlay.prototype.getPointInfo = function(x, y) {
+  return {
+    color: this._getColor(this.name, this.label, this.index),
+    label: this.label,
+    name: this.name,
+    index: this.index,
+  };
+}
+
+Overlay.prototype.isSelectable = function() {
+  return this.id !== undefined;
+};
+
+Overlay.prototype.isSelected = function() {
+  return this.isSelectable() &&
+      this.renderer.options.selectedObjects.includes(this.id);
 };
 
 
@@ -198,7 +275,7 @@ FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
 FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
     canvasHeight) {
   if (typeof(this.attrs) !== undefined) {
-    this._parseAttrs();
+    this._updateAttrs();
   }
   this.textPadder = 10;
   if (this.x === null || this.y === null) {
@@ -213,11 +290,6 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
     return;
   }
   context.font = this.font;
-  // this is *0.4 instead of / 2 because it looks better
-  const bbox = computeBBoxForTextOverlay(
-      context, this.attrText, this.attrFontHeight, this.textPadder);
-  this.w = bbox.width;
-  this.h = bbox.height;
 };
 
 
@@ -225,17 +297,19 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  * Private method to parse the attributes objects provided at creation and set
  * them up as renderable strings for the overlay.
  *
- * @method _parseAttrs
+ * @method _updateAttrs
  */
-FrameAttributesOverlay.prototype._parseAttrs = function() {
-  if (this.attrText === null) {
-    this.attrText = new Array(this.attrs.length);
-  }
-
-  for (let len = this.attrs.length, a = 0; a < len; a++) {
-    const at = `${this.attrs[a].name}: ${this.attrs[a].value}`;
-    this.attrText[a] = at.replace(new RegExp('_', 'g'), ' ');
-  }
+FrameAttributesOverlay.prototype._updateAttrs = function() {
+  this.attrText = this.attrs
+      .filter((attr) => this.renderer.options.activeLabels[attr.name] &&
+        _isAttrShown(this.renderer.options.filter, attr, true))
+      .map((attr) => {
+        let s = `${attr.name}: ${attr.value}`;
+        if (this.options.showConfidence && !isNaN(attr.confidence)) {
+          s += ` (${Number(attr.confidence).toFixed(2)})`;
+        }
+        return s;
+      });
 };
 
 /**
@@ -253,19 +327,24 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
   }
   if (this.w === null) {
     this.setup(context, canvasWidth, canvasHeight);
-    if (this.w <= 0 || this.h <= 0) {
-      return;
-    }
   }
 
   if (!this.renderer.player._boolThumbnailMode) {
+    this._updateAttrs();
+    if (!this.attrText.length) {
+      return;
+    }
+    context.font = this.font;
+    const bbox = computeBBoxForTextOverlay(
+        context, this.attrText, this.attrFontHeight, this.textPadder);
+    this.w = bbox.width;
+    this.h = bbox.height;
     context.fillStyle = this.renderer.metadataOverlayBGColor;
     context.fillRect(this.x, this.y, this.w, this.h);
-    context.font = this.font;
-    context.fillStyle = colorGenerator.white;
 
     // Rendering y is at the baseline of the text.  Handle this by padding
     // one row (attrFontHeight and textPadder)
+    context.fillStyle = colorGenerator.white;
     for (let a = 0; a < this.attrText.length; a++) {
       context.fillText(this.attrText[a],
           this.x + this.textPadder,
@@ -279,22 +358,26 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
 /**
  * An overlay that renders frame-level masks
  *
- * @param {array} mask a base64-encoded mask
+ * @param {object} d an object with keys:
+ *   `mask`: base64-encoded mask
+ *   `name`: a name identifying the mask
  * @param {Renderer} renderer Associated renderer
  *
  */
-function FrameMaskOverlay(mask, renderer) {
+function FrameMaskOverlay(d, renderer) {
   if (!FrameMaskOverlay._tempMaskCanvas) {
     FrameMaskOverlay._tempMaskCanvas = document.createElement('canvas');
   }
 
   Overlay.call(this, renderer);
 
-  this.mask = deserialize(mask);
+  this.mask = deserialize(d.mask);
+  this.name = d.name;
   this.x = null;
   this.y = null;
   this.w = null;
   this.h = null;
+  this.renderer = renderer;
 }
 FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
 FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
@@ -328,6 +411,10 @@ FrameMaskOverlay.prototype.setup = function(context, canvasWidth,
  */
 FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     canvasHeight) {
+  if (this.name && !this._isShown(this.name)) {
+    return;
+  }
+
   const [maskHeight, maskWidth] = this.mask.shape;
   ensureCanvasSize(FrameMaskOverlay._tempMaskCanvas, {
     width: maskWidth,
@@ -339,6 +426,7 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   if (this.mask.rendered) {
     imageColors.set(this.mask.data);
   } else {
+    this.mask.targets = new Uint32Array(this.mask.data);
     const index = this.renderer.frameMaskIndex;
     if (index) {
       for (let i = 0; i < this.mask.data.length; i++) {
@@ -357,11 +445,262 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
     this.mask.rendered = true;
   }
   maskContext.putImageData(maskImage, 0, 0);
+  context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
   context.drawImage(FrameMaskOverlay._tempMaskCanvas,
       0, 0, maskWidth, maskHeight,
       0, 0, canvasWidth, canvasHeight);
+  this.h = canvasHeight;
+  this.w = canvasWidth;
 };
 
+FrameMaskOverlay.prototype.containsPoint = function(x, y) {
+  return Overlay.CONTAINS_CONTENT;
+};
+
+
+FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
+  const [h, w] = this.mask.shape;
+  const sourceX = Math.floor(x * (w / this.w));
+  const sourceY = Math.floor(y * (h / this.h));
+  const index = w * sourceY + sourceX;
+  const target = this.mask.targets[index];
+  const color = this.mask.data[index];
+  return {
+    color,
+    coordinates: [sourceX, sourceY],
+    label: this.renderer.options.defaultTargets[target],
+    name: this.name,
+    shape: this.mask.shape,
+    target
+  }
+}
+
+/**
+ * An overlay that renders keypoints
+ *
+ * @param {array} d an ETA Keypoints object
+ * @param {Renderer} renderer Associated renderer
+ *
+ */
+function KeypointsOverlay(d, renderer) {
+  Overlay.call(this, renderer);
+
+  this.id = d._id;
+  this.name = d.name;
+  this.label = d.label;
+  this.index = d.index;
+  this.points = d.points;
+}
+KeypointsOverlay.prototype = Object.create(Overlay.prototype);
+KeypointsOverlay.prototype.constructor = KeypointsOverlay;
+
+
+/**
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @method setup
+ * @constructor
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+KeypointsOverlay.prototype.setup = function(context, canvasWidth,
+    canvasHeight) {
+  this.x = 0;
+  this.y = 0;
+  this.w = canvasWidth;
+  this.h = canvasHeight;
+};
+
+
+/**
+ * Basic rendering function for drawing the overlay instance.
+ *
+ * @method draw
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+KeypointsOverlay.prototype.draw = function(context, canvasWidth,
+    canvasHeight) {
+  if (!this._isShown(this.name)) {
+    return;
+  }
+  const color = this._getColor(this.name, this.label, this.index);
+  context.lineWidth = 0;
+  const isSelected = this.isSelected();
+
+  for (const point of this.points) {
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(
+        point[0] * canvasWidth,
+        point[1] * canvasHeight,
+        isSelected ? POINT_RADIUS * 2 : POINT_RADIUS,
+        0,
+        Math.PI * 2,
+    );
+    context.fill();
+
+    if (isSelected) {
+      context.fillStyle = DASH_COLOR;
+      context.beginPath();
+      context.arc(
+          point[0] * canvasWidth,
+          point[1] * canvasHeight,
+          POINT_RADIUS,
+          0,
+          Math.PI * 2,
+      );
+      context.fill();
+    }
+  }
+};
+
+
+KeypointsOverlay.prototype.containsPoint = function(x, y) {
+  if (!this._isShown()) {
+    return Overlay.CONTAINS_NONE;
+  }
+  for (const point of this.points) {
+    if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
+        2 * POINT_RADIUS) {
+      return Overlay.CONTAINS_BORDER;
+    }
+  }
+  return Overlay.CONTAINS_NONE;
+};
+
+
+/**
+ * An overlay that renders polylines
+ *
+ * @param {array} d an ETA Polyline object
+ * @param {Renderer} renderer Associated renderer
+ *
+ */
+function PolylineOverlay(d, renderer) {
+  Overlay.call(this, renderer);
+
+  this.id = d._id;
+  this.name = d.name;
+  this.label = d.label;
+  this.index = d.index;
+  this.points = d.points;
+  this.closed = d.closed;
+  this.filled = d.filled;
+}
+PolylineOverlay.prototype = Object.create(Overlay.prototype);
+PolylineOverlay.prototype.constructor = PolylineOverlay;
+
+
+/**
+ * Second half of constructor that should be called after the object exists.
+ *
+ * @method setup
+ * @constructor
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+PolylineOverlay.prototype.setup = function(context, canvasWidth,
+    canvasHeight) {
+  this.x = 0;
+  this.y = 0;
+  this.w = canvasWidth;
+  this.h = canvasHeight;
+
+  this._context = context;
+
+  this.path = new Path2D();
+  for (const shape of this.points) {
+    const shapePath = new Path2D();
+    for (const [pidx, point] of Object.entries(shape)) {
+      if (pidx > 0) {
+        shapePath.lineTo(canvasWidth * point[0], canvasHeight * point[1]);
+      } else {
+        shapePath.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
+      }
+    }
+    if (this.closed) {
+      shapePath.closePath();
+    }
+    this.path.addPath(shapePath);
+  }
+};
+
+
+/**
+ * Basic rendering function for drawing the overlay instance.
+ *
+ * @method draw
+ * @param {context} context
+ * @param {int} canvasWidth
+ * @param {int} canvasHeight
+ */
+PolylineOverlay.prototype.draw = function(context, canvasWidth,
+    canvasHeight) {
+  if (!this._isShown(this.name)) {
+    return;
+  }
+  const color = this._getColor(this.name, this.label, this.index);
+  context.fillStyle = color;
+  context.strokeStyle = color;
+  context.lineWidth = LINE_WIDTH;
+  context.stroke(this.path);
+  if (this.isSelected()) {
+    context.strokeStyle = DASH_COLOR;
+    context.setLineDash([DASH_LENGTH]);
+    context.stroke(this.path);
+    context.strokeStyle = color;
+    context.setLineDash([]);
+  }
+  if (this.filled) {
+    context.globalAlpha = MASK_ALPHA;
+    context.fill(this.path);
+    context.globalAlpha = 1;
+  }
+};
+
+
+PolylineOverlay.prototype.containsPoint = function(x, y) {
+  if (!this._isShown()) {
+    return Overlay.CONTAINS_NONE;
+  }
+  const tolerance = LINE_WIDTH * 1.5;
+  // calculate distance from each line segment
+  for (const shape of this.points) {
+    for (let i = 0; i < shape.length - 1; i++) {
+      if (distanceFromLineSegment(
+          x,
+          y,
+          this.w * shape[i][0],
+          this.h * shape[i][1],
+          this.w * shape[i + 1][0],
+          this.h * shape[i + 1][1],
+      ) <= tolerance) {
+        return Overlay.CONTAINS_BORDER;
+      }
+    }
+    // also check final line segment if closed
+    if (this.closed && distanceFromLineSegment(
+        x,
+        y,
+        this.w * shape[0][0],
+        this.h * shape[0][1],
+        this.w * shape[shape.length - 1][0],
+        this.h * shape[shape.length - 1][1],
+    ) <= tolerance) {
+      return Overlay.CONTAINS_BORDER;
+    }
+  }
+  if (this.closed || this.filled) {
+    return this._context.isPointInPath(this.path, x, y) ?
+      Overlay.CONTAINS_CONTENT :
+      Overlay.CONTAINS_NONE;
+  }
+  return Overlay.CONTAINS_NONE;
+};
 
 /**
  * A Class for rendering an Overlay on the Video
@@ -390,9 +729,11 @@ function ObjectOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
   this._cache_options = Object.assign({}, this.options);
-
+  this.id = d._id;
+  this.name = d.name;
+  this.confidence = d.confidence;
   this.label = d.label;
-  this.labelUpper = this.label.toUpperCase();
+  this._setupLabel();
   this.index = d.index;
   this.indexStr = '';
   if (this.index != null) {
@@ -419,7 +760,6 @@ function ObjectOverlay(d, renderer) {
   this.y = null;
   this.w = null;
   this.h = null;
-  this.color = null;
 
   // this is the height of the header box into which we draw the label
   this.headerHeight = null;
@@ -445,17 +785,13 @@ ObjectOverlay.prototype.constructor = ObjectOverlay;
  * @param {int} canvasHeight
  */
 ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
-  if (typeof(this._attrs) !== undefined) {
-    this._parseAttrs();
-  }
+  this._parseAttrs();
   this.x = this.bounding_box.top_left.x * canvasWidth;
   this.y = this.bounding_box.top_left.y * canvasHeight;
   this.w = (this.bounding_box.bottom_right.x - this.bounding_box.top_left
       .x) * canvasWidth;
   this.h = (this.bounding_box.bottom_right.y - this.bounding_box.top_left
       .y) * canvasHeight;
-  this.color = colorGenerator.color(this.index);
-  this.rawColor = colorGenerator.rawColor(this.index);
 
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this
@@ -471,6 +807,15 @@ ObjectOverlay.prototype.setup = function(context, canvasWidth, canvasHeight) {
     return;
   }
   this._setupFontWidths(context, canvasWidth, canvasHeight);
+};
+
+
+/**
+ * Checks whether the object has attributes
+ * @return {boolean}
+ */
+ObjectOverlay.prototype.hasAttrs = function() {
+  return this._attrs !== undefined;
 };
 
 
@@ -504,6 +849,13 @@ ObjectOverlay.prototype._setupAttrBox = function(context) {
       context, this.attrText, this.attrFontHeight, this.textPadder);
   this.attrWidth = wh.width;
   this.attrHeight = wh.height;
+};
+
+ObjectOverlay.prototype._setupLabel = function() {
+  this.labelUpper = this.label.toUpperCase();
+  if (this.options.showConfidence && !isNaN(this.confidence)) {
+    this.labelUpper += ` (${Number(this.confidence).toFixed(2)})`;
+  }
 };
 
 
@@ -562,21 +914,47 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     return;
   }
 
+  if (!this._isShown(this.name)) {
+    return;
+  }
+
+  let optionsUpdated = false;
   if (!compareData(this._cache_options, this.options)) {
     this._cache_options = Object.assign({}, this.options);
     this._parseAttrs(this._attrs);
     this._setupAttrBox(context);
+    optionsUpdated = true;
   }
 
-  if (this.labelTextWidth === null) {
+  if (optionsUpdated || this.labelTextWidth === null) {
+    this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-
-  context.strokeStyle = this.color;
-  context.fillStyle = this.color;
+  const color = this._getColor(this.name, this.label, this.index);
+  context.strokeStyle = color;
+  context.fillStyle = color;
+  context.lineWidth = LINE_WIDTH;
   context.strokeRect(this.x, this.y, this.w, this.h);
 
+  if (this.isSelected()) {
+    context.strokeStyle = DASH_COLOR;
+    context.setLineDash([DASH_LENGTH]);
+    context.strokeRect(this.x, this.y, this.w, this.h);
+    context.strokeStyle = color;
+    context.setLineDash([]);
+  }
+
   if (this.mask) {
+    if (_rawColorCache[color] === undefined) {
+      const rawMaskColorComponents = new Uint8Array(
+          context.getImageData(this.x, this.y, 1, 1).data.buffer);
+      rawMaskColorComponents[3] = 255 * MASK_ALPHA;
+      _rawColorCache[color] = (
+        new Uint32Array(rawMaskColorComponents.buffer)
+      )[0];
+    }
+    const rawMaskColor = _rawColorCache[color];
+
     const [maskHeight, maskWidth] = this.mask.shape;
     ensureCanvasSize(ObjectOverlay._tempMaskCanvas, {
       width: maskWidth,
@@ -589,10 +967,11 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 
     for (let i = 0; i < this.mask.data.length; i++) {
       if (this.mask.data[i]) {
-        maskImageRaw[i] = this.rawColor;
+        maskImageRaw[i] = rawMaskColor;
       }
     }
     maskContext.putImageData(maskImage, 0, 0);
+    context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
     context.drawImage(ObjectOverlay._tempMaskCanvas,
         0, 0, maskWidth, maskHeight,
         this.x, this.y, this.w, this.h);
@@ -641,9 +1020,41 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
 };
 
 ObjectOverlay.prototype.containsPoint = function(x, y) {
-  return inRect(x, y, this.x, this.y, this.w, this.h) ||
-      inRect(x, y, this.x, this.y - this.headerHeight,
-          this.headerWidth, this.headerHeight);
+  if (!this._isShown()) {
+    return Overlay.CONTAINS_NONE;
+  }
+  // the header takes up an extra LINE_WIDTH / 2 on each side due to its border
+  if (inRect(x, y,
+      this.x - LINE_WIDTH / 2,
+      this.y - this.headerHeight - LINE_WIDTH / 2,
+      this.headerWidth + LINE_WIDTH,
+      this.headerHeight + LINE_WIDTH,
+  )) {
+    return Overlay.CONTAINS_BORDER;
+  }
+  // the distance from the box contents to the edge of the line segment is
+  // LINE_WIDTH / 2, so this gives a tolerance of an extra LINE_WIDTH on either
+  // side of the border
+  const tolerance = LINE_WIDTH * 1.5;
+  if (
+    distanceFromLineSegment(
+        x, y, this.x, this.y, this.x + this.w, this.y,
+    ) <= tolerance ||
+    distanceFromLineSegment(
+        x, y, this.x, this.y, this.x, this.y + this.h,
+    ) <= tolerance ||
+    distanceFromLineSegment(x, y,
+        this.x + this.w, this.y + this.h, this.x + this.w, this.y,
+    ) <= tolerance ||
+    distanceFromLineSegment(
+        x, y, this.x + this.w, this.y + this.h, this.x, this.y + this.h,
+    ) <= tolerance
+  ) {
+    return Overlay.CONTAINS_BORDER;
+  }
+  if (inRect(x, y, this.x, this.y, this.w, this.h)) {
+    return Overlay.CONTAINS_CONTENT;
+  }
 };
 
 /**

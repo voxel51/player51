@@ -34,11 +34,10 @@ export {
  * @param {string} overlay is data that should be overlayed on the video.
  * Overlay can be empty (`null`), a string point to a single URL or
  * an object that is preloaded data.
- * @param {int} fps is the frame-rate of the media.  If it is not provided
- * then it will be guessed.
+ * @param {object} options: additional player options
  */
-function VideoPlayer(media, overlay, fps) {
-  MediaPlayer.call(this, 'video', media, overlay, fps);
+function VideoPlayer(media, overlay, options) {
+  MediaPlayer.call(this, 'video', media, overlay, options);
   // Player View Attributes
   this.boolDrawFrameNumber = false;
   this.boolDrawTimestamp = false;
@@ -67,6 +66,40 @@ VideoPlayer.prototype.setLoadingPoster = function(url) {
  */
 VideoPlayer.prototype.loop = function(boolLoop = true) {
   this.renderer._boolLoop = boolLoop;
+};
+
+
+/**
+ * Play the video, if it is not already playing.
+ *
+ * @member play
+ */
+VideoPlayer.prototype.play = function() {
+  this.renderer._boolPlaying = true;
+  this.renderer.updateFromDynamicState();
+};
+
+
+/**
+ * Pause the video, if it is not already paused.
+ *
+ * @member pause
+ */
+VideoPlayer.prototype.pause = function() {
+  this.renderer._boolPlaying = false;
+  this.renderer.updateFromDynamicState();
+};
+
+
+/**
+ * Returns true if the mouse is hovering over the player, and false, if not.
+ *
+ * @member isHovering
+ *
+ * @return {bool} if the mouse is hovering over the player
+ */
+VideoPlayer.prototype.isHovering = function() {
+  return this._boolHovering;
 };
 
 
