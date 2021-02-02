@@ -211,12 +211,7 @@ Overlay.prototype.containsPoint = function(x, y) {
 };
 
 Overlay.prototype.getPointInfo = function(x, y) {
-  return {
-    color: this._getColor(this.name, this.label, this.index),
-    label: this.label,
-    name: this.name,
-    index: this.index,
-  };
+  throw new Error('Method getPointInfo() must be implemented.');
 }
 
 Overlay.prototype.isSelectable = function() {
@@ -466,10 +461,11 @@ FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
   const target = this.mask.targets[index];
   return {
     color: colorGenerator.color(target), 
-    coordinates: [sourceX, sourceY],
-    name: this.name,
     shape: this.mask.shape,
-    target
+    coordinates: [sourceX, sourceY],
+    field: this.name,
+    target,
+    type: "mask",    
   }
 }
 
@@ -555,6 +551,15 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
   }
 };
 
+
+KeypointsOverlay.prototype.getPointInfo = function(x, y) {
+  return {
+    color: this._getColor(this.name, this.label, this.index),
+    label: this.label,
+    field: this.name,
+    index: this.index,
+  };
+}
 
 KeypointsOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
@@ -659,6 +664,18 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
     context.globalAlpha = 1;
   }
 };
+
+PolylineOverlay.prototype.getPointInfo = function(x, y) {
+  return {
+    color: this._getColor(this.name, this.label, this.index),
+    label: this.label,
+    field: this.name,
+    index: this.index,
+    points: this.points.length(),
+    closed: this.closed,
+    filled: this.filled
+  };
+}
 
 
 PolylineOverlay.prototype.containsPoint = function(x, y) {
@@ -1016,6 +1033,24 @@ ObjectOverlay.prototype.draw = function(context, canvasWidth, canvasHeight) {
     }
   }
 };
+
+ObjectOverlay.prototype.getPointInfo = function(x, y) {
+  const left = this.bounding_box.top_left.x;
+  const width = this.bounding_box.bottom_right.x - left;
+  const top = this.bounding_box.top_left.y;
+  const height = this.bounding_box.bottom_right.y - top;
+  return {
+    color: this._getColor(this.name, this.label, this.index),
+    label: this.label,
+    field: this.name,
+    index: this.index,
+    confidence: this.confidence,
+    top,
+    left,
+    height,
+    width
+  };
+}
 
 ObjectOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {

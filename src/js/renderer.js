@@ -731,8 +731,7 @@ Renderer.prototype._handleMouseEvent = function(e) {
     this.dispatchEvent('tooltipinfo', {
       data: {
 	overlays: overlayPointInfos,
-        x,
-	y
+        point: [Math.floor(x / this.canvasWidth * this.mediaWith), Math.floor(y / this.canvasHeight * this.mediaWith)]
       }
     });
   }
