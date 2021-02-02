@@ -288,6 +288,13 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
 };
 
 
+FrameAttributesOverlay.prototype._getFilteredAttrs = function() {
+  return this.attrs
+    .filter((attr) => this.renderer.options.activeLabels[attr.name] &&
+    _isAttrShown(this.renderer.options.filter, attr, true));
+}
+
+
 /**
  * Private method to parse the attributes objects provided at creation and set
  * them up as renderable strings for the overlay.
@@ -295,9 +302,7 @@ FrameAttributesOverlay.prototype.setup = function(context, canvasWidth,
  * @method _updateAttrs
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
-  this.attrText = this.attrs
-      .filter((attr) => this.renderer.options.activeLabels[attr.name] &&
-        _isAttrShown(this.renderer.options.filter, attr, true))
+  this.attrText = this.getFilteredAttrs()
       .map((attr) => {
         let s = `${attr.name}: ${attr.value}`;
         if (this.options.showConfidence && !isNaN(attr.confidence)) {
@@ -350,6 +355,25 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
 };
 
 
+FrameAttributesOverlay.prototype.containsPoint = function(x, y) {
+  const xAxis = x > this.x && x < (this.w + this.x);
+  const yAxis = y > this.y && y < (this.h + this.y);
+  console.log(xAxis && yAxis);
+  return xAxis && yAxis;
+}
+
+FrameAttributesOverlay.prototype.getPointInfo = function(x, y) {
+  return this.getFilteredAttrs().map((a) => {
+    return {
+      field: a.name,
+      confidence: a.confidence,
+      label: a.value,
+      type: "classification"
+    }
+  });
+}
+
+
 /**
  * An overlay that renders frame-level masks
  *
@@ -368,6 +392,7 @@ function FrameMaskOverlay(d, renderer) {
 
   this.mask = deserialize(d.mask);
   this.name = d.name;
+  this.id = d._id;
   this.x = null;
   this.y = null;
   this.w = null;
@@ -451,9 +476,9 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
 
 FrameMaskOverlay.prototype.getMaskCoordinates = function(x, y) {
   const [h, w] = this.mask.shape;
-  const sourceX = Math.floor(x * (w / this.w));
-  const sourceY = Math.floor(y * (h / this.h));
-  return [sourceX, sourceY];
+  const sx = Math.floor(x * (w / this.w));
+  const sy = Math.floor(y * (h / this.h));
+  return [sx, sy];
 }
 
 FrameMaskOverlay.prototype.getIndex = function(x, y) {
@@ -467,14 +492,13 @@ FrameMaskOverlay.prototype.getTarget = function(x, y) {
 }
 
 FrameMaskOverlay.prototype.containsPoint = function(x, y) {
-  if (this.getTarget(x, y)) {
+  if (this.mask.rendered && this.getTarget(x, y)) {
     return Overlay.CONTAINS_CONTENT;
   }
   return Overlay.CONTAINS_NONE;
 };
 
 FrameMaskOverlay.prototype.getRGBAColor = function(target) {
-  const target = this.getTarget(x, y);
   const rawColor = colorGenerator.rawMaskColors[target];
   const [r, g, b, a] = new Uint8Array(new Uint32Array([rawColor]).buffer);
   return `rgba(${r},${g},${b},${a / 255})`;
@@ -484,7 +508,8 @@ FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
   const coords = this.getMaskCoordinates(x, y);
   const target = this.getTarget(x, y);
   return {
-    color: this.getRGBAColor(x, y), 
+    id: this.id,
+    color: this.getRGBAColor(target), 
     shape: this.mask.shape,
     coordinates: coords,
     field: this.name,

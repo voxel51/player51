@@ -659,6 +659,14 @@ Renderer.prototype._findOverlaysAt = function({x, y}) {
   if (!objects) {
     return []
   }
+
+  if (!this._renderRest()) {
+    const overlay = this._findTopOverlayAt(this._focusPos);
+    if (overlay) {
+      return [overlay];
+    }
+    return [];
+  }
   const containedOverlays = []
   let bestContainsMode = Overlay.CONTAINS_NONE;
   for (let i = objects.length - 1; i >= 0; i--) {
@@ -727,7 +735,13 @@ Renderer.prototype._handleMouseEvent = function(e) {
   }
 
   if (eventType === 'mousemove') {
-    const overlayPointInfos = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
+    const results = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
+    const overlayPointInfos = results.reduce((acc, cur) => {
+    	if (Array.isArray(cur) {
+	    return [..acc, ...cur];
+	}
+	return [...acc, cur];
+    },[]);
     const {height, width} = this.getContentDimensions();
     const pointY = Math.floor(y / this.canvasHeight * this.height);
     const pointX = Math.floor(x / this.canvasWidth * width);
