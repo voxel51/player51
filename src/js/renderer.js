@@ -734,11 +734,13 @@ Renderer.prototype._handleMouseEvent = function(e) {
     });
   }
 
-  if (eventType === 'mousemove') {
+  const pausedOrImage = !this.eleVideo || this.eleVideo.paused
+  if (pausedOrImage && eventType === 'mousemove') {
+    
     const results = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
     const overlayPointInfos = results.reduce((acc, cur) => {
-    	if (Array.isArray(cur) {
-	    return [..acc, ...cur];
+    	if (Array.isArray(cur)) {
+	    return [...acc, ...cur];
 	}
 	return [...acc, cur];
     },[]);

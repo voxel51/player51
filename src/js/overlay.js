@@ -302,9 +302,13 @@ FrameAttributesOverlay.prototype._getFilteredAttrs = function() {
  * @method _updateAttrs
  */
 FrameAttributesOverlay.prototype._updateAttrs = function() {
-  this.attrText = this.getFilteredAttrs()
+  this.attrText = this._getFilteredAttrs()
       .map((attr) => {
-        let s = `${attr.name}: ${attr.value}`;
+	const strLimit = 24;
+	let {name, value} = attr;
+	name = name.length > strLimit ? name.slice(0, strLimit) + "..." : name;
+	value = typeof value === "string" && value.length > strLimit ? value.slice(0, strLimit) + "..." : value;
+        let s = `${name}: ${value}`;
         if (this.options.showConfidence && !isNaN(attr.confidence)) {
           s += ` (${Number(attr.confidence).toFixed(2)})`;
         }
@@ -358,17 +362,18 @@ FrameAttributesOverlay.prototype.draw = function(context, canvasWidth,
 FrameAttributesOverlay.prototype.containsPoint = function(x, y) {
   const xAxis = x > this.x && x < (this.w + this.x);
   const yAxis = y > this.y && y < (this.h + this.y);
-  console.log(xAxis && yAxis);
   return xAxis && yAxis;
 }
 
 FrameAttributesOverlay.prototype.getPointInfo = function(x, y) {
-  return this.getFilteredAttrs().map((a) => {
+  return this._getFilteredAttrs().map((a) => {
     return {
+      color: this._getColor(a.name, a.value),
       field: a.name,
       confidence: a.confidence,
       label: a.value,
-      type: "classification"
+      type: "classification",
+      attrs: a.attrs
     }
   });
 }
@@ -492,6 +497,9 @@ FrameMaskOverlay.prototype.getTarget = function(x, y) {
 }
 
 FrameMaskOverlay.prototype.containsPoint = function(x, y) {
+  if (!this._isShown()) {
+    return Overlay.CONTAINS_NONE;
+  }
   if (this.mask.rendered && this.getTarget(x, y)) {
     return Overlay.CONTAINS_CONTENT;
   }
