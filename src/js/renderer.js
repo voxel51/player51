@@ -728,10 +728,13 @@ Renderer.prototype._handleMouseEvent = function(e) {
 
   if (eventType === 'mousemove') {
     const overlayPointInfos = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
+    const {height, width} = this.getContentDimensions();
+    const pointY = Math.floor(y / this.canvasHeight * this.height);
+    const pointX = Math.floor(x / this.canvasWidth * width);
     this.dispatchEvent('tooltipinfo', {
       data: {
 	overlays: overlayPointInfos,
-        point: [Math.floor(x / this.canvasWidth * this.mediaWith), Math.floor(y / this.canvasHeight * this.mediaWith)]
+        point: [pointX, pointY]
       }
     });
   }

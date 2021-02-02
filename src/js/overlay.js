@@ -448,21 +448,45 @@ FrameMaskOverlay.prototype.draw = function(context, canvasWidth,
   this.w = canvasWidth;
 };
 
-FrameMaskOverlay.prototype.containsPoint = function(x, y) {
-  return Overlay.CONTAINS_CONTENT;
-};
 
-
-FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
+FrameMaskOverlay.prototype.getMaskCoordinates = function(x, y) {
   const [h, w] = this.mask.shape;
   const sourceX = Math.floor(x * (w / this.w));
   const sourceY = Math.floor(y * (h / this.h));
-  const index = w * sourceY + sourceX;
-  const target = this.mask.targets[index];
+  return [sourceX, sourceY];
+}
+
+FrameMaskOverlay.prototype.getIndex = function(x, y) {
+  const [sx, sy] = this.getMaskCoordinates(x, y);
+  return this.mask.shape[1] * sy + sx;
+}
+
+FrameMaskOverlay.prototype.getTarget = function(x, y) {
+  const index = this.getIndex(x, y);
+  return this.mask.targets[index];
+}
+
+FrameMaskOverlay.prototype.containsPoint = function(x, y) {
+  if (this.getTarget(x, y)) {
+    return Overlay.CONTAINS_CONTENT;
+  }
+  return Overlay.CONTAINS_NONE;
+};
+
+FrameMaskOverlay.prototype.getRGBAColor = function(target) {
+  const target = this.getTarget(x, y);
+  const rawColor = colorGenerator.rawMaskColors[target];
+  const [r, g, b, a] = new Uint8Array(new Uint32Array([rawColor]).buffer);
+  return `rgba(${r},${g},${b},${a / 255})`;
+}
+
+FrameMaskOverlay.prototype.getPointInfo = function(x, y) {
+  const coords = this.getMaskCoordinates(x, y);
+  const target = this.getTarget(x, y);
   return {
-    color: colorGenerator.color(target), 
+    color: this.getRGBAColor(x, y), 
     shape: this.mask.shape,
-    coordinates: [sourceX, sourceY],
+    coordinates: coords,
     field: this.name,
     target,
     type: "mask",    
@@ -554,10 +578,12 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 
 KeypointsOverlay.prototype.getPointInfo = function(x, y) {
   return {
+    id: this.id,
     color: this._getColor(this.name, this.label, this.index),
     label: this.label,
     field: this.name,
     index: this.index,
+    type: "keypoints",
   };
 }
 
@@ -667,13 +693,15 @@ PolylineOverlay.prototype.draw = function(context, canvasWidth,
 
 PolylineOverlay.prototype.getPointInfo = function(x, y) {
   return {
+    id: this.id,
     color: this._getColor(this.name, this.label, this.index),
     label: this.label,
     field: this.name,
     index: this.index,
     points: this.points.length(),
     closed: this.closed,
-    filled: this.filled
+    filled: this.filled,
+    type: "polyline"
   };
 }
 
@@ -1040,6 +1068,7 @@ ObjectOverlay.prototype.getPointInfo = function(x, y) {
   const top = this.bounding_box.top_left.y;
   const height = this.bounding_box.bottom_right.y - top;
   return {
+    id: this.id,
     color: this._getColor(this.name, this.label, this.index),
     label: this.label,
     field: this.name,
@@ -1048,7 +1077,8 @@ ObjectOverlay.prototype.getPointInfo = function(x, y) {
     top,
     left,
     height,
-    width
+    width,
+    type: "detection"
   };
 }
 
