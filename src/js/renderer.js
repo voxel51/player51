@@ -9,7 +9,7 @@
  * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
-import EventTarget from '@ungap/event-target';
+import EventTarget from "@ungap/event-target";
 import {
   ColorGenerator,
   FrameAttributesOverlay,
@@ -18,19 +18,11 @@ import {
   ObjectOverlay,
   KeypointsOverlay,
   PolylineOverlay,
-} from './overlay.js';
-import {
-  ICONS,
-  rescale,
-} from './util.js';
-import {
-  ZipLibrary,
-} from './zipreader/zip.js';
+} from "./overlay.js";
+import { argMin, ICONS, rescale } from "./util.js";
+import { ZipLibrary } from "./zipreader/zip.js";
 
-export {
-  Renderer,
-};
-
+export { Renderer };
 
 /**
  * Renderer Class Definition
@@ -45,7 +37,7 @@ export {
  */
 function Renderer(media, overlay, options) {
   if (this.constructor === Renderer) {
-    throw new TypeError('Cannot instantiate abstract class.');
+    throw new TypeError("Cannot instantiate abstract class.");
   }
   // Data structures
   this.player = undefined;
@@ -56,7 +48,7 @@ function Renderer(media, overlay, options) {
   this.frameOverlay = {};
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
-  this.reader.workerScriptsPath = '../src/js/zipreader/';
+  this.reader.workerScriptsPath = "../src/js/zipreader/";
   // Player state attributes
   this._isRendered = false;
   this._isSizePrepared = false;
@@ -67,36 +59,36 @@ function Renderer(media, overlay, options) {
   this.paddingRight = 0;
   this.paddingTop = 0;
   this.paddingBottom = 0;
-  this.metadataOverlayBGColor = 'hsla(210, 20%, 10%, 0.8)';
+  this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
   this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
   this.overlayOptions = Object.assign(
-      {
-        showFrameCount: false,
-        labelsOnlyOnClick: false,
-        attrsOnlyOnClick: false,
-        showConfidence: true,
-        showAttrs: true,
-        attrRenderMode: 'value',
-        attrRenderBox: true,
-        action: 'click',
-        smoothMasks: true,
-      },
-      this.options.defaultOverlayOptions,
+    {
+      showFrameCount: false,
+      labelsOnlyOnClick: false,
+      attrsOnlyOnClick: false,
+      showConfidence: true,
+      showAttrs: true,
+      attrRenderMode: "value",
+      attrRenderBox: true,
+      action: "click",
+      smoothMasks: true,
+    },
+    this.options.defaultOverlayOptions
   );
   this._actionOptions = {
-    click: {name: 'Click', type: 'click', labelText: 'clicked'},
-    hover: {name: 'Hover', type: 'mousemove', labelText: 'hovered'},
+    click: { name: "Click", type: "click", labelText: "clicked" },
+    hover: { name: "Hover", type: "mousemove", labelText: "hovered" },
   };
   this._attrRenderModeOptions = [
     {
-      name: 'Value',
-      value: 'value',
+      name: "Value",
+      value: "value",
     },
     {
-      name: 'Attribute: Value',
-      value: 'attr-value',
+      name: "Attribute: Value",
+      value: "attr-value",
     },
   ];
   this._overlayOptionWrappers = {}; // overlayOptions key -> element
@@ -118,23 +110,21 @@ function Renderer(media, overlay, options) {
   this._boolZipReady = false;
   this._timeouts = {};
   this._canFocus = true;
-  this._focusPos = {x: -1, y: -1};
+  this._focusPos = { x: -1, y: -1 };
   this._boolHoveringControls = false;
   this.handleOverlay(overlay);
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
 
-
 /*
  * Destroy the renderer
  * @member destroy
  */
-Renderer.prototype.destroy = function() {
+Renderer.prototype.destroy = function () {
   for (const child of this.parent.children) {
     this.parent.removeChild(child);
   }
 };
-
 
 /**
  * Define abstract function initPlayer to be implemented in subclasses
@@ -142,10 +132,9 @@ Renderer.prototype.destroy = function() {
  * @member initPlayer
  * @abstract
  */
-Renderer.prototype.initPlayer = function() {
-  throw new Error('Method initPlayer() must be implemented.');
+Renderer.prototype.initPlayer = function () {
+  throw new Error("Method initPlayer() must be implemented.");
 };
-
 
 /**
  * Define abstract function initPlayerControls to be implemented in subclasses
@@ -153,10 +142,9 @@ Renderer.prototype.initPlayer = function() {
  * @member initPlayerControls
  * @abstract
  */
-Renderer.prototype.initPlayerControls = function() {
-  throw new Error('Method initPlayerControls() must be implemented.');
+Renderer.prototype.initPlayerControls = function () {
+  throw new Error("Method initPlayerControls() must be implemented.");
 };
-
 
 /**
  * Define abstract function determineMediaDimensions to be implemented in
@@ -165,19 +153,16 @@ Renderer.prototype.initPlayerControls = function() {
  * @member determineMediaDimensions
  * @abstract
  */
-Renderer.prototype.determineMediaDimensions = function() {
-  throw new Error('Method determineMediaDimensions() must be implemented.');
+Renderer.prototype.determineMediaDimensions = function () {
+  throw new Error("Method determineMediaDimensions() must be implemented.");
 };
-
 
 /**
  * Define base function resizeControls to be implemented in subclasses
  *
  * @member resizeControls
  */
-Renderer.prototype.resizeControls = function() {
-};
-
+Renderer.prototype.resizeControls = function () {};
 
 /**
  * Define abstract function updateFromDynamicState to be implemented in
@@ -186,10 +171,9 @@ Renderer.prototype.resizeControls = function() {
  * @member updateFromDynamicState
  * @abstract
  */
-Renderer.prototype.updateFromDynamicState = function() {
-  throw new Error('Method updateFromDynamicState() must be implemented.');
+Renderer.prototype.updateFromDynamicState = function () {
+  throw new Error("Method updateFromDynamicState() must be implemented.");
 };
-
 
 /**
  * Define abstract function updateFromLoadingState to be implemented in
@@ -198,10 +182,9 @@ Renderer.prototype.updateFromDynamicState = function() {
  * @member updateFromLoadingState
  * @abstract
  */
-Renderer.prototype.updateFromLoadingState = function() {
-  throw new Error('Method updateFromLoadingState() must be implemented.');
+Renderer.prototype.updateFromLoadingState = function () {
+  throw new Error("Method updateFromLoadingState() must be implemented.");
 };
-
 
 /**
  * Define abstract function updateStateFromTimeChange to be implemented in
@@ -210,10 +193,9 @@ Renderer.prototype.updateFromLoadingState = function() {
  * @member updateStateFromTimeChange
  * @abstract
  */
-Renderer.prototype.updateStateFromTimeChange = function() {
-  throw new Error('Method updateStateFromTimeChange() must be implemented.');
+Renderer.prototype.updateStateFromTimeChange = function () {
+  throw new Error("Method updateStateFromTimeChange() must be implemented.");
 };
-
 
 /**
  * Define abstract function state to be implemented in subclasses
@@ -221,10 +203,9 @@ Renderer.prototype.updateStateFromTimeChange = function() {
  * @member state
  * @abstract
  */
-Renderer.prototype.state = function() {
-  throw new Error('Method state() must be implemented.');
+Renderer.prototype.state = function () {
+  throw new Error("Method state() must be implemented.");
 };
-
 
 /**
  * Define abstract function customDraw to be implemented in subclasses
@@ -232,10 +213,9 @@ Renderer.prototype.state = function() {
  * @member customDraw
  * @abstract
  */
-Renderer.prototype.customDraw = function() {
-  throw new Error('Method customDraw() must be implemented.');
+Renderer.prototype.customDraw = function () {
+  throw new Error("Method customDraw() must be implemented.");
 };
-
 
 /**
  * Define abstract function handleBlob to be implemented in subclasses
@@ -244,10 +224,9 @@ Renderer.prototype.customDraw = function() {
  * @member handleBlob
  * @abstract
  */
-Renderer.prototype.handleBlob = function() {
-  throw new Error('Method handleBlob() must be implemented.');
+Renderer.prototype.handleBlob = function () {
+  throw new Error("Method handleBlob() must be implemented.");
 };
-
 
 /**
  * Return the original size of the underlying content (image, video).
@@ -255,10 +234,9 @@ Renderer.prototype.handleBlob = function() {
  * @return {object|null} with keys `width` and `height`, or null if the content
  *   size cannot be determined or is not applicable (e.g. for galleries)
  */
-Renderer.prototype.getContentDimensions = function() {
+Renderer.prototype.getContentDimensions = function () {
   return null;
 };
-
 
 /**
  * Emit a custom event.
@@ -267,12 +245,14 @@ Renderer.prototype.getContentDimensions = function() {
  * @param {*} args - additional arguments to pass to the Event constructor
  * @return {boolean} false if the event was cancelled
  */
-Renderer.prototype.dispatchEvent = function(eventType, {data, ...args} = {}) {
+Renderer.prototype.dispatchEvent = function (
+  eventType,
+  { data, ...args } = {}
+) {
   const e = new Event(eventType, args);
   e.data = data;
   return this.eventTarget.dispatchEvent(e);
 };
-
 
 /**
  * This function processes the overlayData
@@ -280,21 +260,20 @@ Renderer.prototype.dispatchEvent = function(eventType, {data, ...args} = {}) {
  * @member handleOverlay
  * @param {string} overlay of overlay JSON
  */
-Renderer.prototype.handleOverlay = function(overlay) {
+Renderer.prototype.handleOverlay = function (overlay) {
   if (!overlay) {
     this._overlayURL = null;
     this._overlayCanBePrepared = false;
     this._isOverlayPrepared = true;
-  } else if (typeof(overlay) === 'string') {
+  } else if (typeof overlay === "string") {
     this._overlayURL = overlay;
     this._overlayCanBePrepared = false;
     this.loadOverlay(overlay);
-  } else if (typeof(overlay) === 'object') {
+  } else if (typeof overlay === "object") {
     this._overlayData = overlay;
     this._overlayURL = null;
   }
 };
-
 
 /**
  * This function loads in the JSON file asynchronously.
@@ -302,20 +281,19 @@ Renderer.prototype.handleOverlay = function(overlay) {
  * @member loadOverlay
  * @param {string} overlayPath
  */
-Renderer.prototype.loadOverlay = function(overlayPath) {
+Renderer.prototype.loadOverlay = function (overlayPath) {
   const self = this;
   this._isOverlayPrepared = false;
   const xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
+  xmlhttp.onreadystatechange = function () {
     if (this.readyState === 4 && this.status === 200) {
       self._overlayData = JSON.parse(this.responseText);
       self.updateFromLoadingState();
     }
   };
-  xmlhttp.open('GET', overlayPath, true);
+  xmlhttp.open("GET", overlayPath, true);
   xmlhttp.send();
 };
-
 
 /**
  * This function updates the overlay data and prepares it for rendering.
@@ -324,7 +302,7 @@ Renderer.prototype.loadOverlay = function(overlayPath) {
  * @member updateOverlay
  * @param {object} overlayData
  */
-Renderer.prototype.updateOverlay = function(overlayData) {
+Renderer.prototype.updateOverlay = function (overlayData) {
   this.frameOverlay = {};
   this._overlayData = JSON.parse(JSON.stringify(overlayData));
   this._isOverlayPrepared = false;
@@ -334,7 +312,6 @@ Renderer.prototype.updateOverlay = function(overlayData) {
   }
 };
 
-
 /**
  * This function processes the overlay code and creates frame objects to be
  * drawn onto the screen.
@@ -343,20 +320,20 @@ Renderer.prototype.updateOverlay = function(overlayData) {
  * @member prepareOverlay
  * @param {json} rawjson
  */
-Renderer.prototype.prepareOverlay = function(rawjson) {
-  if ((this._isOverlayPrepared) || (this._isPreparingOverlay) || !rawjson) {
+Renderer.prototype.prepareOverlay = function (rawjson) {
+  if (this._isOverlayPrepared || this._isPreparingOverlay || !rawjson) {
     return;
   }
   this._isPreparingOverlay = true;
 
   // Format 1
-  if (typeof (rawjson.objects) !== 'undefined') {
+  if (typeof rawjson.objects !== "undefined") {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
   }
 
   // Format 2
-  if (typeof(rawjson.frames) !== 'undefined') {
+  if (typeof rawjson.frames !== "undefined") {
     const context = this.setupCanvasContext();
     const frameKeys = Object.keys(rawjson.frames);
     for (const frameKeyI in frameKeys) {
@@ -364,26 +341,36 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
         if (f && f.mask) {
-          this._prepareOverlay_auxMask(context, {mask: f.mask}, frameKey);
+          this._prepareOverlay_auxMask(context, { mask: f.mask }, frameKey);
         }
         if (f && f.masks) {
           for (const maskData of f.masks) {
-            this._prepareOverlay_auxMask(context, {
-              name: maskData.name,
-              mask: maskData.mask,
-            }, frameKey);
+            this._prepareOverlay_auxMask(
+              context,
+              {
+                name: maskData.name,
+                mask: maskData.mask,
+              },
+              frameKey
+            );
           }
         }
         if (f && f.objects && f.objects.objects) {
           this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
         }
         if (f && f.keypoints && f.keypoints.keypoints) {
-          this._prepareOverlay_auxKeypoints(context, f.keypoints.keypoints,
-              frameKey);
+          this._prepareOverlay_auxKeypoints(
+            context,
+            f.keypoints.keypoints,
+            frameKey
+          );
         }
         if (f && f.polylines && f.polylines.polylines) {
-          this._prepareOverlay_auxPolylines(context, f.polylines.polylines,
-              frameKey);
+          this._prepareOverlay_auxPolylines(
+            context,
+            f.polylines.polylines,
+            frameKey
+          );
         }
         // add all other overlays above so that this one renders on top
         if (f && f.attrs) {
@@ -393,16 +380,16 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
     }
   }
 
-  if (typeof(rawjson.mask_index) !== 'undefined') {
+  if (typeof rawjson.mask_index !== "undefined") {
     this.frameMaskIndex = rawjson.mask_index.index;
   }
 
   // Attributes and masks for images
-  if (typeof(rawjson.mask) !== 'undefined') {
+  if (typeof rawjson.mask !== "undefined") {
     const context = this.setupCanvasContext();
-    this._prepareOverlay_auxMask(context, {mask: rawjson.mask});
+    this._prepareOverlay_auxMask(context, { mask: rawjson.mask });
   }
-  if (typeof(rawjson.masks) !== 'undefined') {
+  if (typeof rawjson.masks !== "undefined") {
     const context = this.setupCanvasContext();
     for (const maskData of rawjson.masks) {
       this._prepareOverlay_auxMask(context, {
@@ -411,16 +398,20 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
       });
     }
   }
-  if (typeof(rawjson.keypoints) !== 'undefined') {
-    this._prepareOverlay_auxKeypoints(this.setupCanvasContext(),
-        rawjson.keypoints.keypoints);
+  if (typeof rawjson.keypoints !== "undefined") {
+    this._prepareOverlay_auxKeypoints(
+      this.setupCanvasContext(),
+      rawjson.keypoints.keypoints
+    );
   }
-  if (typeof(rawjson.polylines) !== 'undefined') {
-    this._prepareOverlay_auxPolylines(this.setupCanvasContext(),
-        rawjson.polylines.polylines);
+  if (typeof rawjson.polylines !== "undefined") {
+    this._prepareOverlay_auxPolylines(
+      this.setupCanvasContext(),
+      rawjson.polylines.polylines
+    );
   }
   // add all other overlays above so that this one renders on top
-  if (typeof(rawjson.attrs) !== 'undefined') {
+  if (typeof rawjson.attrs !== "undefined") {
     const context = this.setupCanvasContext();
     this._prepareOverlay_auxAttributes(context, rawjson.attrs);
   }
@@ -433,16 +424,14 @@ Renderer.prototype.prepareOverlay = function(rawjson) {
   this.updateFromDynamicState();
 };
 
-
-Renderer.prototype._reBindMouseHandler = function() {
+Renderer.prototype._reBindMouseHandler = function () {
   for (const action of Object.values(this._actionOptions)) {
-    this.eleCanvas.removeEventListener(
-        action.type, this._handleMouseEvent);
+    this.eleCanvas.removeEventListener(action.type, this._handleMouseEvent);
   }
   const eventType = this._actionOptions[this.overlayOptions.action].type;
   this.eleCanvas.addEventListener(eventType, this._handleMouseEvent);
-  if (eventType !== 'click') {
-    this.eleCanvas.addEventListener('click', this._handleMouseEvent);
+  if (eventType !== "click") {
+    this.eleCanvas.addEventListener("click", this._handleMouseEvent);
   }
 };
 
@@ -455,8 +444,11 @@ Renderer.prototype._reBindMouseHandler = function() {
  * @param {key} frameKey the frame number of the attributes (defaults to current
  *   frame)
  */
-Renderer.prototype._prepareOverlay_auxAttributes = function(context,
-    attributes, frameKey = null) {
+Renderer.prototype._prepareOverlay_auxAttributes = function (
+  context,
+  attributes,
+  frameKey = null
+) {
   const o = new FrameAttributesOverlay(attributes, this);
   o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
@@ -464,7 +456,7 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
   } else {
     // @todo remove this when video attrs are supported
     // In the meantime, this allows video labels with video attrs to load
-    if (typeof this._frameNumber !== 'undefined') {
+    if (typeof this._frameNumber !== "undefined") {
       this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
     }
   }
@@ -481,8 +473,11 @@ Renderer.prototype._prepareOverlay_auxAttributes = function(context,
  * @param {key} frameKey the frame number of the mask (defaults to current
  *   frame)
  */
-Renderer.prototype._prepareOverlay_auxMask = function(context,
-    maskData, frameKey = null) {
+Renderer.prototype._prepareOverlay_auxMask = function (
+  context,
+  maskData,
+  frameKey = null
+) {
   const o = new FrameMaskOverlay(maskData, this);
   o.setup(context, this.canvasWidth, this.canvasHeight);
   if (frameKey) {
@@ -492,9 +487,11 @@ Renderer.prototype._prepareOverlay_auxMask = function(context,
   }
 };
 
-
-Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
-    keypoints, frameKey = null) {
+Renderer.prototype._prepareOverlay_auxKeypoints = function (
+  context,
+  keypoints,
+  frameKey = null
+) {
   frameKey = parseInt(frameKey) || this._frameNumber;
   for (const k of keypoints) {
     const o = new KeypointsOverlay(k, this);
@@ -503,9 +500,11 @@ Renderer.prototype._prepareOverlay_auxKeypoints = function(context,
   }
 };
 
-
-Renderer.prototype._prepareOverlay_auxPolylines = function(context,
-    polylines, frameKey = null) {
+Renderer.prototype._prepareOverlay_auxPolylines = function (
+  context,
+  polylines,
+  frameKey = null
+) {
   frameKey = parseInt(frameKey) || this._frameNumber;
   for (const p of polylines) {
     const o = new PolylineOverlay(p, this);
@@ -513,7 +512,6 @@ Renderer.prototype._prepareOverlay_auxPolylines = function(context,
     this._prepareOverlay_auxCheckAdd(o, frameKey);
   }
 };
-
 
 /**
  * Helper function to parse one of the objects in the Format 1 of the overlay
@@ -524,12 +522,15 @@ Renderer.prototype._prepareOverlay_auxPolylines = function(context,
  * object in Format 1 above.
  * @param {bool} frameFlag forces frameNumber to be frameNumber property
  */
-Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
-    objects, frameFlag = false) {
-  if (typeof(objects) === 'undefined') {
+Renderer.prototype._prepareOverlay_auxFormat1Objects = function (
+  context,
+  objects,
+  frameFlag = false
+) {
+  if (typeof objects === "undefined") {
     return;
   }
-  if (typeof(objects.length) === 'undefined') {
+  if (typeof objects.length === "undefined") {
     objects = objects.objects;
   }
   this._overlayHasObjectAttrs = false;
@@ -549,7 +550,6 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
   this._updateOverlayOptionVisibility();
 };
 
-
 /**
  * Add the overlay to the set.
  *
@@ -558,11 +558,11 @@ Renderer.prototype._prepareOverlay_auxFormat1Objects = function(context,
  * @param {int} fn optional is the frame numnber
  * (if not provided, then the overlay o needs a frameNumber propery.
  */
-Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
+Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
   if (fn == -1) {
     fn = o.frame_number;
   }
-  if (typeof(fn) === 'undefined') {
+  if (typeof fn === "undefined") {
     fn = this._frameNumber;
   }
   if (fn in this.frameOverlay) {
@@ -572,7 +572,6 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
     this.frameOverlay[fn] = [o];
   }
 };
-
 
 /**
  * Handles the rendering of a specific frame, noting that rendering has two
@@ -585,7 +584,7 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function(o, fn = -1) {
  * canvas to avoid flickering.
  * @member processFrame
  */
-Renderer.prototype.processFrame = function() {
+Renderer.prototype.processFrame = function () {
   if (!this._isReadyProcessFrames) {
     return;
   }
@@ -595,7 +594,7 @@ Renderer.prototype.processFrame = function() {
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
-      if (this.overlayOptions.action === 'hover') {
+      if (this.overlayOptions.action === "hover") {
         this.setFocus(this._findTopOverlayAt(this._focusPos));
       }
       const fm = this.frameOverlay[this._frameNumber];
@@ -617,20 +616,20 @@ Renderer.prototype.processFrame = function() {
   }
 };
 
-Renderer.prototype.clearCanvas = function() {
-  this.eleCanvas.getContext('2d').clearRect(
-      0, 0, this.canvasWidth, this.canvasHeight);
+Renderer.prototype.clearCanvas = function () {
+  this.eleCanvas
+    .getContext("2d")
+    .clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 };
 
-Renderer.prototype._renderRest = function() {
+Renderer.prototype._renderRest = function () {
   if (this.overlayOptions.labelsOnlyOnClick) {
     return !this._focusedObject;
   }
   return true;
 };
 
-
-Renderer.prototype._findTopOverlayAt = function({x, y}) {
+Renderer.prototype._findTopOverlayAt = function ({ x, y }) {
   if (this.player._boolThumbnailMode) {
     return;
   }
@@ -638,56 +637,61 @@ Renderer.prototype._findTopOverlayAt = function({x, y}) {
   if (!objects) {
     return;
   }
-  let bestObject = undefined;
+  let containedOverlays = [];
   let bestContainsMode = Overlay.CONTAINS_NONE;
   for (let i = objects.length - 1; i >= 0; i--) {
     const object = objects[i];
     const mode = object.containsPoint(x, y);
-    if (mode > bestContainsMode) {
-      bestObject = object;
-      bestContainsMode = mode;
-      if (mode >= Overlay.CONTAINS_BORDER) { // maximum possible
-        break;
-      }
-    }
-  }
-  return bestObject;
-};
 
-
-Renderer.prototype._findOverlaysAt = function({x, y}) {
-  const objects = this.frameOverlay[this._frameNumber];
-  if (!objects) {
-    return []
-  }
-
-  if (!this._renderRest()) {
-    const overlay = this._findTopOverlayAt(this._focusPos);
-    if (overlay) {
-      return [overlay];
-    }
-    return [];
-  }
-  const containedOverlays = []
-  let bestContainsMode = Overlay.CONTAINS_NONE;
-  for (let i = objects.length - 1; i >= 0; i--) {
-    const object = objects[i];
-    const mode = object.containsPoint(x, y);
-    
     if (mode > bestContainsMode) {
       containedOverlays.push(object);
     }
   }
-  return containedOverlays;
-}
 
+  if (containedOverlays.length === 0) {
+    return;
+  }
 
-Renderer.prototype.isFocus = function(overlayObj) {
-  return this._focusedObject === overlayObj ||
-    overlayObj.index === this._focusIndex;
+  const bestIndex = argMin(
+    containedOverlays.map((o) => [o.getMouseDistance(x, y), o])
+  );
+
+  return containedOverlays[bestIndex];
 };
 
-Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
+Renderer.prototype._findOverlaysAt = function ({ x, y }) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return [];
+  }
+
+  let containedOverlays = [];
+  let bestContainsMode = Overlay.CONTAINS_NONE;
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
+    const mode = object.containsPoint(x, y);
+
+    if (mode > bestContainsMode) {
+      containedOverlays.push(object);
+    }
+  }
+  let containedOverlays = containedOverlays
+    .map((o) => [o.getMouseDistance(x, y), o])
+    .sort((a, b) => a[0] - b[0])
+    .map((t) => t[1]);
+  if (!this._renderRest() && containedOverlays.length) {
+    return [containedOverlays[0]];
+  }
+  return containedOverlays;
+};
+
+Renderer.prototype.isFocus = function (overlayObj) {
+  return (
+    this._focusedObject === overlayObj || overlayObj.index === this._focusIndex
+  );
+};
+
+Renderer.prototype.setFocus = function (overlayObj, position = undefined) {
   if (!this._canFocus) {
     overlayObj = position = undefined;
   }
@@ -707,8 +711,7 @@ Renderer.prototype.setFocus = function(overlayObj, position=undefined) {
   return false;
 };
 
-
-Renderer.prototype._handleMouseEvent = function(e) {
+Renderer.prototype._handleMouseEvent = function (e) {
   const eventType = e.type.toLowerCase();
   const rect = e.target.getBoundingClientRect();
   // calculate relative to top left of canvas
@@ -718,16 +721,18 @@ Renderer.prototype._handleMouseEvent = function(e) {
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
 
-  const overlayObj = this._findTopOverlayAt({x, y});
-  if (eventType === 'click' &&
-      overlayObj &&
-      overlayObj.constructor === ObjectOverlay &&
-      overlayObj.index === undefined) {
+  const overlayObj = this._findTopOverlayAt({ x, y });
+  if (
+    eventType === "click" &&
+    overlayObj &&
+    overlayObj.constructor === ObjectOverlay &&
+    overlayObj.index === undefined
+  ) {
     // for now, allow clicking on objects without IDs
     // @todo only allow this for images?
   }
-  if (eventType === 'click' && overlayObj && overlayObj.isSelectable()) {
-    this.dispatchEvent('select', {
+  if (eventType === "click" && overlayObj && overlayObj.isSelectable()) {
+    this.dispatchEvent("select", {
       data: {
         id: overlayObj.id,
         name: overlayObj.name,
@@ -736,40 +741,40 @@ Renderer.prototype._handleMouseEvent = function(e) {
   }
 
   const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
-  const mousemove = eventType === 'mousemove';
+  const mousemove = eventType === "mousemove";
   const notThumbnail = !this.player._boolThumbnailMode;
   if (pausedOrImage && mousemove && notThumbnail) {
-    
-    const results = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
+    const results = this._findOverlaysAt({ x, y }).map((o) =>
+      o.getPointInfo(x, y)
+    );
     const overlayPointInfos = results.reduce((acc, cur) => {
-    	if (Array.isArray(cur)) {
-	    return [...acc, ...cur];
-	}
-	return [...acc, cur];
-    },[]);
-    const {height, width} = this.getContentDimensions();
-    const pointY = Math.floor(y / this.canvasHeight * this.height);
-    const pointX = Math.floor(x / this.canvasWidth * width);
-    this.dispatchEvent('tooltipinfo', {
-      data: {
-	overlays: overlayPointInfos,
-        point: [pointX, pointY]
+      if (Array.isArray(cur)) {
+        return [...acc, ...cur];
       }
+      return [...acc, cur];
+    }, []);
+    const { height, width } = this.getContentDimensions();
+    const pointY = Math.floor((y / this.canvasHeight) * this.height);
+    const pointX = Math.floor((x / this.canvasWidth) * width);
+    this.dispatchEvent("tooltipinfo", {
+      data: {
+        overlays: overlayPointInfos,
+        point: [pointX, pointY],
+      },
     });
   }
 
-  if (this.setFocus(overlayObj, {x, y})) {
+  if (this.setFocus(overlayObj, { x, y })) {
     this.processFrame();
   }
 };
-
 
 /**
  * Handle a keyboard event
  * @param {Event} e
  * @return {boolean} true if the event was handled and should not be propagated
  */
-Renderer.prototype._handleKeyboardEvent = function(e) {
+Renderer.prototype._handleKeyboardEvent = function (e) {
   // esc: hide settings
   if (e.keyCode === 27 && this._boolShowVideoOptions) {
     this._boolShowVideoOptions = false;
@@ -778,7 +783,7 @@ Renderer.prototype._handleKeyboardEvent = function(e) {
     return true;
   }
   // s: toggle settings
-  if (e.key === 's') {
+  if (e.key === "s") {
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
     this._repositionOptionsPanel();
     this.updateFromDynamicState();
@@ -786,16 +791,14 @@ Renderer.prototype._handleKeyboardEvent = function(e) {
   }
 };
 
-
 /**
  * Called when the player loses focus
  */
-Renderer.prototype._handleFocusLost = function() {
+Renderer.prototype._handleFocusLost = function () {
   this._boolShowVideoOptions = false;
   this._boolShowControls = false;
   this.updateFromDynamicState();
 };
-
 
 /**
  * Used by overlay rendering code.
@@ -804,15 +807,14 @@ Renderer.prototype._handleFocusLost = function() {
  * @param {int} h is font height
  * @return {int} h is the current height
  */
-Renderer.prototype.checkFontHeight = function(h) {
+Renderer.prototype.checkFontHeight = function (h) {
   if (h == 0) {
     /* eslint-disable-next-line no-console */
-    console.log('PLAYER51 WARN: fontheight 0');
+    console.log("PLAYER51 WARN: fontheight 0");
     return 10;
   }
   return h;
 };
-
 
 /**
  * Return media extension
@@ -820,8 +822,8 @@ Renderer.prototype.checkFontHeight = function(h) {
  * @member getExtension
  * @return {string} extension
  */
-Renderer.prototype.getExtension = function() {
-  const tmp = this.media.type.split('/');
+Renderer.prototype.getExtension = function () {
+  const tmp = this.media.type.split("/");
   return tmp.slice(-1)[0];
 };
 
@@ -832,11 +834,10 @@ Renderer.prototype.getExtension = function() {
  * @param {path} path
  * @return {string} extension
  */
-Renderer.prototype.getFileExtension = function(path) {
-  const tmp = path.split('.');
+Renderer.prototype.getFileExtension = function (path) {
+  const tmp = path.split(".");
   return tmp.slice(-1)[0];
 };
-
 
 /**
  * Check image extension
@@ -845,11 +846,10 @@ Renderer.prototype.getFileExtension = function(path) {
  * @param {string} extension
  * @return {bool}
  */
-Renderer.prototype.checkImageExtension = function(extension) {
-  const validImageTypes = ['png', 'jpg', 'gif', 'jpeg', 'bmp'];
+Renderer.prototype.checkImageExtension = function (extension) {
+  const validImageTypes = ["png", "jpg", "gif", "jpeg", "bmp"];
   return validImageTypes.includes(extension.toLowerCase());
 };
-
 
 /**
  * Checks for MACOSX from mac created zips.
@@ -858,11 +858,10 @@ Renderer.prototype.checkImageExtension = function(extension) {
  * @param {path} filename
  * @return {bool}
  */
-Renderer.prototype.checkMACOSX = function(filename) {
-  const elements = filename.split('/');
-  return elements.includes('__MACOSX');
+Renderer.prototype.checkMACOSX = function (filename) {
+  const elements = filename.split("/");
+  return elements.includes("__MACOSX");
 };
-
 
 /**
  * Opens up media and stores filenames in imageFiles by
@@ -871,12 +870,12 @@ Renderer.prototype.checkMACOSX = function(filename) {
  * @member openContents
  * @required media.src needs to be a zip file
  */
-Renderer.prototype.openContents = function() {
+Renderer.prototype.openContents = function () {
   const zipPath = this.media.src;
   const self = this;
   this._boolZipReady = false;
   const xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
+  xmlhttp.onreadystatechange = function () {
     if (this.readyState === 4 && this.status === 200) {
       const zipBlob = this.response;
       self.readBlob(zipBlob);
@@ -885,11 +884,10 @@ Renderer.prototype.openContents = function() {
       self.updateFromLoadingState();
     }
   };
-  xmlhttp.responseType = 'blob';
-  xmlhttp.open('GET', zipPath, true);
+  xmlhttp.responseType = "blob";
+  xmlhttp.open("GET", zipPath, true);
   xmlhttp.send();
 };
-
 
 /**
  * Reads the zip blob into files
@@ -897,42 +895,49 @@ Renderer.prototype.openContents = function() {
  * @member readBlob
  * @param {blob} blob
  */
-Renderer.prototype.readBlob = function(blob) {
+Renderer.prototype.readBlob = function (blob) {
   const self = this;
-  this.reader.createReader(new this.reader.BlobReader(blob), function(reader) {
-    reader.getEntries(function(entries) {
-      entries.forEach(function(item) {
-        const filename = item.filename;
-        const extension = self.getFileExtension(filename);
-        if (self.checkImageExtension(extension) &&
-        !self.checkMACOSX(filename)) {
-          item.getData(new self.reader.BlobWriter(), function(content) {
-            self.handleBlob(content, filename);
+  this.reader.createReader(
+    new this.reader.BlobReader(blob),
+    function (reader) {
+      reader.getEntries(
+        function (entries) {
+          entries.forEach(function (item) {
+            const filename = item.filename;
+            const extension = self.getFileExtension(filename);
+            if (
+              self.checkImageExtension(extension) &&
+              !self.checkMACOSX(filename)
+            ) {
+              item.getData(new self.reader.BlobWriter(), function (content) {
+                self.handleBlob(content, filename);
+              });
+            }
           });
+        },
+        function (error) {
+          /* eslint-disable-next-line no-console */
+          console.log(error);
         }
-      });
-    }, function(error) {
+      );
+    },
+    function (error) {
       /* eslint-disable-next-line no-console */
       console.log(error);
-    });
-  }, function(error) {
-    /* eslint-disable-next-line no-console */
-    console.log(error);
-  });
+    }
+  );
 };
-
 
 /**
  * This function checks if player is set
  *
  * @member checkPlayer
  */
-Renderer.prototype.checkPlayer = function() {
-  if (typeof(this.player) === 'undefined') {
-    throw new TypeError('Player not set.');
+Renderer.prototype.checkPlayer = function () {
+  if (typeof this.player === "undefined") {
+    throw new TypeError("Player not set.");
   }
 };
-
 
 /**
  * This function sets the player
@@ -940,26 +945,24 @@ Renderer.prototype.checkPlayer = function() {
  * @member setPlayer
  * @param {player} player
  */
-Renderer.prototype.setPlayer = function(player) {
+Renderer.prototype.setPlayer = function (player) {
   this.player = player;
 };
-
 
 /**
  * This function checks if parent and media are set
  *
  * @member checkParentandMedia
  */
-Renderer.prototype.checkParentandMedia = function() {
-  if (typeof(this.parent) === 'undefined') {
-    throw new TypeError('Parent not set.');
+Renderer.prototype.checkParentandMedia = function () {
+  if (typeof this.parent === "undefined") {
+    throw new TypeError("Parent not set.");
   }
 
-  if (typeof(this.media) === 'undefined') {
-    throw new TypeError('Media not set.');
+  if (typeof this.media === "undefined") {
+    throw new TypeError("Media not set.");
   }
 };
-
 
 /**
  * This function sets the parent of the media to be loaded.
@@ -968,28 +971,27 @@ Renderer.prototype.checkParentandMedia = function() {
  * @param {domElement} parentElement String Id of the parentElement or actual
  * Div object.
  */
-Renderer.prototype.setParentofMedia = function(parentElement) {
-  if (typeof(parentElement) === 'string') {
+Renderer.prototype.setParentofMedia = function (parentElement) {
+  if (typeof parentElement === "string") {
     this.parent = document.getElementById(parentElement);
   } else {
     this.parent = parentElement;
   }
 };
 
-
 /**
  * This function checks if parent is borderBox
  *
  * @member checkBorderBox
  */
-Renderer.prototype.checkBorderBox = function() {
-  const cBS = window.getComputedStyle(this.parent, null).getPropertyValue(
-      'box-sizing');
-  if (cBS === 'border-box') {
+Renderer.prototype.checkBorderBox = function () {
+  const cBS = window
+    .getComputedStyle(this.parent, null)
+    .getPropertyValue("box-sizing");
+  if (cBS === "border-box") {
     this._boolBorderBox = true;
   }
 };
-
 
 /**
  * This function loads a canvas in parent
@@ -997,16 +999,15 @@ Renderer.prototype.checkBorderBox = function() {
  * @member initCanvas
  * @required setParentandMedia called beforehand
  */
-Renderer.prototype.initCanvas = function() {
+Renderer.prototype.initCanvas = function () {
   this.checkParentandMedia();
-  this.eleDivCanvas = document.createElement('div');
-  this.eleDivCanvas.className = 'p51-contained-canvas';
-  this.eleCanvas = document.createElement('canvas');
-  this.eleCanvas.className = 'p51-contained-canvas';
+  this.eleDivCanvas = document.createElement("div");
+  this.eleDivCanvas.className = "p51-contained-canvas";
+  this.eleCanvas = document.createElement("canvas");
+  this.eleCanvas.className = "p51-contained-canvas";
   this.eleDivCanvas.appendChild(this.eleCanvas);
   this.parent.appendChild(this.eleDivCanvas);
 };
-
 
 /**
  * Set up the canvas context for default styles.
@@ -1015,24 +1016,24 @@ Renderer.prototype.initCanvas = function() {
  * @required the viewer needs to be rendered
  * @return {canvas} context
  */
-Renderer.prototype.setupCanvasContext = function() {
+Renderer.prototype.setupCanvasContext = function () {
   this.checkPlayer();
   if (!this._isRendered) {
     /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: trying to set up canvas context but player not rendered');
+      "WARN: trying to set up canvas context but player not rendered"
+    );
     return;
   }
-  const canvasContext = this.eleCanvas.getContext('2d');
-  canvasContext.strokeStyle = '#fff';
-  canvasContext.fillStyle = '#fff';
+  const canvasContext = this.eleCanvas.getContext("2d");
+  canvasContext.strokeStyle = "#fff";
+  canvasContext.fillStyle = "#fff";
   canvasContext.lineWidth = 3;
-  canvasContext.font = '14px sans-serif';
+  canvasContext.font = "14px sans-serif";
   // easier for setting offsets
-  canvasContext.textBaseline = 'bottom';
+  canvasContext.textBaseline = "bottom";
   return canvasContext;
 };
-
 
 /**
  * This function loads shared UI controls
@@ -1040,137 +1041,129 @@ Renderer.prototype.setupCanvasContext = function() {
  * @member initSharedControls
  * @required player to be set
  */
-Renderer.prototype.initSharedControls = function() {
+Renderer.prototype.initSharedControls = function () {
   this.checkPlayer();
-  if (typeof(this.player._thumbnailClickAction) !== 'undefined') {
-    this.parent.addEventListener('click', this.player._thumbnailClickAction);
+  if (typeof this.player._thumbnailClickAction !== "undefined") {
+    this.parent.addEventListener("click", this.player._thumbnailClickAction);
   }
   if (this.eleOptionsButton) {
     this.initPlayerOptionsControls();
   }
 };
 
-
-Renderer.prototype.initPlayerControlHTML = function(parent, sequence=true) {
-  this.eleDivVideoControls = document.createElement('div');
-  this.eleDivVideoControls.className = 'p51-video-controls';
+Renderer.prototype.initPlayerControlHTML = function (parent, sequence = true) {
+  this.eleDivVideoControls = document.createElement("div");
+  this.eleDivVideoControls.className = "p51-video-controls";
   if (sequence) {
     this.initPlayerControlsPlayButtonHTML(this.eleDivVideoControls);
     this.initPlayerControlsSeekBarHTML(this.eleDivVideoControls);
   }
   this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
   this.initTimeStampHTML(this.eleDivVideoControls);
-  this.eleDivVideoControls.addEventListener('click',
-    () => {
-      this._boolShowControls = false;
-      this.updateControlsDisplayState();
-    }
-  );
+  this.eleDivVideoControls.addEventListener("click", () => {
+    this._boolShowControls = false;
+    this.updateControlsDisplayState();
+  });
   const hideTooltip = () => {
-    this.dispatchEvent('tooltipinfo', {
+    this.dispatchEvent("tooltipinfo", {
       data: {
-	overlays: [],
-	point: [0, 0]
-      }
+        overlays: [],
+        point: [0, 0],
+      },
     });
-  }
-  this.eleDivVideoControls.addEventListener('mouseenter',
-    () => {
-       this._boolHoveringControls = true;
-       hideTooltip();
-     }
-  );
-  this.eleDivVideoControls.addEventListener('mouseleave',
-    () => {
-       this._boolHoveringControls = false;
-     }
-  );
+  };
+  this.eleDivVideoControls.addEventListener("mouseenter", () => {
+    this._boolHoveringControls = true;
+    hideTooltip();
+  });
+  this.eleDivVideoControls.addEventListener("mouseleave", () => {
+    this._boolHoveringControls = false;
+  });
   parent.appendChild(this.eleDivVideoControls);
   this.initPlayerOptionsPanelHTML(parent);
 };
 
-Renderer.prototype.initPlayerControlsPlayButtonHTML = function(parent) {
-  this.elePlayPauseButton = document.createElement('img');
-  this.elePlayPauseButton.className = 'p51-clickable';
-  this.elePlayPauseButton.style.gridArea = '2 / 2 / 2 / 2';
+Renderer.prototype.initPlayerControlsPlayButtonHTML = function (parent) {
+  this.elePlayPauseButton = document.createElement("img");
+  this.elePlayPauseButton.className = "p51-clickable";
+  this.elePlayPauseButton.style.gridArea = "2 / 2 / 2 / 2";
   this.updatePlayButton(false);
   parent.appendChild(this.elePlayPauseButton);
 };
 
-Renderer.prototype.initPlayerControlsSeekBarHTML = function(parent) {
-  this.eleSeekBar = document.createElement('input');
-  this.eleSeekBar.setAttribute('type', 'range');
-  this.eleSeekBar.setAttribute('value', '0');
-  this.eleSeekBar.setAttribute('min', '0');
-  this.eleSeekBar.setAttribute('max', this.seekBarMax.toString());
-  this.eleSeekBar.className = 'p51-seek-bar';
-  this.eleSeekBar.style.gridArea = '1 / 2 / 1 / 6';
+Renderer.prototype.initPlayerControlsSeekBarHTML = function (parent) {
+  this.eleSeekBar = document.createElement("input");
+  this.eleSeekBar.setAttribute("type", "range");
+  this.eleSeekBar.setAttribute("value", "0");
+  this.eleSeekBar.setAttribute("min", "0");
+  this.eleSeekBar.setAttribute("max", this.seekBarMax.toString());
+  this.eleSeekBar.className = "p51-seek-bar";
+  this.eleSeekBar.style.gridArea = "1 / 2 / 1 / 6";
   parent.appendChild(this.eleSeekBar);
 };
 
-Renderer.prototype.initTimeStampHTML = function(parent) {
-  this.eleTimeStamp = document.createElement('div');
-  this.eleTimeStamp.className = 'p51-time';
-  this.eleTimeStamp.style.gridArea = '2 / 3 / 2 / 3';
+Renderer.prototype.initTimeStampHTML = function (parent) {
+  this.eleTimeStamp = document.createElement("div");
+  this.eleTimeStamp.className = "p51-time";
+  this.eleTimeStamp.style.gridArea = "2 / 3 / 2 / 3";
   parent.appendChild(this.eleTimeStamp);
 };
 
-Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
-  this.eleOptionsButton = document.createElement('img');
-  this.eleOptionsButton.className = 'p51-clickable';
+Renderer.prototype.initPlayerControlOptionsButtonHTML = function (parent) {
+  this.eleOptionsButton = document.createElement("img");
+  this.eleOptionsButton.className = "p51-clickable";
   this.eleOptionsButton.src = ICONS.options;
-  this.eleOptionsButton.title = 'Settings (s)';
-  this.eleOptionsButton.style.gridArea = '2 / 5 / 2 / 5';
+  this.eleOptionsButton.title = "Settings (s)";
+  this.eleOptionsButton.style.gridArea = "2 / 5 / 2 / 5";
   parent.appendChild(this.eleOptionsButton);
 };
 
-Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
-  this.eleDivVideoOpts = document.createElement('div');
-  this.eleDivVideoOpts.className = 'p51-video-options-panel';
+Renderer.prototype.initPlayerOptionsPanelHTML = function (parent) {
+  this.eleDivVideoOpts = document.createElement("div");
+  this.eleDivVideoOpts.className = "p51-video-options-panel";
   const hideTooltip = () => {
-    this.dispatchEvent('tooltipinfo', {
+    this.dispatchEvent("tooltipinfo", {
       data: {
-	overlays: [],
-	point: [0, 0]
-      }
+        overlays: [],
+        point: [0, 0],
+      },
     });
-  }
-  this.eleDivVideoOpts.addEventListener("mouseenter",
-    () => {
-      this._boolHoveringControls = true;
-       hideTooltip();
-    }
-  );
-  this.eleDivVideoOpts.addEventListener("mouseleave",
-    () => this._boolHoveringControls = false
+  };
+  this.eleDivVideoOpts.addEventListener("mouseenter", () => {
+    this._boolHoveringControls = true;
+    hideTooltip();
+  });
+  this.eleDivVideoOpts.addEventListener(
+    "mouseleave",
+    () => (this._boolHoveringControls = false)
   );
 
-  const makeSectionHeader = function(text) {
-    const header = document.createElement('b');
-    header.className = 'p51-section-header';
+  const makeSectionHeader = function (text) {
+    const header = document.createElement("b");
+    header.className = "p51-section-header";
     header.innerText = text;
     return header;
   };
 
-  const makeWrapper = function(children) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'p51-video-opt-input';
+  const makeWrapper = function (children) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "p51-video-opt-input";
     for (const child of children) {
       wrapper.appendChild(child);
     }
     return wrapper;
   };
 
-  const makeCheckboxRow = function(text, checked) {
-    const label = document.createElement('label');
-    label.className = 'p51-label';
+  const makeCheckboxRow = function (text, checked) {
+    const label = document.createElement("label");
+    label.className = "p51-label";
     label.innerHTML = text;
 
-    const checkbox = document.createElement('input');
-    checkbox.setAttribute('type', 'checkbox');
+    const checkbox = document.createElement("input");
+    checkbox.setAttribute("type", "checkbox");
     checkbox.checked = checked;
-    const span = document.createElement('span');
-    span.className = 'p51-checkbox';
+    const span = document.createElement("span");
+    span.className = "p51-checkbox";
     label.appendChild(checkbox);
     label.appendChild(span);
 
@@ -1179,46 +1172,45 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox to show frames instead of time
   const eleOptCtlFrameCountRow = makeCheckboxRow(
-      'Show frame number', this.overlayOptions.showFrameCount);
-  this.eleOptCtlShowFrameCount =
-      eleOptCtlFrameCountRow.querySelector('input[type=checkbox]');
-  this.eleOptCtlShowFrameCountWrapper = makeWrapper([
-    eleOptCtlFrameCountRow,
-  ]);
-  this._overlayOptionWrappers.showFrameCount =
-      this.eleOptCtlShowFrameCountWrapper;
-
+    "Show frame number",
+    this.overlayOptions.showFrameCount
+  );
+  this.eleOptCtlShowFrameCount = eleOptCtlFrameCountRow.querySelector(
+    "input[type=checkbox]"
+  );
+  this.eleOptCtlShowFrameCountWrapper = makeWrapper([eleOptCtlFrameCountRow]);
+  this._overlayOptionWrappers.showFrameCount = this.eleOptCtlShowFrameCountWrapper;
 
   // Checkbox for show label on click only
   const eleOptCtlShowLabelRow = makeCheckboxRow(
-      'Only show clicked object', this.overlayOptions.labelsOnlyOnClick);
-  this.eleOptCtlShowLabel =
-      eleOptCtlShowLabelRow.querySelector('input[type=checkbox]');
-  this.eleOptCtlShowLabelWrapper = makeWrapper([
-    eleOptCtlShowLabelRow,
-  ]);
-  this._overlayOptionWrappers.labelsOnlyOnClick =
-      this.eleOptCtlShowLabelWrapper;
+    "Only show clicked object",
+    this.overlayOptions.labelsOnlyOnClick
+  );
+  this.eleOptCtlShowLabel = eleOptCtlShowLabelRow.querySelector(
+    "input[type=checkbox]"
+  );
+  this.eleOptCtlShowLabelWrapper = makeWrapper([eleOptCtlShowLabelRow]);
+  this._overlayOptionWrappers.labelsOnlyOnClick = this.eleOptCtlShowLabelWrapper;
 
   // Selection for action type
-  this.eleActionCtlOptForm = document.createElement('form');
-  this.eleActionCtlOptForm.className = 'p51-video-opt-input';
-  const actionFormTitle = document.createElement('div');
-  actionFormTitle.appendChild(makeSectionHeader('Object selection mode'));
+  this.eleActionCtlOptForm = document.createElement("form");
+  this.eleActionCtlOptForm.className = "p51-video-opt-input";
+  const actionFormTitle = document.createElement("div");
+  actionFormTitle.appendChild(makeSectionHeader("Object selection mode"));
   this.eleActionCtlOptForm.appendChild(actionFormTitle);
-  this.eleActionCtlOptForm.appendChild(document.createElement('div'));
+  this.eleActionCtlOptForm.appendChild(document.createElement("div"));
   for (const [key, obj] of Object.entries(this._actionOptions)) {
-    const radio = document.createElement('input');
-    radio.setAttribute('type', 'radio');
-    radio.name = 'selectActionOpt';
+    const radio = document.createElement("input");
+    radio.setAttribute("type", "radio");
+    radio.name = "selectActionOpt";
     radio.value = key;
     radio.checked = this.overlayOptions.action === key;
-    const label = document.createElement('label');
+    const label = document.createElement("label");
     label.innerHTML = obj.name;
-    label.className = 'p51-label';
+    label.className = "p51-label";
     label.appendChild(radio);
-    const span = document.createElement('span');
-    span.className = 'p51-radio';
+    const span = document.createElement("span");
+    span.className = "p51-radio";
     label.appendChild(span);
     this.eleActionCtlOptForm.appendChild(label);
   }
@@ -1226,67 +1218,69 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
 
   // Checkbox for show confidence
   const eleOptCtlShowConfidenceRow = makeCheckboxRow(
-      'Show confidence', this.overlayOptions.showConfidence);
-  this.eleOptCtlShowConfidence =
-      eleOptCtlShowConfidenceRow.querySelector('input[type=checkbox]');
+    "Show confidence",
+    this.overlayOptions.showConfidence
+  );
+  this.eleOptCtlShowConfidence = eleOptCtlShowConfidenceRow.querySelector(
+    "input[type=checkbox]"
+  );
   this.eleOptCtlShowConfidenceWrapper = makeWrapper([
     eleOptCtlShowConfidenceRow,
   ]);
-  this._overlayOptionWrappers.showConfidence =
-      this.eleOptCtlShowConfidenceWrapper;
+  this._overlayOptionWrappers.showConfidence = this.eleOptCtlShowConfidenceWrapper;
 
   // Checkbox for show attrs
   const eleOptCtlShowAttrRow = makeCheckboxRow(
-      'Show attributes', this.overlayOptions.showAttrs);
-  this.eleOptCtlShowAttr =
-      eleOptCtlShowAttrRow.querySelector('input[type=checkbox]');
-  this.eleOptCtlShowAttrWrapper = makeWrapper([
-    eleOptCtlShowAttrRow,
-  ]);
-  this._overlayOptionWrappers.showAttrs =
-      this.eleOptCtlShowAttrWrapper;
+    "Show attributes",
+    this.overlayOptions.showAttrs
+  );
+  this.eleOptCtlShowAttr = eleOptCtlShowAttrRow.querySelector(
+    "input[type=checkbox]"
+  );
+  this.eleOptCtlShowAttrWrapper = makeWrapper([eleOptCtlShowAttrRow]);
+  this._overlayOptionWrappers.showAttrs = this.eleOptCtlShowAttrWrapper;
 
   // Checkbox for show attrs on click only
   const eleOptCtlShowAttrClickRow = makeCheckboxRow(
-      'Only show clicked attributes', this.overlayOptions.attrsOnlyOnClick);
-  this.eleOptCtlShowAttrClick =
-      eleOptCtlShowAttrClickRow.querySelector('input[type=checkbox]');
-  this.eleOptCtlShowAttrClickWrapper = makeWrapper([
-    eleOptCtlShowAttrClickRow,
-  ]);
-  this._overlayOptionWrappers.attrsOnlyOnClick =
-      this.eleOptCtlShowAttrClickWrapper;
+    "Only show clicked attributes",
+    this.overlayOptions.attrsOnlyOnClick
+  );
+  this.eleOptCtlShowAttrClick = eleOptCtlShowAttrClickRow.querySelector(
+    "input[type=checkbox]"
+  );
+  this.eleOptCtlShowAttrClickWrapper = makeWrapper([eleOptCtlShowAttrClickRow]);
+  this._overlayOptionWrappers.attrsOnlyOnClick = this.eleOptCtlShowAttrClickWrapper;
 
   // Checkbox for rendering background for attr text
   const eleOptCtlAttrBoxRow = makeCheckboxRow(
-      'Show attribute background', this.overlayOptions.attrRenderBox);
-  this.eleOptCtlShowAttrBox =
-      eleOptCtlAttrBoxRow.querySelector('input[type=checkbox]');
-  this.eleOptCtlAttrBoxWrapper = makeWrapper([
-    eleOptCtlAttrBoxRow,
-  ]);
-  this._overlayOptionWrappers.attrRenderBox =
-      this.eleOptCtlAttrBoxWrapper;
+    "Show attribute background",
+    this.overlayOptions.attrRenderBox
+  );
+  this.eleOptCtlShowAttrBox = eleOptCtlAttrBoxRow.querySelector(
+    "input[type=checkbox]"
+  );
+  this.eleOptCtlAttrBoxWrapper = makeWrapper([eleOptCtlAttrBoxRow]);
+  this._overlayOptionWrappers.attrRenderBox = this.eleOptCtlAttrBoxWrapper;
 
   // Radio for how to show attrs
-  this.eleOptCtlAttrOptForm = document.createElement('form');
-  this.eleOptCtlAttrOptForm.className = 'p51-video-opt-input';
-  const formTitle = document.createElement('div');
-  formTitle.appendChild(makeSectionHeader('Object attribute mode'));
+  this.eleOptCtlAttrOptForm = document.createElement("form");
+  this.eleOptCtlAttrOptForm.className = "p51-video-opt-input";
+  const formTitle = document.createElement("div");
+  formTitle.appendChild(makeSectionHeader("Object attribute mode"));
   this.eleOptCtlAttrOptForm.appendChild(formTitle);
-  this.eleOptCtlAttrOptForm.appendChild(document.createElement('div'));
+  this.eleOptCtlAttrOptForm.appendChild(document.createElement("div"));
   for (const item of this._attrRenderModeOptions) {
-    const radio = document.createElement('input');
-    radio.setAttribute('type', 'radio');
-    radio.name = 'attrRenderOpt';
+    const radio = document.createElement("input");
+    radio.setAttribute("type", "radio");
+    radio.name = "attrRenderOpt";
     radio.value = item.value;
     radio.checked = this.overlayOptions.attrRenderMode === item.value;
-    const label = document.createElement('label');
+    const label = document.createElement("label");
     label.innerHTML = item.name;
-    label.className = 'p51-label';
+    label.className = "p51-label";
     label.appendChild(radio);
-    const span = document.createElement('span');
-    span.className = 'p51-radio';
+    const span = document.createElement("span");
+    span.className = "p51-radio";
     label.appendChild(span);
     this.eleOptCtlAttrOptForm.appendChild(label);
   }
@@ -1316,17 +1310,18 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this._alterOptionsLabelText();
 };
 
-Renderer.prototype._repositionOptionsPanel = function() {
+Renderer.prototype._repositionOptionsPanel = function () {
   // account for control bar height and any padding
-  this.eleDivVideoOpts.style.bottom = this.eleDivVideoControls.clientHeight +
-    parseInt(this.paddingBottom) + 4 + 'px';
-  this.eleDivVideoOpts.style.right =
-    parseInt(this.paddingRight) + 'px';
+  this.eleDivVideoOpts.style.bottom =
+    this.eleDivVideoControls.clientHeight +
+    parseInt(this.paddingBottom) +
+    4 +
+    "px";
+  this.eleDivVideoOpts.style.right = parseInt(this.paddingRight) + "px";
 };
 
-
-Renderer.prototype.initPlayerOptionsControls = function() {
-  this.eleOptionsButton.addEventListener('click', (e) => {
+Renderer.prototype.initPlayerOptionsControls = function () {
+  this.eleOptionsButton.addEventListener("click", (e) => {
     e.stopPropagation();
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
     this._repositionOptionsPanel();
@@ -1334,15 +1329,17 @@ Renderer.prototype.initPlayerOptionsControls = function() {
   });
 
   const hideOptions = (e) => {
-    if (this._boolShowVideoOptions &&
-        !this.eleDivVideoOpts.contains(e.target) &&
-        !this.eleOptionsButton.contains(e.target)) {
+    if (
+      this._boolShowVideoOptions &&
+      !this.eleDivVideoOpts.contains(e.target) &&
+      !this.eleOptionsButton.contains(e.target)
+    ) {
       this._boolShowVideoOptions = false;
       this.updateFromDynamicState();
     }
   };
-  this.eleDivCanvas.addEventListener('click', hideOptions);
-  this.eleDivVideoControls.addEventListener('click', hideOptions);
+  this.eleDivCanvas.addEventListener("click", hideOptions);
+  this.eleDivVideoControls.addEventListener("click", hideOptions);
 
   const enableFocus = () => {
     this._canFocus = true;
@@ -1352,53 +1349,50 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.setFocus(undefined);
     this.processFrame();
   };
-  this.eleCanvas.addEventListener('mouseenter', enableFocus);
-  this.eleDivCanvas.addEventListener('mouseenter', enableFocus);
-  this.eleCanvas.addEventListener('mouseleave', disableFocus);
-  this.eleDivCanvas.addEventListener('mouseleave', disableFocus);
-  this.eleDivVideoControls.addEventListener('mouseenter', disableFocus);
+  this.eleCanvas.addEventListener("mouseenter", enableFocus);
+  this.eleDivCanvas.addEventListener("mouseenter", enableFocus);
+  this.eleCanvas.addEventListener("mouseleave", disableFocus);
+  this.eleDivCanvas.addEventListener("mouseleave", disableFocus);
+  this.eleDivVideoControls.addEventListener("mouseenter", disableFocus);
 
-  this.eleOptCtlShowFrameCount.addEventListener('change', () => {
+  this.eleOptCtlShowFrameCount.addEventListener("change", () => {
     this.overlayOptions.showFrameCount = this.eleOptCtlShowFrameCount.checked;
     this.processFrame();
   });
 
-  this.eleOptCtlShowLabel.addEventListener('change', () => {
-    this.overlayOptions.labelsOnlyOnClick =
-        this.eleOptCtlShowLabel.checked;
+  this.eleOptCtlShowLabel.addEventListener("change", () => {
+    this.overlayOptions.labelsOnlyOnClick = this.eleOptCtlShowLabel.checked;
     this.processFrame();
     this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowConfidence.addEventListener('change', () => {
+  this.eleOptCtlShowConfidence.addEventListener("change", () => {
     this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
     this.processFrame();
     this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowAttr.addEventListener('change', () => {
+  this.eleOptCtlShowAttr.addEventListener("change", () => {
     this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
     this.processFrame();
     this.updateFromDynamicState();
     this._repositionOptionsPanel();
   });
 
-  this.eleOptCtlShowAttrClick.addEventListener('change', () => {
-    this.overlayOptions.attrsOnlyOnClick =
-        this.eleOptCtlShowAttrClick.checked;
+  this.eleOptCtlShowAttrClick.addEventListener("change", () => {
+    this.overlayOptions.attrsOnlyOnClick = this.eleOptCtlShowAttrClick.checked;
     this.processFrame();
     this.updateFromDynamicState();
   });
 
-  this.eleOptCtlShowAttrBox.addEventListener('change', () => {
-    this.overlayOptions.attrRenderBox =
-        this.eleOptCtlShowAttrBox.checked;
+  this.eleOptCtlShowAttrBox.addEventListener("change", () => {
+    this.overlayOptions.attrRenderBox = this.eleOptCtlShowAttrBox.checked;
     this.processFrame();
     this.updateFromDynamicState();
   });
 
   for (const radio of this.eleOptCtlAttrOptForm) {
-    radio.addEventListener('change', () => {
+    radio.addEventListener("change", () => {
       if (radio.value !== this.overlayOptions.attrRenderMode) {
         this.overlayOptions.attrRenderMode = radio.value;
         this._alterOptionsLabelText();
@@ -1409,7 +1403,7 @@ Renderer.prototype.initPlayerOptionsControls = function() {
   }
 
   for (const radio of this.eleActionCtlOptForm) {
-    radio.addEventListener('change', () => {
+    radio.addEventListener("change", () => {
       if (radio.value !== this.overlayOptions.action) {
         this.overlayOptions.action = radio.value;
         this._alterOptionsLabelText();
@@ -1421,25 +1415,28 @@ Renderer.prototype.initPlayerOptionsControls = function() {
   }
 };
 
-Renderer.prototype._alterOptionsLabelText = function() {
+Renderer.prototype._alterOptionsLabelText = function () {
   const getTextNode = (nodes) => {
     for (const node of nodes) {
-      if (node.nodeName === '#text') {
+      if (node.nodeName === "#text") {
         return node;
       }
     }
   };
   let textNode = getTextNode(
-      this.eleOptCtlShowAttrClickWrapper.querySelector('label').childNodes);
-  textNode.textContent = 'Only show ' +
+    this.eleOptCtlShowAttrClickWrapper.querySelector("label").childNodes
+  );
+  textNode.textContent =
+    "Only show " +
     `${this._actionOptions[this.overlayOptions.action].labelText} attributes`;
 
   textNode = getTextNode(
-      this.eleOptCtlShowLabelWrapper.querySelector('label').childNodes);
-  textNode.textContent = 'Only show ' +
+    this.eleOptCtlShowLabelWrapper.querySelector("label").childNodes
+  );
+  textNode.textContent =
+    "Only show " +
     `${this._actionOptions[this.overlayOptions.action].labelText} object`;
 };
-
 
 /**
  * This function returns if the mouseEvent target is inside any of the player
@@ -1448,7 +1445,7 @@ Renderer.prototype._alterOptionsLabelText = function() {
  * @param {MouseEvent} e - mouseEvent from eventHandler
  * @return {Boolean} if contained
  */
-Renderer.prototype.checkMouseOnControls = function(e) {
+Renderer.prototype.checkMouseOnControls = function (e) {
   if (this.eleDivVideoControls && this.eleDivVideoControls.contains(e.target)) {
     return true;
   } else if (this.eleDivVideoOpts && this.eleDivVideoOpts.contains(e.target)) {
@@ -1464,15 +1461,15 @@ Renderer.prototype.checkMouseOnControls = function(e) {
  * @member updateControlsDisplayState
  * @required the viewer must be rendered.
  */
-Renderer.prototype.updateControlsDisplayState = function() {
+Renderer.prototype.updateControlsDisplayState = function () {
   if (!this.eleDivVideoControls) {
     return;
   }
   if (this._boolShowControls) {
-    this.eleDivVideoControls.style.opacity = '0.9';
-    this.eleDivVideoControls.style.height = 'unset';
+    this.eleDivVideoControls.style.opacity = "0.9";
+    this.eleDivVideoControls.style.height = "unset";
   } else {
-    this.eleDivVideoControls.style.opacity = '0.0';
+    this.eleDivVideoControls.style.opacity = "0.0";
     this.eleDivVideoControls.style.height = 0;
     if (this.player._boolThumbnailMode) {
       this.eleDivVideoControls.remove();
@@ -1481,16 +1478,16 @@ Renderer.prototype.updateControlsDisplayState = function() {
   this._updateOptionsDisplayState();
 };
 
-Renderer.prototype._updateOptionsDisplayState = function() {
+Renderer.prototype._updateOptionsDisplayState = function () {
   if (!this.eleDivVideoOpts) {
     return;
   }
   if (this._boolShowVideoOptions && this._boolShowControls) {
-    this.eleDivVideoOpts.style.opacity = '0.9';
-    this.eleDivVideoOpts.classList.remove('p51-display-none');
+    this.eleDivVideoOpts.style.opacity = "0.9";
+    this.eleDivVideoOpts.classList.remove("p51-display-none");
   } else {
-    this.eleDivVideoOpts.style.opacity = '0.0';
-    this.eleDivVideoOpts.classList.add('p51-display-none');
+    this.eleDivVideoOpts.style.opacity = "0.0";
+    this.eleDivVideoOpts.classList.add("p51-display-none");
     if (this.player._boolThumbnailMode) {
       this.eleDivVideoOpts.remove();
     }
@@ -1498,36 +1495,41 @@ Renderer.prototype._updateOptionsDisplayState = function() {
   this._updateOverlayOptionVisibility();
 };
 
-Renderer.prototype._updateOverlayOptionVisibility = function() {
+Renderer.prototype._updateOverlayOptionVisibility = function () {
   this.eleOptCtlShowAttrWrapper.classList.toggle(
-      'hidden', !this._overlayHasObjectAttrs);
-  this.attrOptsElements.forEach((e) => e.classList.toggle(
-      'hidden',
-      !this._overlayHasObjectAttrs || !this.overlayOptions.showAttrs));
+    "hidden",
+    !this._overlayHasObjectAttrs
+  );
+  this.attrOptsElements.forEach((e) =>
+    e.classList.toggle(
+      "hidden",
+      !this._overlayHasObjectAttrs || !this.overlayOptions.showAttrs
+    )
+  );
   for (const [key, wrapper] of Object.entries(this._overlayOptionWrappers)) {
     if (this.options.enableOverlayOptions[key] === false) {
-      wrapper.classList.add('hidden');
+      wrapper.classList.add("hidden");
     }
   }
 };
 
-Renderer.prototype.hasFrameNumbers = function() {
+Renderer.prototype.hasFrameNumbers = function () {
   return this._hasOverlay;
 };
 
-Renderer.prototype.updatePlayButton = function(playing) {
+Renderer.prototype.updatePlayButton = function (playing) {
   if (this.elePlayPauseButton) {
     if (playing) {
       this.elePlayPauseButton.src = ICONS.pause;
-      this.elePlayPauseButton.title = 'Pause (space)';
+      this.elePlayPauseButton.title = "Pause (space)";
     } else {
       this.elePlayPauseButton.src = ICONS.play;
-      this.elePlayPauseButton.title = 'Play (space)';
+      this.elePlayPauseButton.title = "Play (space)";
     }
   }
 };
 
-Renderer.prototype.updateTimeStamp = function(timeStr) {
+Renderer.prototype.updateTimeStamp = function (timeStr) {
   if (!this.eleTimeStamp) {
     return;
   }
@@ -1540,7 +1542,7 @@ Renderer.prototype.updateTimeStamp = function(timeStr) {
  * @member updateSizeAndPadding
  * @required the viewer must be rendered.
  */
-Renderer.prototype.updateSizeAndPadding = function() {
+Renderer.prototype.updateSizeAndPadding = function () {
   this.checkPlayer();
   this.checkParentandMedia();
   this.handleWidthAndHeight();
@@ -1548,14 +1550,13 @@ Renderer.prototype.updateSizeAndPadding = function() {
   this._isSizePrepared = true;
 };
 
-
 /**
  * This function updates the size and padding based on parent
  *
  * @member updateSizeAndPaddingByParent
  * @required the viewer must be rendered.
  */
-Renderer.prototype.updateSizeAndPaddingByParent = function() {
+Renderer.prototype.updateSizeAndPaddingByParent = function () {
   this.checkPlayer();
   this.checkParentandMedia();
   this.determineMediaDimensions();
@@ -1564,7 +1565,6 @@ Renderer.prototype.updateSizeAndPaddingByParent = function() {
   this._isSizePrepared = true;
 };
 
-
 /**
  * This method is a helper function that computes necessary padding and
  * width/height and sets the media element.
@@ -1572,46 +1572,56 @@ Renderer.prototype.updateSizeAndPaddingByParent = function() {
  * @member handleWidthAndHeight
  * @required the viewer must be rendered.
  */
-Renderer.prototype.handleWidthAndHeight = function() {
+Renderer.prototype.handleWidthAndHeight = function () {
   if (!this._isRendered) {
     /* eslint-disable-next-line no-console */
     console.log(
-        'WARN: Player51 trying to update size, but it is not rendered.');
+      "WARN: Player51 trying to update size, but it is not rendered."
+    );
     return;
   }
 
   this.determineMediaDimensions();
 
-  this.paddingLeft = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-left');
-  this.paddingRight = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-right');
-  this.paddingTop = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-top');
-  this.paddingBottom = window.getComputedStyle(this.parent, null)
-      .getPropertyValue('padding-bottom');
-  this.paddingLeftN = parseInt(this.paddingLeft.substr(0, this.paddingLeft
-      .length - 2));
-  this.paddingRightN = parseInt(this.paddingRight.substr(0, this
-      .paddingRight.length - 2));
-  this.paddingTopN = parseInt(this.paddingTop.substr(0, this.paddingTop
-      .length - 2));
-  this.paddingBottomN = parseInt(this.paddingBottom.substr(0, this
-      .paddingBottom.length - 2));
-
+  this.paddingLeft = window
+    .getComputedStyle(this.parent, null)
+    .getPropertyValue("padding-left");
+  this.paddingRight = window
+    .getComputedStyle(this.parent, null)
+    .getPropertyValue("padding-right");
+  this.paddingTop = window
+    .getComputedStyle(this.parent, null)
+    .getPropertyValue("padding-top");
+  this.paddingBottom = window
+    .getComputedStyle(this.parent, null)
+    .getPropertyValue("padding-bottom");
+  this.paddingLeftN = parseInt(
+    this.paddingLeft.substr(0, this.paddingLeft.length - 2)
+  );
+  this.paddingRightN = parseInt(
+    this.paddingRight.substr(0, this.paddingRight.length - 2)
+  );
+  this.paddingTopN = parseInt(
+    this.paddingTop.substr(0, this.paddingTop.length - 2)
+  );
+  this.paddingBottomN = parseInt(
+    this.paddingBottom.substr(0, this.paddingBottom.length - 2)
+  );
 
   // Preservation is based on maintaining the height of the parent.
   // Try to maintain height of container first.  If fails, then set width.
   // Fails means that the width of the video is too wide for the container.
-  this.height = this.parent.offsetHeight - this.paddingTopN - this
-      .paddingBottomN;
-  this.width = this.height * this.mediaWidth / this.mediaHeight;
+  this.height =
+    this.parent.offsetHeight - this.paddingTopN - this.paddingBottomN;
+  this.width = (this.height * this.mediaWidth) / this.mediaHeight;
 
-  if (this.width > this.parent.offsetWidth - this.paddingLeftN - this
-      .paddingRightN) {
-    this.width = this.parent.offsetWidth - this.paddingLeftN - this
-        .paddingRightN;
-    this.height = this.width * this.mediaHeight / this.mediaWidth;
+  if (
+    this.width >
+    this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN
+  ) {
+    this.width =
+      this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN;
+    this.height = (this.width * this.mediaHeight) / this.mediaWidth;
   }
 
   // if the caller wants to maximize to native pixel resolution
@@ -1632,7 +1642,6 @@ Renderer.prototype.handleWidthAndHeight = function() {
   }
 };
 
-
 /**
  * This method is a helper function that aligns canvas dimensions
  * with image dimensions.
@@ -1640,7 +1649,7 @@ Renderer.prototype.handleWidthAndHeight = function() {
  * @member resizeCanvas
  * @required the viewer must be rendered
  */
-Renderer.prototype.resizeCanvas = function() {
+Renderer.prototype.resizeCanvas = function () {
   // NOTE:: Legacy
   // Current functionality is to set a fixed size canvas so that we can
   // guarantee of consistent L&F for the overlays.
@@ -1654,9 +1663,9 @@ Renderer.prototype.resizeCanvas = function() {
   // this.canvasHeight = this.height;
 
   const canvasWidth = 1280;
-  const canvasHeight = canvasWidth * this.mediaHeight / this.mediaWidth;
-  this.eleCanvas.setAttribute('width', canvasWidth);
-  this.eleCanvas.setAttribute('height', canvasHeight);
+  const canvasHeight = (canvasWidth * this.mediaHeight) / this.mediaWidth;
+  this.eleCanvas.setAttribute("width", canvasWidth);
+  this.eleCanvas.setAttribute("height", canvasHeight);
   this.canvasWidth = canvasWidth;
   this.canvasHeight = canvasHeight;
   this.canvasMultiplier = canvasWidth / this.width;
@@ -1664,14 +1673,13 @@ Renderer.prototype.resizeCanvas = function() {
   this.resizeControls();
 };
 
-
 /**
  * Set a named timeout, cancelling any existing timeout of the same name.
  * @param {string} name The name of the timeout
  * @param {function} callback The function to call after the time has passed
  * @param {number} delay The time to wait
  */
-Renderer.prototype.setTimeout = function(name, callback, delay) {
+Renderer.prototype.setTimeout = function (name, callback, delay) {
   this.clearTimeout(name);
   this._timeouts[name] = setTimeout(callback, delay);
 };
@@ -1680,7 +1688,7 @@ Renderer.prototype.setTimeout = function(name, callback, delay) {
  * Clear a named timeout if it exists.
  * @param {string} name The name of the timeout
  */
-Renderer.prototype.clearTimeout = function(name) {
+Renderer.prototype.clearTimeout = function (name) {
   if (name in this._timeouts) {
     clearTimeout(this._timeouts[name]);
     delete this._timeouts[name];

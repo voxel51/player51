@@ -208,6 +208,10 @@ Overlay.prototype.containsPoint = function (x, y) {
   return Overlay.CONTAINS_NONE;
 };
 
+Overlay.prototype.getMouseDistance = function (x, y) {
+  throw new Error("Method getMouseDistance() must be implemented.");
+};
+
 Overlay.prototype.getPointInfo = function (x, y) {
   throw new Error("Method getPointInfo() must be implemented.");
 };
@@ -366,6 +370,13 @@ FrameAttributesOverlay.prototype.draw = function (
       );
     }
   }
+};
+
+FrameAttributesOverlay.prototype.getMouseDistance = function (x, y) {
+  if (this.containsPoint(x, y)) {
+    return 0;
+  }
+  return Infinity;
 };
 
 FrameAttributesOverlay.prototype.containsPoint = function (x, y) {
