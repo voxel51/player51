@@ -373,6 +373,7 @@ FrameAttributesOverlay.prototype.getPointInfo = function(x, y) {
       confidence: a.confidence,
       label: a.value,
       type: "classification",
+      target: a.target,
       attrs: a.attrs
     }
   });
@@ -541,6 +542,8 @@ function KeypointsOverlay(d, renderer) {
   this.label = d.label;
   this.index = d.index;
   this.points = d.points;
+  this.target = d.target;
+  this.attrs = d.attrs;
 }
 KeypointsOverlay.prototype = Object.create(Overlay.prototype);
 KeypointsOverlay.prototype.constructor = KeypointsOverlay;
@@ -609,6 +612,20 @@ KeypointsOverlay.prototype.draw = function(context, canvasWidth,
 };
 
 
+KeypointsOverlay.prototype._getPoint = function(x, y) {
+  const distances = [];
+  for (const point of this.points) {
+    const d = distance(x, y, point[0] * this.w, point[1] * this.h);
+    if (d <= 2 * POINT_RADIUS) {
+      distances.push([d, point]);
+    }
+  }
+  if (distances.length) {
+    return distances.sort((a, b) => a[0] - b[0])[0][1];
+  }
+}
+
+
 KeypointsOverlay.prototype.getPointInfo = function(x, y) {
   return {
     id: this.id,
@@ -616,6 +633,10 @@ KeypointsOverlay.prototype.getPointInfo = function(x, y) {
     label: this.label,
     field: this.name,
     index: this.index,
+    target: this.target,
+    point: this._getPoint(x, y),
+    numPoints: this.points.length,
+    attrs: this.attrs,
     type: "keypoints",
   };
 }
@@ -624,11 +645,8 @@ KeypointsOverlay.prototype.containsPoint = function(x, y) {
   if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
-  for (const point of this.points) {
-    if (distance(x, y, point[0] * this.w, point[1] * this.h) <=
-        2 * POINT_RADIUS) {
-      return Overlay.CONTAINS_BORDER;
-    }
+  if (this._getPoint(x, y)) {
+    return Overlay.CONTAINS_BORDER;
   }
   return Overlay.CONTAINS_NONE;
 };
@@ -651,6 +669,8 @@ function PolylineOverlay(d, renderer) {
   this.points = d.points;
   this.closed = d.closed;
   this.filled = d.filled;
+  this.target = d.target;
+  this.attrs = d.attrs;
 }
 PolylineOverlay.prototype = Object.create(Overlay.prototype);
 PolylineOverlay.prototype.constructor = PolylineOverlay;
@@ -734,6 +754,8 @@ PolylineOverlay.prototype.getPointInfo = function(x, y) {
     points: this.points.length(),
     closed: this.closed,
     filled: this.filled,
+    target: this.target,
+    attrs: this.attrs,
     type: "polyline"
   };
 }
@@ -811,6 +833,7 @@ function ObjectOverlay(d, renderer) {
   this.label = d.label;
   this._setupLabel();
   this.index = d.index;
+  this.target = d.target;
   this.indexStr = '';
   if (this.index != null) {
     this.indexStr = `${this.index}`;
@@ -1107,6 +1130,8 @@ ObjectOverlay.prototype.getPointInfo = function(x, y) {
     field: this.name,
     index: this.index,
     confidence: this.confidence,
+    target: this.target,
+    attrs: this.attrs,
     top,
     left,
     height,

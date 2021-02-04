@@ -734,8 +734,9 @@ Renderer.prototype._handleMouseEvent = function(e) {
     });
   }
 
-  const pausedOrImage = !this.eleVideo || this.eleVideo.paused
-  if (pausedOrImage && eventType === 'mousemove') {
+  const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
+  if (pausedOrImage
+        && eventType === 'mousemove' && this.player._boolThumbnailMode) {
     
     const results = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
     const overlayPointInfos = results.reduce((acc, cur) => {
