@@ -119,6 +119,7 @@ function Renderer(media, overlay, options) {
   this._timeouts = {};
   this._canFocus = true;
   this._focusPos = {x: -1, y: -1};
+  this._boolHoveringControls = false;
   this.handleOverlay(overlay);
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
@@ -735,8 +736,9 @@ Renderer.prototype._handleMouseEvent = function(e) {
   }
 
   const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
-  if (pausedOrImage
-        && eventType === 'mousemove' && this.player._boolThumbnailMode) {
+  const mousemove = eventType === 'mousemove';
+  const notThumbnail = !this.player._boolThumbnailMode;
+  if (pausedOrImage && mousemove && notThumbnail) {
     
     const results = this._findOverlaysAt({x, y}).map((o) => o.getPointInfo(x, y));
     const overlayPointInfos = results.reduce((acc, cur) => {
@@ -1058,6 +1060,31 @@ Renderer.prototype.initPlayerControlHTML = function(parent, sequence=true) {
   }
   this.initPlayerControlOptionsButtonHTML(this.eleDivVideoControls);
   this.initTimeStampHTML(this.eleDivVideoControls);
+  this.eleDivVideoControls.addEventListener('click',
+    () => {
+      this._boolShowControls = false;
+      this.updateControlsDisplayState();
+    }
+  );
+  const hideTooltip = () => {
+    this.dispatchEvent('tooltipinfo', {
+      data: {
+	overlays: [],
+	point: [0, 0]
+      }
+    });
+  }
+  this.eleDivVideoControls.addEventListener('mouseenter',
+    () => {
+       this._boolHoveringControls = true;
+       hideTooltip();
+     }
+  );
+  this.eleDivVideoControls.addEventListener('mouseleave',
+    () => {
+       this._boolHoveringControls = false;
+     }
+  );
   parent.appendChild(this.eleDivVideoControls);
   this.initPlayerOptionsPanelHTML(parent);
 };
@@ -1100,6 +1127,23 @@ Renderer.prototype.initPlayerControlOptionsButtonHTML = function(parent) {
 Renderer.prototype.initPlayerOptionsPanelHTML = function(parent) {
   this.eleDivVideoOpts = document.createElement('div');
   this.eleDivVideoOpts.className = 'p51-video-options-panel';
+  const hideTooltip = () => {
+    this.dispatchEvent('tooltipinfo', {
+      data: {
+	overlays: [],
+	point: [0, 0]
+      }
+    });
+  }
+  this.eleDivVideoOpts.addEventListener("mouseenter",
+    () => {
+      this._boolHoveringControls = true;
+       hideTooltip();
+    }
+  );
+  this.eleDivVideoOpts.addEventListener("mouseleave",
+    () => this._boolHoveringControls = false
+  );
 
   const makeSectionHeader = function(text) {
     const header = document.createElement('b');
@@ -1283,6 +1327,7 @@ Renderer.prototype._repositionOptionsPanel = function() {
 
 Renderer.prototype.initPlayerOptionsControls = function() {
   this.eleOptionsButton.addEventListener('click', (e) => {
+    e.stopPropagation();
     this._boolShowVideoOptions = !this._boolShowVideoOptions;
     this._repositionOptionsPanel();
     this.updateFromDynamicState();
@@ -1425,8 +1470,10 @@ Renderer.prototype.updateControlsDisplayState = function() {
   }
   if (this._boolShowControls) {
     this.eleDivVideoControls.style.opacity = '0.9';
+    this.eleDivVideoControls.style.height = 'unset';
   } else {
     this.eleDivVideoControls.style.opacity = '0.0';
+    this.eleDivVideoControls.style.height = 0;
     if (this.player._boolThumbnailMode) {
       this.eleDivVideoControls.remove();
     }

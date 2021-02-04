@@ -120,7 +120,6 @@ ImageRenderer.prototype.initPlayerControls = function() {
 
   this.parent.addEventListener('mousemove', function(e) {
     if (!self.player._boolThumbnailMode) {
-      self._boolShowControls = true;
       if (self.checkMouseOnControls(e)) {
         self.clearTimeout('hideControls');
       } else {
