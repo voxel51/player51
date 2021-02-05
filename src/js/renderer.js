@@ -112,6 +112,9 @@ function Renderer(media, overlay, options) {
   this._canFocus = true;
   this._focusPos = { x: -1, y: -1 };
   this._boolHoveringControls = false;
+  this._boolDisableShowControls = false;
+  this._boolShowControls = false;
+  this._orderedOverlayCache = null;
   this.handleOverlay(overlay);
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
@@ -595,20 +598,27 @@ Renderer.prototype.processFrame = function () {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
       if (this.overlayOptions.action === "hover") {
-        this.setFocus(this._findTopOverlayAt(this._focusPos));
+        !this._orderedOverlayCache &&
+          this.setFocus(this._findTopOverlayAt(this._focusPos));
+        this._orderedOverlayCache &&
+          this.setFocus(this._orderedOverlayCache[0]);
       }
-      const fm = this.frameOverlay[this._frameNumber];
+      const fm = this._orderedOverlayCache
+        ? this._orderedOverlayCache
+        : this.frameOverlay[this._frameNumber];
       const len = fm.length;
       // draw items without focus first, if settings allow
       if (this._renderRest()) {
         for (let i = 0; i < len; i++) {
-          if (!this.isFocus(fm[i])) {
+          if (this._orderedOverlayCache) {
+            fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+          } else if (!this.isFocus(fm[i])) {
             fm[i].draw(context, this.canvasWidth, this.canvasHeight);
           }
         }
       }
       for (let i = 0; i < len; i++) {
-        if (this.isFocus(fm[i])) {
+        if (!this._orderedOverlayCache && this.isFocus(fm[i])) {
           fm[i].draw(context, this.canvasWidth, this.canvasHeight);
         }
       }
@@ -629,8 +639,8 @@ Renderer.prototype._renderRest = function () {
   return true;
 };
 
-Renderer.prototype._findTopOverlayAt = function ({ x, y }) {
-  if (this.player._boolThumbnailMode) {
+Renderer.prototype._findTopOverlayAt = function ({ x, y }, force = false) {
+  if (this.player._boolThumbnailMode && !force) {
     return;
   }
   const objects = this.frameOverlay[this._frameNumber];
@@ -657,32 +667,6 @@ Renderer.prototype._findTopOverlayAt = function ({ x, y }) {
   );
 
   return containedOverlays[bestIndex];
-};
-
-Renderer.prototype._findOverlaysAt = function ({ x, y }) {
-  const objects = this.frameOverlay[this._frameNumber];
-  if (!objects) {
-    return [];
-  }
-
-  let containedOverlays = [];
-  let bestContainsMode = Overlay.CONTAINS_NONE;
-  for (let i = objects.length - 1; i >= 0; i--) {
-    const object = objects[i];
-    const mode = object.containsPoint(x, y);
-
-    if (mode > bestContainsMode) {
-      containedOverlays.push(object);
-    }
-  }
-  let containedOverlays = containedOverlays
-    .map((o) => [o.getMouseDistance(x, y), o])
-    .sort((a, b) => a[0] - b[0])
-    .map((t) => t[1]);
-  if (!this._renderRest() && containedOverlays.length) {
-    return [containedOverlays[0]];
-  }
-  return containedOverlays;
 };
 
 Renderer.prototype.isFocus = function (overlayObj) {
@@ -721,7 +705,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
   x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
   y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
 
-  const overlayObj = this._findTopOverlayAt({ x, y });
+  let overlayObj = this._findTopOverlayAt({ x, y }, true);
   if (
     eventType === "click" &&
     overlayObj &&
@@ -742,31 +726,64 @@ Renderer.prototype._handleMouseEvent = function (e) {
 
   const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
   const mousemove = eventType === "mousemove";
-  const notThumbnail = !this.player._boolThumbnailMode;
-  if (pausedOrImage && mousemove && notThumbnail) {
-    const results = this._findOverlaysAt({ x, y }).map((o) =>
-      o.getPointInfo(x, y)
-    );
-    const overlayPointInfos = results.reduce((acc, cur) => {
-      if (Array.isArray(cur)) {
-        return [...acc, ...cur];
+  if (pausedOrImage && mousemove) {
+    let result = null;
+    if (overlayObj) {
+      result = overlayObj.getPointInfo(x, y);
+      if (!Array.isArray(result)) {
+        result = [result];
       }
-      return [...acc, cur];
-    }, []);
-    const { height, width } = this.getContentDimensions();
+    }
     const pointY = Math.floor((y / this.canvasHeight) * this.height);
-    const pointX = Math.floor((x / this.canvasWidth) * width);
+    const pointX = Math.floor((x / this.canvasWidth) * this.width);
     this.dispatchEvent("tooltipinfo", {
       data: {
-        overlays: overlayPointInfos,
+        overlays: result,
         point: [pointX, pointY],
       },
     });
   }
 
-  if (this.setFocus(overlayObj, { x, y })) {
-    this.processFrame();
+  let processFrame = this.setFocus(overlayObj, { x, y });
+
+  const notThumbnail = !this.player._boolThumbnailMode;
+  if (pausedOrImage) {
+    let down = null;
+    let up = null;
+    if (eventType === "wheel" && notThumbnail) {
+      if (e.deltaY > 0) {
+        up = true;
+      } else {
+        down = true;
+      }
+    }
+    if (eventType === "keydown" && this._canFocus) {
+      if (e.key === "ArrowDown") {
+        e.stopPropagation();
+        down = true;
+      } else if (e.key === "ArrowUp") {
+        e.stopPropagation();
+        up = true;
+      }
+    }
+    if (down || up) {
+      processFrame = true;
+      let fm = this._orderedOverlayCache
+        ? this._orderedOverlayCache
+        : this.frameOverlay[this._frameNumber].filter((o) =>
+            o._isShown(o.name)
+          );
+      if (up) {
+        fm = [fm[fm.length - 1], ...fm.slice(0, fm.length - 1)];
+      } else {
+        fm = [...fm.slice(1, fm.length), fm[0]];
+      }
+      this._orderedOverlayCache = fm;
+    } else {
+      this._orderedOverlayCache = null;
+    }
   }
+  processFrame && this.processFrame();
 };
 
 /**
@@ -1007,6 +1024,9 @@ Renderer.prototype.initCanvas = function () {
   this.eleCanvas.className = "p51-contained-canvas";
   this.eleDivCanvas.appendChild(this.eleCanvas);
   this.parent.appendChild(this.eleDivCanvas);
+  if (!this._boolThumbnailMode) {
+    this.eleCanvas.addEventListener("wheel", this._handleMouseEvent);
+  }
 };
 
 /**
@@ -1062,6 +1082,7 @@ Renderer.prototype.initPlayerControlHTML = function (parent, sequence = true) {
   this.initTimeStampHTML(this.eleDivVideoControls);
   this.eleDivVideoControls.addEventListener("click", () => {
     this._boolShowControls = false;
+    this._boolDisableShowControls = true;
     this.updateControlsDisplayState();
   });
   const hideTooltip = () => {
@@ -1349,10 +1370,25 @@ Renderer.prototype.initPlayerOptionsControls = function () {
     this.setFocus(undefined);
     this.processFrame();
   };
-  this.eleCanvas.addEventListener("mouseenter", enableFocus);
-  this.eleDivCanvas.addEventListener("mouseenter", enableFocus);
+  const hideTooltip = () => {
+    this.dispatchEvent("tooltipinfo", {
+      data: {
+        overlays: [],
+        point: [0, 0],
+      },
+    });
+  };
+  this.eleCanvas.addEventListener("mouseenter", () => enableFocus);
+  this.eleDivCanvas.addEventListener("mouseenter", () => {
+    enableFocus();
+    document.body.addEventListener("keydown", this._handleMouseEvent);
+  });
   this.eleCanvas.addEventListener("mouseleave", disableFocus);
-  this.eleDivCanvas.addEventListener("mouseleave", disableFocus);
+  this.eleDivCanvas.addEventListener("mouseleave", () => {
+    disableFocus();
+    document.body.removeEventListener("keydown", this._handleMouseEvent);
+    hideTooltip();
+  });
   this.eleDivVideoControls.addEventListener("mouseenter", disableFocus);
 
   this.eleOptCtlShowFrameCount.addEventListener("change", () => {
@@ -1465,7 +1501,7 @@ Renderer.prototype.updateControlsDisplayState = function () {
   if (!this.eleDivVideoControls) {
     return;
   }
-  if (this._boolShowControls) {
+  if (this._boolShowControls && !this._boolDisableShowControls) {
     this.eleDivVideoControls.style.opacity = "0.9";
     this.eleDivVideoControls.style.height = "unset";
   } else {
@@ -1482,7 +1518,11 @@ Renderer.prototype._updateOptionsDisplayState = function () {
   if (!this.eleDivVideoOpts) {
     return;
   }
-  if (this._boolShowVideoOptions && this._boolShowControls) {
+  if (
+    this._boolShowVideoOptions &&
+    this._boolShowControls &&
+    !this._boolDisableShowControls
+  ) {
     this.eleDivVideoOpts.style.opacity = "0.9";
     this.eleDivVideoOpts.classList.remove("p51-display-none");
   } else {

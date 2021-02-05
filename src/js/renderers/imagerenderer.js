@@ -10,14 +10,9 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
-import {
-  Renderer,
-} from '../renderer.js';
+import { Renderer } from "../renderer.js";
 
-export {
-  ImageRenderer,
-};
-
+export { ImageRenderer };
 
 /**
  * ImageRenderer Class Definition
@@ -35,11 +30,9 @@ export {
 function ImageRenderer(media, overlay, options) {
   Renderer.call(this, media, overlay, options);
   this._frameNumber = 1;
-  this._boolShowControls = false;
 }
 ImageRenderer.prototype = Object.create(Renderer.prototype);
 ImageRenderer.prototype.constructor = ImageRenderer;
-
 
 /**
  * Initializes an image and canvas in parent
@@ -47,16 +40,16 @@ ImageRenderer.prototype.constructor = ImageRenderer;
  * @member initPlayer
  * @required setParentandMedia called beforehand
  */
-ImageRenderer.prototype.initPlayer = function() {
+ImageRenderer.prototype.initPlayer = function () {
   this.checkParentandMedia();
   this.checkBorderBox();
-  this.eleDivImage = document.createElement('div');
-  this.eleDivImage.className = 'p51-contained-image';
-  this.eleImage = document.createElement('img');
-  this.eleImage.className = 'p51-contained-image';
-  this.eleImage.setAttribute('src', this.media.src);
-  this.eleImage.setAttribute('type', this.media.type);
-  this.eleImage.setAttribute('loading', 'lazy');
+  this.eleDivImage = document.createElement("div");
+  this.eleDivImage.className = "p51-contained-image";
+  this.eleImage = document.createElement("img");
+  this.eleImage.className = "p51-contained-image";
+  this.eleImage.setAttribute("src", this.media.src);
+  this.eleImage.setAttribute("type", this.media.type);
+  this.eleImage.setAttribute("loading", "lazy");
   this.eleDivImage.appendChild(this.eleImage);
   this.parent.appendChild(this.eleDivImage);
   this.initPlayerControlHTML(this.parent, false);
@@ -65,38 +58,37 @@ ImageRenderer.prototype.initPlayer = function() {
   this.initCanvas();
 };
 
-
 /**
  * This loads controls for imageviewer
  *
  * @member initPlayerControls
  * @required player to be set
  */
-ImageRenderer.prototype.initPlayerControls = function() {
+ImageRenderer.prototype.initPlayerControls = function () {
   this.checkPlayer();
   const self = this;
 
   // Update size
-  this.eleImage.addEventListener('load', function() {
+  this.eleImage.addEventListener("load", function () {
     self.updateSizeAndPadding();
     self.updateFromLoadingState();
     self.setupCanvasContext();
     self._isDataLoaded = true;
     self.updateFromLoadingState();
-    self.dispatchEvent('load');
+    self.dispatchEvent("load");
   });
 
-  this.eleImage.addEventListener('error', function() {
+  this.eleImage.addEventListener("error", function () {
     if (self.player._boolNotFound) {
-      const tmpImage = document.createElement('img');
-      tmpImage.setAttribute('loading', 'lazy');
-      tmpImage.className = 'p51-contained-image';
-      tmpImage.setAttribute('src', self.player._notFoundPosterURL);
+      const tmpImage = document.createElement("img");
+      tmpImage.setAttribute("loading", "lazy");
+      tmpImage.className = "p51-contained-image";
+      tmpImage.setAttribute("src", self.player._notFoundPosterURL);
       self.parent.appendChild(tmpImage);
     }
   });
 
-  const hideControls = function() {
+  const hideControls = function () {
     if (self._boolShowVideoOptions) {
       return;
     }
@@ -104,45 +96,45 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.updateFromDynamicState();
   };
 
-
-  this.parent.addEventListener('mouseenter', function() {
-    self.dispatchEvent('mouseenter');
+  this.parent.addEventListener("mouseenter", function () {
+    self.dispatchEvent("mouseenter");
     self.player._boolHovering = true;
     if (!self._isDataLoaded) {
       return;
     }
     if (!self.player._boolThumbnailMode) {
       self._boolShowControls = true;
-      self.setTimeout('hideControls', hideControls, 2.5 * 1000);
+      self.setTimeout("hideControls", hideControls, 2.5 * 1000);
     }
     self.updateFromDynamicState();
   });
 
-  this.parent.addEventListener('mousemove', function(e) {
+  this.parent.addEventListener("mousemove", function (e) {
     if (!self.player._boolThumbnailMode) {
       if (self.checkMouseOnControls(e)) {
-        self.clearTimeout('hideControls');
+        self.clearTimeout("hideControls");
       } else {
-        self.setTimeout('hideControls', hideControls, 2.5 * 1000);
+        self._boolShowControls = true;
+        self.setTimeout("hideControls", hideControls, 2.5 * 1000);
       }
     }
     self.updateFromDynamicState();
   });
 
-  this.parent.addEventListener('mouseleave', function() {
-    self.dispatchEvent('mouseleave');
+  this.parent.addEventListener("mouseleave", function () {
+    self.dispatchEvent("mouseleave");
     self.player._boolHovering = false;
+    self._boolDisableShowControls = false;
     if (!self._isDataLoaded) {
       return;
     }
     if (!self.player._boolThumbnailMode) {
       hideControls();
-      self.clearTimeout('hideControls');
+      self.clearTimeout("hideControls");
     }
     self.updateFromDynamicState();
   });
 };
-
 
 /**
  * This determines the dimensions of the media
@@ -150,11 +142,10 @@ ImageRenderer.prototype.initPlayerControls = function() {
  * @member determineMediaDimensions
  * @required initPlayer() to be called
  */
-ImageRenderer.prototype.determineMediaDimensions = function() {
+ImageRenderer.prototype.determineMediaDimensions = function () {
   this.mediaHeight = this.mediaElement.height;
   this.mediaWidth = this.mediaElement.width;
 };
-
 
 /**
  * Return the original size of the underlying image
@@ -162,7 +153,7 @@ ImageRenderer.prototype.determineMediaDimensions = function() {
  * @return {object|null} with keys `width` and `height`, or null if the content
  *   size cannot be determined
  */
-ImageRenderer.prototype.getContentDimensions = function() {
+ImageRenderer.prototype.getContentDimensions = function () {
   if (!this.mediaElement) {
     return null;
   }
@@ -172,7 +163,6 @@ ImageRenderer.prototype.getContentDimensions = function() {
   };
 };
 
-
 /**
  * This function is a controller
  * The dynamic state of the player has changed and various settings have to be
@@ -180,14 +170,13 @@ ImageRenderer.prototype.getContentDimensions = function() {
  *
  * @member updateFromDynamicState
  */
-ImageRenderer.prototype.updateFromDynamicState = function() {
+ImageRenderer.prototype.updateFromDynamicState = function () {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
   }
 
   this.updateControlsDisplayState();
 };
-
 
 /**
  * This function is a controller
@@ -196,13 +185,13 @@ ImageRenderer.prototype.updateFromDynamicState = function() {
  *
  * @member updateFromLoadingState
  */
-ImageRenderer.prototype.updateFromLoadingState = function() {
+ImageRenderer.prototype.updateFromLoadingState = function () {
   if (this._isRendered && this._isSizePrepared) {
     if (this._isDataLoaded) {
       this._isReadyProcessFrames = true;
     }
     // If we had to download the overlay data and it is ready
-    if ((this._overlayData !== null) && (this._overlayURL !== null)) {
+    if (this._overlayData !== null && this._overlayURL !== null) {
       this._overlayCanBePrepared = true;
     }
   }
@@ -216,14 +205,13 @@ ImageRenderer.prototype.updateFromLoadingState = function() {
   }
 };
 
-
 /**
  * Generate a string that represents the state.
  *
  * @member state
  * @return {dictionary} state
  */
-ImageRenderer.prototype.state = function() {
+ImageRenderer.prototype.state = function () {
   return `
 ImageViewer State Information:
 frame number: ${this._frameNumber}
@@ -237,15 +225,13 @@ isPreparingOverlay: ${this._isPreparingOverlay}
 `;
 };
 
-
 /**
  * Draws custom case objects onto a frame.
  * @member customDraw
  * @param {context} context
  */
-ImageRenderer.prototype.customDraw = function(context) {
-};
+ImageRenderer.prototype.customDraw = function (context) {};
 
-ImageRenderer.prototype.hasFrameNumbers = function() {
+ImageRenderer.prototype.hasFrameNumbers = function () {
   return false;
 };

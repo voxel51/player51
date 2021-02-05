@@ -242,6 +242,7 @@ Overlay.prototype.isSelected = function () {
 function FrameAttributesOverlay(d, renderer) {
   Overlay.call(this, renderer);
 
+  this.name = null;
   this.attrs = d.attrs;
   this.attrText = null; // will store a list of strings (one for each object in d.attrs)
 
@@ -388,6 +389,7 @@ FrameAttributesOverlay.prototype.containsPoint = function (x, y) {
 FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
   return this._getFilteredAttrs().map((a) => {
     return {
+      id: a.id,
       color: this._getColor(a.name, a.value),
       field: a.name,
       confidence: a.confidence,
@@ -793,7 +795,8 @@ PolylineOverlay.prototype.getPointInfo = function (x, y) {
     label: this.label,
     field: this.name,
     index: this.index,
-    points: this.points.length(),
+    points: this.points.map((p) => p.length).reduce((a, b) => a + b, 0),
+    paths: this.points.length,
     closed: this.closed,
     filled: this.filled,
     target: this.target,
@@ -831,7 +834,7 @@ PolylineOverlay.prototype.getMouseDistance = function (x, y) {
       );
     }
   }
-  return distances.min();
+  return Math.min(...distances);
 };
 
 PolylineOverlay.prototype.containsPoint = function (x, y) {
@@ -1227,7 +1230,7 @@ ObjectOverlay.prototype.getPointInfo = function (x, y) {
     index: this.index,
     confidence: this.confidence,
     target: this.target,
-    attrs: this.attrs,
+    attrs: this._attrs,
     top,
     left,
     height,
@@ -1247,7 +1250,7 @@ ObjectOverlay.prototype._inHeader = function (x, y) {
   );
 };
 
-ObjectObject.prototype.getMouseDistance = function (x, y) {
+ObjectOverlay.prototype.getMouseDistance = function (x, y) {
   if (this._inHeader(x, y)) {
     return 0;
   }
@@ -1271,7 +1274,7 @@ ObjectObject.prototype.getMouseDistance = function (x, y) {
       this.y + this.h
     ),
   ];
-  return distances.min();
+  return Math.min(...distances);
 };
 
 ObjectOverlay.prototype.containsPoint = function (x, y) {

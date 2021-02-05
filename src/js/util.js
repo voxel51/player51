@@ -219,6 +219,6 @@ function getArrayByLine(text) {
  * @param {Array.<number>} array Input array
  * @return {number} Index of array element with smallest value
  */
-function argMin(array) {
+export function argMin(array) {
   return array.map((x, i) => [x, i]).reduce((r, a) => (a[0] < r[0] ? a : r))[1];
 }
