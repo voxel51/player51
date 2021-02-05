@@ -658,7 +658,9 @@ KeypointsOverlay.prototype._getDistanceAndPoint = function (x, y) {
   const distances = [];
   for (const point of this.points) {
     const d = distance(x, y, point[0] * this.w, point[1] * this.h);
-    if (d <= 2 * POINT_RADIUS) {
+    if (d <= POINT_RADIUS) {
+      distances.push([0, point]);
+    } else if (d <= 2 * POINT_RADIUS) {
       distances.push([d, point]);
     }
   }
