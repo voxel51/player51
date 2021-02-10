@@ -817,7 +817,7 @@ ObjectOverlay.prototype._setupAttrBox = function(context) {
 };
 
 ObjectOverlay.prototype._setupLabel = function() {
-  this.labelUpper = this.label.toUpperCase();
+  this.labelUpper = (this.label || "None").toUpperCase();
   if (this.options.showConfidence && !isNaN(this.confidence)) {
     this.labelUpper += ` (${Number(this.confidence).toFixed(2)})`;
   }
