@@ -86,7 +86,7 @@ ImageRenderer.prototype.initPlayerControls = function() {
     self.dispatchEvent('load');
   });
 
-  this.eleImage.addEventListener('error', function() {
+  this.eleImage.addEventListener('error', function(e) {
     if (self.player._boolNotFound) {
       const tmpImage = document.createElement('img');
       tmpImage.setAttribute('loading', 'lazy');
@@ -94,6 +94,8 @@ ImageRenderer.prototype.initPlayerControls = function() {
       tmpImage.setAttribute('src', self.player._notFoundPosterURL);
       self.parent.appendChild(tmpImage);
     }
+    self.eleImage.remove(); 
+    self.dispatchEvent('error');
   });
 
   const hideControls = function() {

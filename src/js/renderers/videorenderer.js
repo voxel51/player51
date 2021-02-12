@@ -195,10 +195,11 @@ VideoRenderer.prototype.initPlayerControls = function() {
     self.updateStateFromTimeChange();
   });
 
-  this.eleVideo.addEventListener('error', function() {
+  this.eleVideo.addEventListener('error', function(e) {
     if (self.player._boolNotFound) {
       self.eleVideo.setAttribute('poster', self.player._notFoundPosterURL);
     }
+    self.eleVideo.remove(); 
     self.dispatchEvent('error');
   });
 
