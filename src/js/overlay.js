@@ -1019,10 +1019,10 @@ ObjectOverlay.prototype._setupAttrBox = function (context) {
   this.attrHeight = wh.height;
 };
 
-ObjectOverlay.prototype._setupLabel = function () {
-  this.labelUpper = this.label.toUpperCase();
+ObjectOverlay.prototype._setupLabel = function() {
+  this.labelUpper = (this.label ? `${this.label} ` : "").toUpperCase();
   if (this.options.showConfidence && !isNaN(this.confidence)) {
-    this.labelUpper += ` (${Number(this.confidence).toFixed(2)})`;
+    this.labelUpper += `(${Number(this.confidence).toFixed(2)})`;
   }
 };
 
