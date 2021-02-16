@@ -759,14 +759,14 @@ Renderer.prototype._handleMouseEvent = function (e) {
     }
     if (eventType === "keydown" && this._canFocus) {
       if (e.key === "ArrowDown") {
-        e.stopPropagation();
         down = true;
       } else if (e.key === "ArrowUp") {
-        e.stopPropagation();
         up = true;
       }
     }
     if (down || up) {
+      e.stopPropagation();
+      e.preventDefault();
       processFrame = true;
       let fm = this._orderedOverlayCache
         ? this._orderedOverlayCache
