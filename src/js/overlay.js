@@ -660,13 +660,12 @@ KeypointsOverlay.prototype._getDistanceAndPoint = function (x, y) {
     const d = distance(x, y, point[0] * this.w, point[1] * this.h);
     if (d <= POINT_RADIUS) {
       distances.push([0, point]);
-    } else if (d <= 2 * POINT_RADIUS) {
+    } else {
       distances.push([d, point]);
     }
   }
-  if (distances.length) {
-    return distances.sort((a, b) => a[0] - b[0])[0];
-  }
+
+  return distances.sort((a, b) => a[0] - b[0])[0];
 };
 
 KeypointsOverlay.prototype.getPointInfo = function (x, y) {
@@ -692,7 +691,7 @@ KeypointsOverlay.prototype.containsPoint = function (x, y) {
   if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
-  if (this._getDistanceAndPoint(x, y)) {
+  if (this._getDistanceAndPoint(x, y)[0] <= 2 * POINT_RADIUS) {
     return Overlay.CONTAINS_BORDER;
   }
   return Overlay.CONTAINS_NONE;
@@ -1019,7 +1018,7 @@ ObjectOverlay.prototype._setupAttrBox = function (context) {
   this.attrHeight = wh.height;
 };
 
-ObjectOverlay.prototype._setupLabel = function() {
+ObjectOverlay.prototype._setupLabel = function () {
   this.labelUpper = (this.label ? `${this.label} ` : "").toUpperCase();
   if (this.options.showConfidence && !isNaN(this.confidence)) {
     this.labelUpper += `(${Number(this.confidence).toFixed(2)})`;
