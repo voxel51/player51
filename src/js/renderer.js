@@ -747,7 +747,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
   let processFrame = this.setFocus(overlayObj, { x, y });
 
   const notThumbnail = !this.player._boolThumbnailMode;
-  if (pausedOrImage) {
+  if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
     if (eventType === "wheel" && notThumbnail) {
@@ -775,7 +775,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
             .sort(
               (a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y)
             );
-
       const contained = fm.filter((o) => o.containsPoint(x, y)).length;
       if (up) {
         fm = [
@@ -784,7 +783,11 @@ Renderer.prototype._handleMouseEvent = function (e) {
           ...fm.slice(contained),
         ];
       } else {
-        fm = [...fm.slice(1, contained.length), fm[0], ...fm.slice(contained)];
+        fm = [
+          ...fm.slice(1, contained.length + 1),
+          fm[0],
+          ...fm.slice(contained),
+        ];
       }
       this._orderedOverlayCache = fm;
     } else {
