@@ -601,10 +601,7 @@ Renderer.prototype.processFrame = function () {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
       if (this.overlayOptions.action === "hover") {
-        !this._orderedOverlayCache &&
-          this.setFocus(this._setTopOverlayAt(this._focusPos));
-        this._orderedOverlayCache &&
-          this.setFocus(this._orderedOverlayCache[0]);
+        this.setFocus(this._setTopOverlay(this._focusPos));
       }
       const fm = this._orderedOverlayCache
         ? this._orderedOverlayCache
@@ -612,18 +609,14 @@ Renderer.prototype.processFrame = function () {
       const len = fm.length;
       // draw items without focus first, if settings allow
       if (this._renderRest()) {
-        for (let i = 0; i < len; i++) {
+        for (let i = len - 1; i > 1; i--) {
           if (this._orderedOverlayCache) {
-            fm[i].draw(context, this.canvasWidth, this.canvasHeight);
-          } else if (!this.isFocus(fm[i])) {
             fm[i].draw(context, this.canvasWidth, this.canvasHeight);
           }
         }
       }
-      for (let i = 0; i < len; i++) {
-        if (!this._orderedOverlayCache && this.isFocus(fm[i])) {
-          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
-        }
+      if (this.isFocus(fm[0])) {
+        fm[i].draw(context, this.canvasWidth, this.canvasHeight);
       }
     }
   }
@@ -652,6 +645,14 @@ Renderer.prototype._setTopOverlay = function ({ x, y }, force = false) {
   }
   let containedOverlays = [];
   let bestContainsMode = Overlay.CONTAINS_NONE;
+
+  if (this._orderedOverlayCache) {
+    const top = this._orderedOverlayCache[0];
+    const mode = top.containsPoint(x, y);
+    if (mode > bestContainsMode) {
+      return top;
+    }
+  }
   for (let i = objects.length - 1; i >= 0; i--) {
     const object = objects[i];
     const mode = object.containsPoint(x, y);
@@ -727,17 +728,17 @@ Renderer.prototype._handleMouseEvent = function (e) {
   const pointX = Math.floor((x / this.canvasWidth) * this.width);
 
   const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
-  let overlayObj = this._setTopOverlayAt({ x, y }, true);
+  let topObj = this._setTopOverlay({ x, y }, true);
   if (
     eventType === "click" &&
-    overlayObj &&
-    overlayObj.constructor === ObjectOverlay &&
-    overlayObj.index === undefined
+    topObj &&
+    topObj.constructor === ObjectOverlay &&
+    topObj.index === undefined
   ) {
     // for now, allow clicking on objects without IDs
     // @todo only allow this for images?
   }
-  if (eventType === "click" && overlayObj && overlayObj.isSelectable()) {
+  if (eventType === "click" && topObj && topObj.isSelectable()) {
     this.dispatchEvent("select", {
       data: {
         id: overlayObj.id,
@@ -749,6 +750,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
   let processFrame = this.setFocus(overlayObj, { x, y });
 
   const notThumbnail = !this.player._boolThumbnailMode;
+
   if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
@@ -787,22 +789,16 @@ Renderer.prototype._handleMouseEvent = function (e) {
       } else if (contained > 1) {
         fm = [...fm.slice(1, contained), fm[0], ...fm.slice(contained)];
       }
+      topObj = fm[0];
       this._orderedOverlayCache = fm;
     } else {
+      result = this.frameOverlay[this._frameNumber];
       this._orderedOverlayCache = null;
     }
   }
-  if (processFrame) {
-    this.dispatchEvent("tooltipinfo", {
-      data: {
-        overlays: result,
-        point: [pointX, pointY],
-      },
-    });
-  }
 
   const mousemove = eventType === "mousemove";
-  if (pausedOrImage && mousemove) {
+  if (pausedOrImage && mousemove && notThumbnail) {
     let result = null;
     if (overlayObj) {
       result = overlayObj.getPointInfo(x, y);
