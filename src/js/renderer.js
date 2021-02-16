@@ -669,6 +669,24 @@ Renderer.prototype._findTopOverlayAt = function ({ x, y }, force = false) {
   return containedOverlays[bestIndex];
 };
 
+Renderer.prototype._findOverlaysAt = function({x, y}) {
+  const objects = this.frameOverlay[this._frameNumber];
+  if (!objects) {
+    return []
+  }
+  const containedOverlays = []
+  let bestContainsMode = Overlay.CONTAINS_NONE;
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const object = objects[i];
+    const mode = object.containsPoint(x, y);
+
+    if (mode > bestContainsMode) {
+      containedOverlays.push(object);
+    }
+  }
+  return containedOverlays;
+}
+
 Renderer.prototype.isFocus = function (overlayObj) {
   return (
     this._focusedObject === overlayObj || overlayObj.index === this._focusIndex
