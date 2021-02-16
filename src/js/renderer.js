@@ -616,7 +616,7 @@ Renderer.prototype.processFrame = function () {
         }
       }
       if (this.isFocus(fm[0])) {
-        fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+        fm[0].draw(context, this.canvasWidth, this.canvasHeight);
       }
     }
   }
@@ -728,26 +728,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
   const pointX = Math.floor((x / this.canvasWidth) * this.width);
 
   const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
-  let topObj = this._setTopOverlay({ x, y }, true);
-  if (
-    eventType === "click" &&
-    topObj &&
-    topObj.constructor === ObjectOverlay &&
-    topObj.index === undefined
-  ) {
-    // for now, allow clicking on objects without IDs
-    // @todo only allow this for images?
-  }
-  if (eventType === "click" && topObj && topObj.isSelectable()) {
-    this.dispatchEvent("select", {
-      data: {
-        id: overlayObj.id,
-        name: overlayObj.name,
-      },
-    });
-  }
-
-  let processFrame = this.setFocus(overlayObj, { x, y });
 
   const notThumbnail = !this.player._boolThumbnailMode;
 
@@ -792,20 +772,38 @@ Renderer.prototype._handleMouseEvent = function (e) {
       topObj = fm[0];
       this._orderedOverlayCache = fm;
     } else {
-      result = this.frameOverlay[this._frameNumber];
+      topObj = this.frameOverlay[this._frameNumber];
       this._orderedOverlayCache = null;
     }
   }
 
+  let topObj = this._setTopOverlay({ x, y }, true);
+  if (
+    eventType === "click" &&
+    topObj &&
+    topObj.constructor === ObjectOverlay &&
+    topObj.index === undefined
+  ) {
+    // for now, allow clicking on objects without IDs
+    // @todo only allow this for images?
+  }
+  if (eventType === "click" && topObj && topObj.isSelectable()) {
+    this.dispatchEvent("select", {
+      data: {
+        id: topObj.id,
+        name: topObj.name,
+      },
+    });
+  }
+  let processFrame = this.setFocus(overlayObj, { x, y });
+
   const mousemove = eventType === "mousemove";
-  if (pausedOrImage && mousemove && notThumbnail) {
-    let result = null;
-    if (overlayObj) {
-      result = overlayObj.getPointInfo(x, y);
-      if (!Array.isArray(result)) {
-        result = [result];
-      }
+  if (pausedOrImage && mousemove && notThumbnail && topObj) {
+    let result = topObj.getPointInfo(x, y);
+    if (!Array.isArray(result)) {
+      result = [result];
     }
+
     this.dispatchEvent("tooltipinfo", {
       data: {
         overlays: result,
@@ -813,6 +811,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
       },
     });
   }
+
   processFrame && this.processFrame();
 };
 
