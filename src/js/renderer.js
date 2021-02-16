@@ -669,24 +669,6 @@ Renderer.prototype._findTopOverlayAt = function ({ x, y }, force = false) {
   return containedOverlays[bestIndex];
 };
 
-Renderer.prototype._findOverlaysAt = function({x, y}) {
-  const objects = this.frameOverlay[this._frameNumber];
-  if (!objects) {
-    return []
-  }
-  const containedOverlays = []
-  let bestContainsMode = Overlay.CONTAINS_NONE;
-  for (let i = objects.length - 1; i >= 0; i--) {
-    const object = objects[i];
-    const mode = object.containsPoint(x, y);
-
-    if (mode > bestContainsMode) {
-      containedOverlays.push(object);
-    }
-  }
-  return containedOverlays;
-}
-
 Renderer.prototype.isFocus = function (overlayObj) {
   return (
     this._focusedObject === overlayObj || overlayObj.index === this._focusIndex
@@ -788,13 +770,21 @@ Renderer.prototype._handleMouseEvent = function (e) {
       processFrame = true;
       let fm = this._orderedOverlayCache
         ? this._orderedOverlayCache
-        : this.frameOverlay[this._frameNumber].filter((o) =>
-            o._isShown(o.name)
-          );
+        : this.frameOverlay[this._frameNumber]
+            .filter((o) => o._isShown(o.name))
+            .sort(
+              (a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y)
+            );
+
+      const contained = fm.filter((o) => o.containsPoint(x, y)).length;
       if (up) {
-        fm = [fm[fm.length - 1], ...fm.slice(0, fm.length - 1)];
+        fm = [
+          fm[contained - 1],
+          ...fm.slice(0, contained - 1),
+          ...fm.slice(contained),
+        ];
       } else {
-        fm = [...fm.slice(1, fm.length), fm[0]];
+        fm = [...fm.slice(1, contained.length), fm[0], ...fm.slice(contained)];
       }
       this._orderedOverlayCache = fm;
     } else {
@@ -1421,10 +1411,10 @@ Renderer.prototype.initPlayerOptionsControls = function () {
   });
 
   const dispatchOptionsChange = () => {
-    this.dispatchEvent("options", {data: this.overlayOptions});
-  }
+    this.dispatchEvent("options", { data: this.overlayOptions });
+  };
 
-  this.eleOptCtlShowConfidence.addEventListener('change', () => {
+  this.eleOptCtlShowConfidence.addEventListener("change", () => {
     this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
     dispatchOptionsChange();
     this.processFrame();
