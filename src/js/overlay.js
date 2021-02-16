@@ -1290,33 +1290,14 @@ ObjectOverlay.prototype.containsPoint = function (x, y) {
   // LINE_WIDTH / 2, so this gives a tolerance of an extra LINE_WIDTH on either
   // side of the border
   const tolerance = LINE_WIDTH * 1.5;
-  if (
-    distanceFromLineSegment(x, y, this.x, this.y, this.x + this.w, this.y) <=
-      tolerance ||
-    distanceFromLineSegment(x, y, this.x, this.y, this.x, this.y + this.h) <=
-      tolerance ||
-    distanceFromLineSegment(
-      x,
-      y,
-      this.x + this.w,
-      this.y + this.h,
-      this.x + this.w,
-      this.y
-    ) <= tolerance ||
-    distanceFromLineSegment(
-      x,
-      y,
-      this.x + this.w,
-      this.y + this.h,
-      this.x,
-      this.y + this.h
-    ) <= tolerance
-  ) {
+  if (this.getMouseDistance(x, y) <= tolerance) {
     return Overlay.CONTAINS_BORDER;
   }
   if (inRect(x, y, this.x, this.y, this.w, this.h)) {
     return Overlay.CONTAINS_CONTENT;
   }
+
+  return Overlay.CONTAINS_NONE;
 };
 
 /**

@@ -49,6 +49,7 @@ function Renderer(media, overlay, options) {
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = "../src/js/zipreader/";
+  this._rect = null;
   // Player state attributes
   this._isRendered = false;
   this._isSizePrepared = false;
@@ -103,6 +104,8 @@ function Renderer(media, overlay, options) {
   this._overlayCanBePrepared = true;
   this._isOverlayPrepared = false;
   this._isPreparingOverlay = false;
+  this._mouseX = null;
+  this._mouseY = null;
   this._overlayData = null;
   this._overlayURL = null;
   this._overlayHasObjectAttrs = false;
@@ -695,15 +698,27 @@ Renderer.prototype.setFocus = function (overlayObj, position = undefined) {
   return false;
 };
 
+Renderer.prototype._computeEventCoordinates = function (e) {
+  if (!["keydown"].includes(e.type.toLowerCase())) {
+    this._mouseX = e.clientX;
+    this._mouseY = e.clientY;
+    this._rect = e.target.getBoundingClientRect();
+  }
+  let [x, y] = [this._mouseX, this._mouseY];
+
+  x = x - this._rect.left;
+  y = y - this._rect.top;
+
+  return [
+    Math.round(rescale(x, 0, this._rect.width, 0, this.eleCanvas.width)),
+    Math.round(rescale(y, 0, this._rect.height, 0, this.eleCanvas.height)),
+  ];
+};
+
 Renderer.prototype._handleMouseEvent = function (e) {
   const eventType = e.type.toLowerCase();
-  const rect = e.target.getBoundingClientRect();
-  // calculate relative to top left of canvas
-  let x = e.clientX - rect.left;
-  let y = e.clientY - rect.top;
-  // rescale to canvas width/height
-  x = Math.round(rescale(x, 0, rect.width, 0, this.eleCanvas.width));
-  y = Math.round(rescale(y, 0, rect.height, 0, this.eleCanvas.height));
+
+  const [x, y] = this._computeEventCoordinates(e);
 
   let overlayObj = this._findTopOverlayAt({ x, y }, true);
   if (
@@ -775,19 +790,15 @@ Renderer.prototype._handleMouseEvent = function (e) {
             .sort(
               (a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y)
             );
-      const contained = fm.filter((o) => o.containsPoint(x, y)).length;
-      if (up) {
+      const contained = fm.filter((o) => o.containsPoint(x, y) > 0).length;
+      if (up && contained > 1) {
         fm = [
           fm[contained - 1],
           ...fm.slice(0, contained - 1),
           ...fm.slice(contained),
         ];
-      } else {
-        fm = [
-          ...fm.slice(1, contained.length + 1),
-          fm[0],
-          ...fm.slice(contained),
-        ];
+      } else if (contained > 1) {
+        fm = [...fm.slice(1, contained), fm[0], ...fm.slice(contained)];
       }
       this._orderedOverlayCache = fm;
     } else {
@@ -1392,12 +1403,12 @@ Renderer.prototype.initPlayerOptionsControls = function () {
   this.eleCanvas.addEventListener("mouseenter", () => enableFocus);
   this.eleDivCanvas.addEventListener("mouseenter", () => {
     enableFocus();
-    document.body.addEventListener("keydown", this._handleMouseEvent);
+    this.eleDivCanvas.addEventListener("keydown", this._handleMouseEvent);
   });
   this.eleCanvas.addEventListener("mouseleave", disableFocus);
   this.eleDivCanvas.addEventListener("mouseleave", () => {
     disableFocus();
-    document.body.removeEventListener("keydown", this._handleMouseEvent);
+    this.eleDivCanvas.removeEventListener("keydown", this._handleMouseEvent);
     hideTooltip();
   });
   this.eleDivVideoControls.addEventListener("mouseenter", disableFocus);
