@@ -602,7 +602,7 @@ Renderer.prototype.processFrame = function () {
       // Hover Focus setting
       if (this.overlayOptions.action === "hover") {
         !this._orderedOverlayCache &&
-          this.setFocus(this._findTopOverlayAt(this._focusPos));
+          this.setFocus(this._setTopOverlayAt(this._focusPos));
         this._orderedOverlayCache &&
           this.setFocus(this._orderedOverlayCache[0]);
       }
@@ -642,7 +642,7 @@ Renderer.prototype._renderRest = function () {
   return true;
 };
 
-Renderer.prototype._findTopOverlayAt = function ({ x, y }, force = false) {
+Renderer.prototype._setTopOverlay = function ({ x, y }, force = false) {
   if (this.player._boolThumbnailMode && !force) {
     return;
   }
@@ -669,7 +669,11 @@ Renderer.prototype._findTopOverlayAt = function ({ x, y }, force = false) {
     containedOverlays.map((o) => [o.getMouseDistance(x, y), o])
   );
 
-  return containedOverlays[bestIndex];
+  const fm = this.frameOverlay[this._frameNumber];
+  const best = fm.splice(bestIndex);
+  this.frameOverlay[this._frameOverlay] = [best, ...fm];
+
+  return best;
 };
 
 Renderer.prototype.isFocus = function (overlayObj) {
@@ -719,8 +723,11 @@ Renderer.prototype._handleMouseEvent = function (e) {
   const eventType = e.type.toLowerCase();
 
   const [x, y] = this._computeEventCoordinates(e);
+  const pointY = Math.floor((y / this.canvasHeight) * this.height);
+  const pointX = Math.floor((x / this.canvasWidth) * this.width);
 
-  let overlayObj = this._findTopOverlayAt({ x, y }, true);
+  const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
+  let overlayObj = this._setTopOverlayAt({ x, y }, true);
   if (
     eventType === "click" &&
     overlayObj &&
@@ -735,26 +742,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
       data: {
         id: overlayObj.id,
         name: overlayObj.name,
-      },
-    });
-  }
-
-  const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
-  const mousemove = eventType === "mousemove";
-  if (pausedOrImage && mousemove) {
-    let result = null;
-    if (overlayObj) {
-      result = overlayObj.getPointInfo(x, y);
-      if (!Array.isArray(result)) {
-        result = [result];
-      }
-    }
-    const pointY = Math.floor((y / this.canvasHeight) * this.height);
-    const pointX = Math.floor((x / this.canvasWidth) * this.width);
-    this.dispatchEvent("tooltipinfo", {
-      data: {
-        overlays: result,
-        point: [pointX, pointY],
       },
     });
   }
@@ -804,6 +791,31 @@ Renderer.prototype._handleMouseEvent = function (e) {
     } else {
       this._orderedOverlayCache = null;
     }
+  }
+  if (processFrame) {
+    this.dispatchEvent("tooltipinfo", {
+      data: {
+        overlays: result,
+        point: [pointX, pointY],
+      },
+    });
+  }
+
+  const mousemove = eventType === "mousemove";
+  if (pausedOrImage && mousemove) {
+    let result = null;
+    if (overlayObj) {
+      result = overlayObj.getPointInfo(x, y);
+      if (!Array.isArray(result)) {
+        result = [result];
+      }
+    }
+    this.dispatchEvent("tooltipinfo", {
+      data: {
+        overlays: result,
+        point: [pointX, pointY],
+      },
+    });
   }
   processFrame && this.processFrame();
 };
