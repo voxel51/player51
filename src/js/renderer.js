@@ -1276,14 +1276,20 @@ Renderer.prototype.initPlayerOptionsControls = function() {
     this.updateFromDynamicState();
   });
 
+  const dispatchOptionsChange = () => {
+    this.dispatchEvent("options", {data: this.overlayOptions});
+  }
+
   this.eleOptCtlShowConfidence.addEventListener('change', () => {
     this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
+    dispatchOptionsChange();
     this.processFrame();
     this.updateFromDynamicState();
   });
 
   this.eleOptCtlShowAttr.addEventListener('change', () => {
     this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
+    dispatchOptionsChange();
     this.processFrame();
     this.updateFromDynamicState();
     this._repositionOptionsPanel();
