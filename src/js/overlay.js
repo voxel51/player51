@@ -283,7 +283,7 @@ FrameAttributesOverlay.prototype.setup = function (
     this.y = this.textPadder;
   }
 
-  this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
+  this.attrFontHeight = (12 / this.renderer.height) * canvasHeight;
   this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   this.font = `${this.attrFontHeight}px Arial, sans-serif`;
   if (typeof context === "undefined") {

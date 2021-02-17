@@ -579,6 +579,18 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
   }
 };
 
+Renderer.prototype._getOrderedOverlays = function () {
+  const overlays = this._orderedOverlayCache
+    ? this._orderedOverlayCache
+    : this.frameOverlay[this._frameNumber];
+
+  const bins = Object.fromEntries(
+    this.options.activeLabels.map((l) => [l, []])
+  );
+
+  return overlays;
+};
+
 /**
  * Handles the rendering of a specific frame, noting that rendering has two
  * different meanings in Player51.  The Player51.render function is used to
@@ -603,17 +615,18 @@ Renderer.prototype.processFrame = function () {
       if (this.overlayOptions.action === "hover") {
         this.setFocus(this._setTopOverlay(this._focusPos));
       }
-      const fm = this._orderedOverlayCache
-        ? this._orderedOverlayCache
-        : this.frameOverlay[this._frameNumber];
-      const len = fm.length;
+
+      const overlays = this._getOrderedOverlays();
+
+      const len = overlays.length;
       // draw items without focus first, if settings allow
       if (this._renderRest()) {
         for (let i = len - 1; i > 0; i--) {
-          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
+          overlays[i].draw(context, this.canvasWidth, this.canvasHeight);
         }
       }
-      fm[0] && fm[0].draw(context, this.canvasWidth, this.canvasHeight);
+      overlays[0] &&
+        overlays[0].draw(context, this.canvasWidth, this.canvasHeight);
     }
   }
 };
@@ -631,8 +644,8 @@ Renderer.prototype._renderRest = function () {
   return true;
 };
 
-Renderer.prototype._setTopOverlay = function ({ x, y }, force = false) {
-  if (this.player._boolThumbnailMode && !force) {
+Renderer.prototype._setTopOverlay = function ({ x, y }) {
+  if (this.player._boolThumbnailMode) {
     return;
   }
   const objects = this.frameOverlay[this._frameNumber];
@@ -758,7 +771,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
     }
   }
 
-  const topObj = this._setTopOverlay({ x, y }, true);
+  const topObj = this._setTopOverlay({ x, y });
   if (
     eventType === "click" &&
     topObj &&
