@@ -10,6 +10,7 @@
  * Alan Stahl, alan@voxel51.com
  */
 import EventTarget from "@ungap/event-target";
+import { object } from "prop-types";
 import {
   ColorGenerator,
   FrameAttributesOverlay,
@@ -613,9 +614,7 @@ Renderer.prototype.processFrame = function () {
           fm[i].draw(context, this.canvasWidth, this.canvasHeight);
         }
       }
-      if (fm[0] && this.isFocus(fm[0])) {
-        fm[0].draw(context, this.canvasWidth, this.canvasHeight);
-      }
+      fm[0] && fm[0].draw(context, this.canvasWidth, this.canvasHeight);
     }
   }
 };
@@ -641,37 +640,21 @@ Renderer.prototype._setTopOverlay = function ({ x, y }, force = false) {
   if (!objects) {
     return;
   }
-  let containedOverlays = [];
   let bestContainsMode = Overlay.CONTAINS_NONE;
 
-  if (this._orderedOverlayCache) {
+  if (this._orderedOverlayCache && this._orderedOverlayCache.length) {
     const top = this._orderedOverlayCache[0];
     const mode = top.containsPoint(x, y);
     if (mode > bestContainsMode) {
       return top;
     }
   }
-  for (let i = objects.length - 1; i >= 0; i--) {
-    const object = objects[i];
-    const mode = object.containsPoint(x, y);
 
-    if (mode > bestContainsMode) {
-      containedOverlays.push(object);
-    }
-  }
-
-  if (containedOverlays.length === 0) {
-    return;
-  }
-
-  const bestIndex = argMin(
-    containedOverlays.map((o) => [o.getMouseDistance(x, y), o])
-  );
+  const bestIndex = argMin(objects.map((o) => [o.getMouseDistance(x, y), o]));
 
   const fm = this.frameOverlay[this._frameNumber];
-  const best = fm.splice(bestIndex);
-  this.frameOverlay[this._frameOverlay] = [best, ...fm];
-
+  const [best] = fm.splice(bestIndex, 1);
+  this.frameOverlay[this._frameNumber] = [best, ...fm];
   return best;
 };
 
@@ -772,7 +755,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
     }
   }
 
-  let topObj = this._setTopOverlay({ x, y }, true);
+  const topObj = this._setTopOverlay({ x, y }, true);
   if (
     eventType === "click" &&
     topObj &&
@@ -790,7 +773,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
       },
     });
   }
-  let processFrame = this.setFocus(topObj, { x, y });
+  let processFrame = topObj && this.setFocus(topObj, { x, y });
 
   const mousemove = eventType === "mousemove";
   if (pausedOrImage && mousemove && notThumbnail && topObj) {
