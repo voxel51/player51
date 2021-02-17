@@ -609,13 +609,11 @@ Renderer.prototype.processFrame = function () {
       const len = fm.length;
       // draw items without focus first, if settings allow
       if (this._renderRest()) {
-        for (let i = len - 1; i > 1; i--) {
-          if (this._orderedOverlayCache) {
-            fm[i].draw(context, this.canvasWidth, this.canvasHeight);
-          }
+        for (let i = len - 1; i > 0; i--) {
+          fm[i].draw(context, this.canvasWidth, this.canvasHeight);
         }
       }
-      if (this.isFocus(fm[0])) {
+      if (fm[0] && this.isFocus(fm[0])) {
         fm[0].draw(context, this.canvasWidth, this.canvasHeight);
       }
     }
@@ -751,7 +749,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
     if (down || up) {
       e.stopPropagation();
       e.preventDefault();
-      processFrame = true;
       let fm = this._orderedOverlayCache
         ? this._orderedOverlayCache
         : this.frameOverlay[this._frameNumber]
@@ -769,10 +766,8 @@ Renderer.prototype._handleMouseEvent = function (e) {
       } else if (contained > 1) {
         fm = [...fm.slice(1, contained), fm[0], ...fm.slice(contained)];
       }
-      topObj = fm[0];
       this._orderedOverlayCache = fm;
     } else {
-      topObj = this.frameOverlay[this._frameNumber];
       this._orderedOverlayCache = null;
     }
   }
@@ -795,7 +790,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
       },
     });
   }
-  let processFrame = this.setFocus(overlayObj, { x, y });
+  let processFrame = this.setFocus(topObj, { x, y });
 
   const mousemove = eventType === "mousemove";
   if (pausedOrImage && mousemove && notThumbnail && topObj) {
