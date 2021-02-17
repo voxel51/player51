@@ -10,7 +10,6 @@
  * Alan Stahl, alan@voxel51.com
  */
 import EventTarget from "@ungap/event-target";
-import { object } from "prop-types";
 import {
   ColorGenerator,
   FrameAttributesOverlay,
@@ -652,10 +651,12 @@ Renderer.prototype._setTopOverlay = function ({ x, y }, force = false) {
 
   const bestIndex = argMin(objects.map((o) => [o.getMouseDistance(x, y), o]));
 
-  const fm = this.frameOverlay[this._frameNumber];
-  const [best] = fm.splice(bestIndex, 1);
-  this.frameOverlay[this._frameNumber] = [best, ...fm];
-  return best;
+  if (objects[bestIndex].containsPoint(x, y)) {
+    const fm = this.frameOverlay[this._frameNumber];
+    const [best] = fm.splice(bestIndex, 1);
+    this.frameOverlay[this._frameNumber] = [best, ...fm];
+    return best;
+  }
 };
 
 Renderer.prototype.isFocus = function (overlayObj) {
@@ -712,6 +713,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
 
   const notThumbnail = !this.player._boolThumbnailMode;
 
+  let rotation = false;
   if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
@@ -730,6 +732,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
       }
     }
     if (down || up) {
+      rotation = true;
       e.stopPropagation();
       e.preventDefault();
       let fm = this._orderedOverlayCache
@@ -776,7 +779,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
   let processFrame = topObj && this.setFocus(topObj, { x, y });
 
   const mousemove = eventType === "mousemove";
-  if (pausedOrImage && mousemove && notThumbnail && topObj) {
+  if (pausedOrImage && notThumbnail && topObj && (mousemove || rotation)) {
     let result = topObj.getPointInfo(x, y);
     if (!Array.isArray(result)) {
       result = [result];
@@ -1388,12 +1391,12 @@ Renderer.prototype.initPlayerOptionsControls = function () {
   this.eleCanvas.addEventListener("mouseenter", () => enableFocus);
   this.eleDivCanvas.addEventListener("mouseenter", () => {
     enableFocus();
-    this.eleDivCanvas.addEventListener("keydown", this._handleMouseEvent);
+    document.body.addEventListener("keydown", this._handleMouseEvent);
   });
   this.eleCanvas.addEventListener("mouseleave", disableFocus);
   this.eleDivCanvas.addEventListener("mouseleave", () => {
     disableFocus();
-    this.eleDivCanvas.removeEventListener("keydown", this._handleMouseEvent);
+    document.body.removeEventListener("keydown", this._handleMouseEvent);
     hideTooltip();
   });
   this.eleDivVideoControls.addEventListener("mouseenter", disableFocus);
