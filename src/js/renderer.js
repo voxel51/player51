@@ -779,8 +779,8 @@ Renderer.prototype._handleMouseEvent = function (e) {
   let processFrame = topObj && this.setFocus(topObj, { x, y });
 
   const mousemove = eventType === "mousemove";
-  if (pausedOrImage && notThumbnail && topObj && (mousemove || rotation)) {
-    let result = topObj.getPointInfo(x, y);
+  if (pausedOrImage && notThumbnail && (mousemove || rotation)) {
+    let result = topObj ? topObj.getPointInfo(x, y) : [];
     if (!Array.isArray(result)) {
       result = [result];
     }

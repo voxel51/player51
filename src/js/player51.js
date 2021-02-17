@@ -68,26 +68,14 @@
  * Alan Stahl, alan@voxel51.com
  */
 
-
 // Imports
-import {
-  VideoPlayer,
-} from './videoplayer.js';
-import {
-  ImageViewer,
-} from './imageviewer.js';
-import {
-  GalleryViewer,
-} from './galleryviewer.js';
-import {
-  ImageSequence,
-} from './imagesequence.js';
-import {
-  colorGenerator,
-} from './overlay.js';
+import { VideoPlayer } from "./videoplayer.js";
+import { ImageViewer } from "./imageviewer.js";
+import { GalleryViewer } from "./galleryviewer.js";
+import { ImageSequence } from "./imagesequence.js";
+import { colorGenerator } from "./overlay.js";
 
 export default Player51;
-
 
 /**
  * Player51 Class Definition
@@ -115,14 +103,15 @@ function Player51(options, ...args) {
     delete options.src;
     delete options.type;
   }
-  for (let [index, name] of Object.entries(['overlay', 'fps', 'isSequence'])) {
+  for (let [index, name] of Object.entries(["overlay", "fps", "isSequence"])) {
     index = Number(index);
     if (args[index] !== undefined) {
       if (options[name] === undefined) {
         options[name] = args[index];
       } else {
         throw new Error(
-            `Duplicate option and positional argument ${index + 1}: ${name}`);
+          `Duplicate option and positional argument ${index + 1}: ${name}`
+        );
       }
     }
   }
@@ -133,21 +122,21 @@ function Player51(options, ...args) {
   // set defaults for other options
   options.colorMap = options.colorMap || {};
   options.colorByLabel = options.coloredByLabel || false;
-  options.activeLabels = options.activeLabels || {};
+  options.activeLabels = options.activeLabels || [];
   options.filter = options.filter || {};
   options.enableOverlayOptions = options.enableOverlayOptions || {};
   options.defaultOverlayOptions = options.defaultOverlayOptions || {};
   options.selectedObjects = options.selectedObjects || [];
 
-  const {media, overlay} = options;
+  const { media, overlay } = options;
   const mimetype = options.media.type.toLowerCase();
 
   // Load correct player
-  if (mimetype.startsWith('video/')) {
+  if (mimetype.startsWith("video/")) {
     return new VideoPlayer(media, overlay, options);
-  } else if (mimetype.startsWith('image/')) {
+  } else if (mimetype.startsWith("image/")) {
     return new ImageViewer(media, overlay, options);
-  } else if (mimetype === 'application/zip') {
+  } else if (mimetype === "application/zip") {
     if (options.isSequence) {
       return new ImageSequence(media, overlay, options);
     }
@@ -156,14 +145,12 @@ function Player51(options, ...args) {
   throw new Error(`Unrecognized mime type: ${mimetype}`);
 }
 
-
 /**
-* Get a color for a key
-*
-* @param {object} key
-* @return {string} hsla color string
-*/
-export const getColor = function(key) {
+ * Get a color for a key
+ *
+ * @param {object} key
+ * @return {string} hsla color string
+ */
+export const getColor = function (key) {
   return colorGenerator.color(key);
 };
-

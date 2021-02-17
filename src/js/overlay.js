@@ -166,7 +166,7 @@ Overlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
 Overlay.prototype._isShown = function (name) {
   if (
     this.renderer.options.activeLabels &&
-    this.renderer.options.activeLabels[name] === false
+    !this.renderer.options.activeLabels.includes(name)
   ) {
     return false;
   }
@@ -295,7 +295,7 @@ FrameAttributesOverlay.prototype.setup = function (
 FrameAttributesOverlay.prototype._getFilteredAttrs = function () {
   return this.attrs.filter(
     (attr) =>
-      this.renderer.options.activeLabels[attr.name] &&
+      this.renderer.options.activeLabels.includes(attr.name) &&
       _isAttrShown(this.renderer.options.filter, attr, true)
   );
 };
