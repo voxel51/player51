@@ -277,14 +277,13 @@ FrameAttributesOverlay.prototype.setup = function (
   if (typeof this.attrs !== undefined) {
     this._updateAttrs();
   }
-  this.textPadder = 10;
+  this.textPadder = (3 / this.renderer.height) * canvasHeight;
   if (this.x === null || this.y === null) {
     this.x = this.textPadder;
     this.y = this.textPadder;
   }
 
-  this.attrFontHeight = (12 / this.renderer.height) * canvasHeight;
-  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
+  this.attrFontHeight = (14 / this.renderer.height) * canvasHeight;
   this.font = `${this.attrFontHeight}px Arial, sans-serif`;
   if (typeof context === "undefined") {
     return;
@@ -948,12 +947,10 @@ ObjectOverlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
     (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) *
     canvasHeight;
 
-  this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
-  this.headerFontHeight = this.renderer.checkFontHeight(this.headerFontHeight);
-  this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
-  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
+  this.headerFontHeight = (11 / this.renderer.height) * canvasHeight;
+  this.attrFontHeight = (10 / this.renderer.height) * canvasHeight;
 
-  this.headerHeight = Math.min(26, 0.13 * canvasHeight);
+  this.headerHeight = (12 / this.renderer.height) * canvasHeight;
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
 
@@ -971,11 +968,7 @@ ObjectOverlay.prototype.hasAttrs = function () {
   return this._attrs !== undefined;
 };
 
-ObjectOverlay.prototype._setupFontWidths = function (
-  context,
-  canvasWidth,
-  canvasHeight
-) {
+ObjectOverlay.prototype._setupFontWidths = function (context) {
   context.font = `${this.headerFontHeight}px Arial, sans-serif`;
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
