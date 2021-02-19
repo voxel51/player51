@@ -662,9 +662,9 @@ Renderer.prototype._setTopOverlay = function ({ x, y }) {
     }
   }
 
-  const bestIndex = argMin(objects.map((o) => [o.getMouseDistance(x, y), o]));
+  const bestIndex = argMin(objects.map((o) => o.getMouseDistance(x, y)));
 
-  if (objects[bestIndex].containsPoint(x, y)) {
+  if (objects[bestIndex].containsPoint(x, y) > 0) {
     const fm = this.frameOverlay[this._frameNumber];
     const [best] = fm.splice(bestIndex, 1);
     this.frameOverlay[this._frameNumber] = [best, ...fm];

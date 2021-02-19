@@ -687,7 +687,7 @@ KeypointsOverlay.prototype.getMouseDistance = function (x, y) {
 };
 
 KeypointsOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown()) {
+  if (!this._isShown(this.name)) {
     return Overlay.CONTAINS_NONE;
   }
   if (this._getDistanceAndPoint(x, y)[0] <= 2 * POINT_RADIUS) {
@@ -838,7 +838,7 @@ PolylineOverlay.prototype.getMouseDistance = function (x, y) {
 };
 
 PolylineOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown()) {
+  if (!this._isShown(this.name)) {
     return Overlay.CONTAINS_NONE;
   }
   const tolerance = LINE_WIDTH * 1.5;
@@ -947,10 +947,10 @@ ObjectOverlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
     (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) *
     canvasHeight;
 
-  this.headerFontHeight = (11 / this.renderer.height) * canvasHeight;
-  this.attrFontHeight = (10 / this.renderer.height) * canvasHeight;
+  this.headerFontHeight = (14 / this.renderer.height) * canvasHeight;
+  this.attrFontHeight = (12 / this.renderer.height) * canvasHeight;
 
-  this.headerHeight = (12 / this.renderer.height) * canvasHeight;
+  this.headerHeight = (16 / this.renderer.height) * canvasHeight;
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
 
