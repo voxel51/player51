@@ -1272,7 +1272,7 @@ ObjectOverlay.prototype.getMouseDistance = function (x, y) {
 };
 
 ObjectOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown()) {
+  if (!this._isShown(this.name)) {
     return Overlay.CONTAINS_NONE;
   }
   // the header takes up an extra LINE_WIDTH / 2 on each side due to its border
