@@ -14,12 +14,11 @@ import {
   ColorGenerator,
   FrameAttributesOverlay,
   FrameMaskOverlay,
-  Overlay,
   ObjectOverlay,
   KeypointsOverlay,
   PolylineOverlay,
 } from "./overlay.js";
-import { argMin, ICONS, rescale } from "./util.js";
+import { ICONS, rescale } from "./util.js";
 import { ZipLibrary } from "./zipreader/zip.js";
 
 export { Renderer };
@@ -668,7 +667,11 @@ Renderer.prototype._renderRest = function () {
 };
 
 Renderer.prototype._setTopOverlays = function ({ x, y }, overlays) {
-  if (this.player._boolThumbnailMode) {
+  if (
+    this.player._boolThumbnailMode ||
+    [-1, null].includes(x) ||
+    [-1, null].includes(y)
+  ) {
     return overlays;
   }
 
@@ -679,7 +682,9 @@ Renderer.prototype._setTopOverlays = function ({ x, y }, overlays) {
   const contained = overlays
     .filter((o) => o.containsPoint(x, y) > 0)
     .sort((a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y));
-  const outside = overlays.filter((o) => o.containsPoint(x, y) === 0);
+  const outside = overlays.filter(
+    (o) => o instanceof FrameAttributesOverlay || o.containsPoint(x, y) === 0
+  );
 
   return [...contained, ...outside];
 };
@@ -1396,6 +1401,10 @@ Renderer.prototype.initPlayerOptionsControls = function () {
   };
   const disableFocus = () => {
     this._canFocus = false;
+    this._mouseX = null;
+    this._mouseY = null;
+    this._orderedOverlayCache = null;
+    this._focusPos = { x: -1, y: -1 };
     this.setFocus(undefined);
     this.processFrame();
   };

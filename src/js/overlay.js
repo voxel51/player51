@@ -291,6 +291,10 @@ FrameAttributesOverlay.prototype.setup = function (
   context.font = this.font;
 };
 
+FrameAttributesOverlay.prototype._isShown = function () {
+  return this._getFilteredAttrs().length > 0;
+};
+
 FrameAttributesOverlay.prototype._getFilteredAttrs = function () {
   return this.attrs.filter(
     (attr) =>
