@@ -581,7 +581,7 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
 
 Renderer.prototype._getOrderedOverlays = function (coords) {
   if (this._orderedOverlayCache) {
-    return this._orderedOverlayCache;
+    return this._setTopOverlay(coords, this._orderedOverlayCache);
   }
   const overlays = this.frameOverlay[this._frameNumber];
 
@@ -665,20 +665,20 @@ Renderer.prototype._renderRest = function () {
 
 Renderer.prototype._setTopOverlay = function ({ x, y }, overlays) {
   if (this.player._boolThumbnailMode) {
-    return;
+    return overlays;
   }
 
   if (!overlays || !overlays.length) {
-    return;
+    return overlays;
   }
 
   const bestIndex = argMin(overlays.map((o) => o.getMouseDistance(x, y)));
 
   if (overlays[bestIndex].containsPoint(x, y) > 0) {
     const [best] = overlays.splice(bestIndex, 1);
-    return [best, ...fm];
+    return [best, ...overlays];
   }
-  return fm;
+  return overlays;
 };
 
 Renderer.prototype.isFocus = function (overlayObj) {
@@ -736,9 +736,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
   const notThumbnail = !this.player._boolThumbnailMode;
 
   let rotation = false;
-  let fm = this._orderedOvelayCache
-    ? this._orderedOverlayCache
-    : this._getOrderedOverlays({ x, y });
+  let fm = this._getOrderedOverlays({ x, y });
   if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
@@ -776,7 +774,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
     }
   }
 
-  const topObj = fm[0] && fm[0].containsPoint(x, y) > 0 ? fm[0] : null;
+  const topObj = fm && fm[0] && fm[0].containsPoint(x, y) > 0 ? fm[0] : null;
   if (
     eventType === "click" &&
     topObj &&
