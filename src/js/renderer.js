@@ -68,8 +68,9 @@ function Renderer(media, overlay, options) {
       showFrameCount: false,
       labelsOnlyOnClick: false,
       attrsOnlyOnClick: false,
-      showConfidence: true,
       showAttrs: true,
+      showConfidence: true,
+      showTooltip: true,
       attrRenderMode: "value",
       attrRenderBox: true,
       action: "click",
@@ -809,12 +810,13 @@ Renderer.prototype._handleMouseEvent = function (e) {
       result = [result];
     }
 
-    this.dispatchEvent("tooltipinfo", {
-      data: {
-        overlays: result,
-        point: [pointX, pointY],
-      },
-    });
+    this.overlayOptions.showTooltip &&
+      this.dispatchEvent("tooltipinfo", {
+        data: {
+          overlays: result,
+          point: [pointX, pointY],
+        },
+      });
   }
 
   processFrame && this.processFrame();
@@ -1120,12 +1122,13 @@ Renderer.prototype.initPlayerControlHTML = function (parent, sequence = true) {
     this.updateControlsDisplayState();
   });
   const hideTooltip = () => {
-    this.dispatchEvent("tooltipinfo", {
-      data: {
-        overlays: [],
-        point: [0, 0],
-      },
-    });
+    this.overlayOptions.showTooltip &&
+      this.dispatchEvent("tooltipinfo", {
+        data: {
+          overlays: [],
+          point: [0, 0],
+        },
+      });
   };
   this.eleDivVideoControls.addEventListener("mouseenter", () => {
     this._boolHoveringControls = true;
@@ -1177,12 +1180,13 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function (parent) {
   this.eleDivVideoOpts = document.createElement("div");
   this.eleDivVideoOpts.className = "p51-video-options-panel";
   const hideTooltip = () => {
-    this.dispatchEvent("tooltipinfo", {
-      data: {
-        overlays: [],
-        point: [0, 0],
-      },
-    });
+    this.overlayOptions.showTooltip &&
+      this.dispatchEvent("tooltipinfo", {
+        data: {
+          overlays: [],
+          point: [0, 0],
+        },
+      });
   };
   this.eleDivVideoOpts.addEventListener("mouseenter", () => {
     this._boolHoveringControls = true;
@@ -1271,6 +1275,17 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function (parent) {
   }
   this._overlayOptionWrappers.action = this.eleActionCtlOptForm;
 
+  // Checkbox for show attrs
+  const eleOptCtlShowAttrRow = makeCheckboxRow(
+    "Show attributes",
+    this.overlayOptions.showAttrs
+  );
+  this.eleOptCtlShowAttr = eleOptCtlShowAttrRow.querySelector(
+    "input[type=checkbox]"
+  );
+  this.eleOptCtlShowAttrWrapper = makeWrapper([eleOptCtlShowAttrRow]);
+  this._overlayOptionWrappers.showAttrs = this.eleOptCtlShowAttrWrapper;
+
   // Checkbox for show confidence
   const eleOptCtlShowConfidenceRow = makeCheckboxRow(
     "Show confidence",
@@ -1284,16 +1299,16 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function (parent) {
   ]);
   this._overlayOptionWrappers.showConfidence = this.eleOptCtlShowConfidenceWrapper;
 
-  // Checkbox for show attrs
-  const eleOptCtlShowAttrRow = makeCheckboxRow(
-    "Show attributes",
-    this.overlayOptions.showAttrs
+  // Checkbox for show tooltip
+  const eleOptCtlShowTooltipRow = makeCheckboxRow(
+    "Show tooltip",
+    this.overlayOptions.showTooltip
   );
-  this.eleOptCtlShowAttr = eleOptCtlShowAttrRow.querySelector(
+  this.eleOptCtlShowTooltip = eleOptCtlShowConfidenceRow.querySelector(
     "input[type=checkbox]"
   );
-  this.eleOptCtlShowAttrWrapper = makeWrapper([eleOptCtlShowAttrRow]);
-  this._overlayOptionWrappers.showAttrs = this.eleOptCtlShowAttrWrapper;
+  this.eleOptCtlShowTooltipWrapper = makeWrapper([eleOptCtlShowTooltipRow]);
+  this._overlayOptionWrappers.showTooltip = this.eleOptCtlShowTooltipWrapper;
 
   // Checkbox for show attrs on click only
   const eleOptCtlShowAttrClickRow = makeCheckboxRow(
@@ -1346,9 +1361,10 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function (parent) {
   }
   this.eleDivVideoOpts.appendChild(this.eleActionCtlOptForm);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowLabelWrapper);
-  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowConfidenceWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlShowAttrClickWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowConfidenceWrapper);
+  this.eleDivVideoOpts.appendChild(this.eleOptCtlShowTooltipWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrBoxWrapper);
   this.eleDivVideoOpts.appendChild(this.eleOptCtlAttrOptForm);
 
@@ -1409,12 +1425,13 @@ Renderer.prototype.initPlayerOptionsControls = function () {
     this.processFrame();
   };
   const hideTooltip = () => {
-    this.dispatchEvent("tooltipinfo", {
-      data: {
-        overlays: [],
-        point: [0, 0],
-      },
-    });
+    this.overlayOptions.showTooltip &&
+      this.dispatchEvent("tooltipinfo", {
+        data: {
+          overlays: [],
+          point: [0, 0],
+        },
+      });
   };
   this.eleCanvas.addEventListener("mouseenter", () => enableFocus);
   this.eleDivCanvas.addEventListener("mouseenter", () => {
@@ -1444,13 +1461,6 @@ Renderer.prototype.initPlayerOptionsControls = function () {
     this.dispatchEvent("options", { data: this.overlayOptions });
   };
 
-  this.eleOptCtlShowConfidence.addEventListener("change", () => {
-    this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
-    dispatchOptionsChange();
-    this.processFrame();
-    this.updateFromDynamicState();
-  });
-
   this.eleOptCtlShowAttr.addEventListener("change", () => {
     this.overlayOptions.showAttrs = this.eleOptCtlShowAttr.checked;
     dispatchOptionsChange();
@@ -1467,6 +1477,20 @@ Renderer.prototype.initPlayerOptionsControls = function () {
 
   this.eleOptCtlShowAttrBox.addEventListener("change", () => {
     this.overlayOptions.attrRenderBox = this.eleOptCtlShowAttrBox.checked;
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowConfidence.addEventListener("change", () => {
+    this.overlayOptions.showConfidence = this.eleOptCtlShowConfidence.checked;
+    dispatchOptionsChange();
+    this.processFrame();
+    this.updateFromDynamicState();
+  });
+
+  this.eleOptCtlShowTooltip.addEventListener("change", () => {
+    this.overlayOptions.showTooltip = this.eleOptCtlShowTooltip.checked;
+    dispatchOptionsChange();
     this.processFrame();
     this.updateFromDynamicState();
   });
