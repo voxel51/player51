@@ -580,15 +580,32 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
 };
 
 Renderer.prototype._getOrderedOverlays = function () {
-  const overlays = this._orderedOverlayCache
-    ? this._orderedOverlayCache
-    : this.frameOverlay[this._frameNumber];
+  if (this._orderedOverlayCache) {
+    return this._orderedOverlayCache;
+  }
+  const overlays = this.frameOverlay[this._frameNumber];
 
-  const bins = Object.fromEntries(
-    this.options.activeLabels.map((l) => [l, []])
-  );
+  const activeLabels = this.options.activeLabels;
 
-  return overlays;
+  const bins = Object.fromEntries(activeLabels.map((l) => [l, []]));
+  let attrs = null;
+
+  for (const overlay of overlays) {
+    if (overlay instanceof FrameAttributesOverlay) {
+      attrs = overlay;
+      continue;
+    }
+
+    bins[overlay.name].push(overlay);
+  }
+
+  let ordered = activeLabels.reduce((acc, cur) => [...acc, ...bins[cur]], []);
+
+  if (attrs) {
+    ordered = [attrs, ...ordered];
+  }
+
+  return ordered;
 };
 
 /**
