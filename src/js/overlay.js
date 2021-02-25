@@ -536,7 +536,7 @@ FrameMaskOverlay.prototype.getMouseDistance = function (x, y) {
 };
 
 FrameMaskOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown()) {
+  if (!this._isShown(this.name)) {
     return Overlay.CONTAINS_NONE;
   }
   if (this.mask.rendered && this.getTarget(x, y)) {

@@ -585,6 +585,10 @@ Renderer.prototype._getOrderedOverlays = function (coords) {
   }
   const overlays = this.frameOverlay[this._frameNumber];
 
+  if (!overlays) {
+    return [];
+  }
+
   const activeLabels = this.options.activeLabels;
 
   const bins = Object.fromEntries(activeLabels.map((l) => [l, []]));
