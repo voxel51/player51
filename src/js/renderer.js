@@ -675,9 +675,10 @@ Renderer.prototype._setTopOverlay = function ({ x, y }, overlays) {
   const bestIndex = argMin(overlays.map((o) => o.getMouseDistance(x, y)));
 
   if (overlays[bestIndex].containsPoint(x, y) > 0) {
-    const [best] = fm.splice(bestIndex, 1);
+    const [best] = overlays.splice(bestIndex, 1);
     return [best, ...fm];
   }
+  return fm;
 };
 
 Renderer.prototype.isFocus = function (overlayObj) {
@@ -735,6 +736,9 @@ Renderer.prototype._handleMouseEvent = function (e) {
   const notThumbnail = !this.player._boolThumbnailMode;
 
   let rotation = false;
+  let fm = this._orderedOvelayCache
+    ? this._orderedOverlayCache
+    : this._getOrderedOverlays({ x, y });
   if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
@@ -756,9 +760,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
       rotation = true;
       e.stopPropagation();
       e.preventDefault();
-      let fm = this._orderedOvelayCache
-        ? this._orderedOverlayCache
-        : this._getOrderedOverlays({ x, y });
       const contained = fm.filter((o) => o.containsPoint(x, y) > 0).length;
       if (up && contained > 1) {
         fm = [
@@ -775,7 +776,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
     }
   }
 
-  const overlays = this._getOrderedOverlays({ x, y });
+  const topObj = fm[0] && fm[0].containsPoint(x, y) > 0 ? fm[0] : null;
   if (
     eventType === "click" &&
     topObj &&
