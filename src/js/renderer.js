@@ -579,7 +579,7 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
   }
 };
 
-Renderer.prototype._getOrderedOverlays = function () {
+Renderer.prototype._getOrderedOverlays = function (coords) {
   if (this._orderedOverlayCache) {
     return this._orderedOverlayCache;
   }
@@ -607,7 +607,7 @@ Renderer.prototype._getOrderedOverlays = function () {
     ordered = [attrs, ...ordered];
   }
 
-  return ordered;
+  return this._setTopOverlay(coords, ordered);
 };
 
 /**
@@ -631,11 +631,11 @@ Renderer.prototype.processFrame = function () {
   if (this._isOverlayPrepared) {
     if (this._frameNumber in this.frameOverlay) {
       // Hover Focus setting
-      if (this.overlayOptions.action === "hover") {
-        this.setFocus(this._setTopOverlay(this._focusPos));
-      }
 
-      const overlays = this._getOrderedOverlays();
+      let overlays = this._getOrderedOverlays(this._focusPos);
+      if (this.overlayOptions.action === "hover") {
+        this.setFocus(overlays[0]);
+      }
 
       const len = overlays.length;
       // draw items without focus first, if settings allow
@@ -663,31 +663,20 @@ Renderer.prototype._renderRest = function () {
   return true;
 };
 
-Renderer.prototype._setTopOverlay = function ({ x, y }) {
+Renderer.prototype._setTopOverlay = function ({ x, y }, overlays) {
   if (this.player._boolThumbnailMode) {
     return;
   }
-  const objects = this.frameOverlay[this._frameNumber];
-  if (!objects) {
+
+  if (!overlays || !overlays.length) {
     return;
   }
-  let bestContainsMode = Overlay.CONTAINS_NONE;
 
-  if (this._orderedOverlayCache && this._orderedOverlayCache.length) {
-    const top = this._orderedOverlayCache[0];
-    const mode = top.containsPoint(x, y);
-    if (mode > bestContainsMode) {
-      return top;
-    }
-  }
+  const bestIndex = argMin(overlays.map((o) => o.getMouseDistance(x, y)));
 
-  const bestIndex = argMin(objects.map((o) => o.getMouseDistance(x, y)));
-
-  if (objects[bestIndex].containsPoint(x, y) > 0) {
-    const fm = this.frameOverlay[this._frameNumber];
+  if (overlays[bestIndex].containsPoint(x, y) > 0) {
     const [best] = fm.splice(bestIndex, 1);
-    this.frameOverlay[this._frameNumber] = [best, ...fm];
-    return best;
+    return [best, ...fm];
   }
 };
 
@@ -769,7 +758,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
       e.preventDefault();
       let fm = this._orderedOvelayCache
         ? this._orderedOverlayCache
-        : this._getOrderedOverlays();
+        : this._getOrderedOverlays({ x, y });
       const contained = fm.filter((o) => o.containsPoint(x, y) > 0).length;
       if (up && contained > 1) {
         fm = [
@@ -786,7 +775,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
     }
   }
 
-  const topObj = this._setTopOverlay({ x, y });
+  const overlays = this._getOrderedOverlays({ x, y });
   if (
     eventType === "click" &&
     topObj &&
