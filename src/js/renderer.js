@@ -1304,7 +1304,7 @@ Renderer.prototype.initPlayerOptionsPanelHTML = function (parent) {
     "Show tooltip",
     this.overlayOptions.showTooltip
   );
-  this.eleOptCtlShowTooltip = eleOptCtlShowConfidenceRow.querySelector(
+  this.eleOptCtlShowTooltip = eleOptCtlShowTooltipRow.querySelector(
     "input[type=checkbox]"
   );
   this.eleOptCtlShowTooltipWrapper = makeWrapper([eleOptCtlShowTooltipRow]);
