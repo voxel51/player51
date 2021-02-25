@@ -663,7 +663,7 @@ Renderer.prototype._renderRest = function () {
   return true;
 };
 
-Renderer.prototype._setTopOverlay = function ({ x, y }, overlays) {
+Renderer.prototype._setTopOverlays = function ({ x, y }, overlays) {
   if (this.player._boolThumbnailMode) {
     return overlays;
   }
@@ -675,7 +675,7 @@ Renderer.prototype._setTopOverlay = function ({ x, y }, overlays) {
   const contained = overlays
     .filter((o) => o.containsPoint(x, y) > 0)
     .sort((a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y));
-  const outside = overlayrs.filter((o) => o.containsPoint(x, y) === 0);
+  const outside = overlays.filter((o) => o.containsPoint(x, y) === 0);
 
   return [...contained, ...outside];
 };
