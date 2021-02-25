@@ -581,7 +581,7 @@ Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
 
 Renderer.prototype._getOrderedOverlays = function (coords) {
   if (this._orderedOverlayCache) {
-    return this._setTopOverlay(coords, this._orderedOverlayCache);
+    return this._orderedOverlayCache;
   }
   const overlays = this.frameOverlay[this._frameNumber];
 
@@ -607,7 +607,7 @@ Renderer.prototype._getOrderedOverlays = function (coords) {
     ordered = [attrs, ...ordered];
   }
 
-  return this._setTopOverlay(coords, ordered);
+  return this._setTopOverlays(coords, ordered);
 };
 
 /**
@@ -672,13 +672,12 @@ Renderer.prototype._setTopOverlay = function ({ x, y }, overlays) {
     return overlays;
   }
 
-  const bestIndex = argMin(overlays.map((o) => o.getMouseDistance(x, y)));
+  const contained = overlays
+    .filter((o) => o.containsPoint(x, y) > 0)
+    .sort((a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y));
+  const outside = overlayrs.filter((o) => o.containsPoint(x, y) === 0);
 
-  if (overlays[bestIndex].containsPoint(x, y) > 0) {
-    const [best] = overlays.splice(bestIndex, 1);
-    return [best, ...overlays];
-  }
-  return overlays;
+  return [...contained, ...outside];
 };
 
 Renderer.prototype.isFocus = function (overlayObj) {
