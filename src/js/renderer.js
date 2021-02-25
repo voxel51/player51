@@ -596,6 +596,8 @@ Renderer.prototype._getOrderedOverlays = function () {
       continue;
     }
 
+    if (!(overlay.name in bins)) continue;
+
     bins[overlay.name].push(overlay);
   }
 
@@ -765,13 +767,9 @@ Renderer.prototype._handleMouseEvent = function (e) {
       rotation = true;
       e.stopPropagation();
       e.preventDefault();
-      let fm = this._orderedOverlayCache
+      let fm = this._orderedOvelayCache
         ? this._orderedOverlayCache
-        : this.frameOverlay[this._frameNumber]
-            .filter((o) => o._isShown(o.name))
-            .sort(
-              (a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y)
-            );
+        : this._getOrderedOverlays();
       const contained = fm.filter((o) => o.containsPoint(x, y) > 0).length;
       if (up && contained > 1) {
         fm = [
