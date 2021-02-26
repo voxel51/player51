@@ -177,14 +177,14 @@ Overlay.prototype._isShown = function (name) {
 };
 Overlay.prototype._getColor = function (name, label, index) {
   const options = this.renderer.options;
-  const hasColor = options.colorMap && options.colorMap[name];
-  const useColorMap = !options.colorByLabel;
-  if (hasColor && useColorMap) {
-    return options.colorMap[name];
-  } else if (hasColor && !useColorMap) {
+  const key = options.colorByLabel ? label : name;
+  const hasColor = options.colorMap && options.colorMap[key];
+  if (hasColor) {
+    return options.colorMap[key];
+  } else {
     return colorGenerator.color(label);
   }
-  return colorGenerator.color(index);
+  // return colorGenerator.color(index);
 };
 
 Overlay.prototype.hasFocus = function () {
@@ -951,7 +951,6 @@ ObjectOverlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
   this.h =
     (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) *
     canvasHeight;
-
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this.headerFontHeight);
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
