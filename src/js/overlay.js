@@ -283,7 +283,8 @@ FrameAttributesOverlay.prototype.setup = function (
     this.y = this.textPadder;
   }
 
-  this.attrFontHeight = (14 / this.renderer.height) * canvasHeight;
+  this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
+  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
   this.font = `${this.attrFontHeight}px Arial, sans-serif`;
   if (typeof context === "undefined") {
     return;
@@ -951,10 +952,12 @@ ObjectOverlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
     (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) *
     canvasHeight;
 
-  this.headerFontHeight = (14 / this.renderer.height) * canvasHeight;
-  this.attrFontHeight = (12 / this.renderer.height) * canvasHeight;
+  this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
+  this.headerFontHeight = this.renderer.checkFontHeight(this.headerFontHeight);
+  this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
+  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
 
-  this.headerHeight = (16 / this.renderer.height) * canvasHeight;
+  this.headerHeight = Math.min(26, 0.13 * canvasHeight);
   // this is *0.4 instead of / 2 because it looks better
   this.textPadder = (this.headerHeight - this.headerFontHeight) * 0.4;
 
