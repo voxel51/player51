@@ -118,6 +118,7 @@ function Renderer(media, overlay, options) {
   this._boolDisableShowControls = false;
   this._boolShowControls = false;
   this._orderedOverlayCache = null;
+  this._rotateIndex = 0;
   this.handleOverlay(overlay);
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
@@ -749,13 +750,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
   if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
-    if (eventType === "wheel" && notThumbnail) {
-      if (e.deltaY > 0) {
-        up = true;
-      } else {
-        down = true;
-      }
-    }
     if (eventType === "keydown" && this._canFocus) {
       if (e.key === "ArrowDown") {
         down = true;
@@ -768,18 +762,21 @@ Renderer.prototype._handleMouseEvent = function (e) {
       e.stopPropagation();
       e.preventDefault();
       const contained = fm.filter((o) => o.containsPoint(x, y) > 0).length;
-      if (up && contained > 1) {
+      if (up && contained > 1 && this._rotateIndex > 0) {
         fm = [
           fm[contained - 1],
           ...fm.slice(0, contained - 1),
           ...fm.slice(contained),
         ];
-      } else if (contained > 1) {
+        this._rotateIndex -= 1;
+      } else if (contained > 1 && this._rotateIndex < contained) {
         fm = [...fm.slice(1, contained), fm[0], ...fm.slice(contained)];
+        this._rotateIndex += 1;
       }
       this._orderedOverlayCache = fm;
     } else {
       this._orderedOverlayCache = null;
+      this._rotateIndex = 0;
     }
   }
 
@@ -1060,9 +1057,6 @@ Renderer.prototype.initCanvas = function () {
   this.eleCanvas.className = "p51-contained-canvas";
   this.eleDivCanvas.appendChild(this.eleCanvas);
   this.parent.appendChild(this.eleDivCanvas);
-  if (!this._boolThumbnailMode) {
-    this.eleCanvas.addEventListener("wheel", this._handleMouseEvent);
-  }
 };
 
 /**
