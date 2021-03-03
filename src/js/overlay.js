@@ -352,7 +352,7 @@ FrameAttributesOverlay.prototype.draw = function (
   if (typeof context === "undefined") {
     return;
   }
-  if (this.w === null) {
+  if (this.x === null) {
     this.setup(context, canvasWidth, canvasHeight);
   }
 
@@ -362,26 +362,26 @@ FrameAttributesOverlay.prototype.draw = function (
       return;
     }
     context.font = this.font;
-    const bbox = computeBBoxForTextOverlay(
-      context,
-      this.attrText,
-      this.attrFontHeight,
-      this.textPadder
-    );
-    this.w = bbox.width;
-    this.h = bbox.height;
     context.fillStyle = this.renderer.metadataOverlayBGColor;
-    context.fillRect(this.x, this.y, this.w, this.h);
 
-    // Rendering y is at the baseline of the text.  Handle this by padding
-    // one row (attrFontHeight and textPadder)
     context.fillStyle = colorGenerator.white;
+    let y = this.y;
     for (let a = 0; a < this.attrText.length; a++) {
+      const bbox = computeBBoxForTextOverlay(
+        context,
+        [this.attrText[a]],
+        this.attrFontHeight,
+        this.textPadder
+      );
+      context.fillRect(this.x, y, bbox.width, bbox.height);
+      // Rendering y is at the baseline of the text.  Handle this by padding
+      // one row (attrFontHeight and textPadder)
       context.fillText(
         this.attrText[a],
         this.x + this.textPadder,
         this.y + (a + 1) * (this.attrFontHeight + this.textPadder)
       );
+      y += this.textPadder;
     }
   }
 };
