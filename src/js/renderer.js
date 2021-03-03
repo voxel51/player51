@@ -769,7 +769,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
           ...fm.slice(contained),
         ];
         this._rotateIndex -= 1;
-      } else if (contained > 1 && this._rotateIndex < contained) {
+      } else if (down && contained > 1 && this._rotateIndex < contained - 1) {
         fm = [...fm.slice(1, contained), fm[0], ...fm.slice(contained)];
         this._rotateIndex += 1;
       }
