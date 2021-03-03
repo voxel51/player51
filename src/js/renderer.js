@@ -802,10 +802,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
   }
   if (eventType === "click" && topObj && topObj.isSelectable()) {
     this.dispatchEvent("select", {
-      data: {
-        id: topObj.id,
-        name: topObj.name,
-      },
+      data: topObj.getSelectData(x,z),
     });
   }
   let processFrame = topObj && this.setFocus(topObj, { x, y });

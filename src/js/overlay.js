@@ -229,6 +229,13 @@ Overlay.prototype.isSelected = function () {
   );
 };
 
+Overlay.prototype.getSelectData = function () {
+  return {
+    id: this.id,
+    name: this.name,
+  };
+};
+
 /**
  * An overlay that renders frame-level attributes
  *
