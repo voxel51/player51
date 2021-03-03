@@ -253,7 +253,6 @@ function FrameAttributesOverlay(d, renderer) {
 
   this.name = null;
   this.attrs = d.attrs;
-  console.log(this.attrs);
   this.attrText = null; // will store a list of strings (one for each object in d.attrs)
 
   this.attrFontHeight = null;
@@ -380,6 +379,7 @@ FrameAttributesOverlay.prototype.draw = function (
     );
     this.attrHeight = Math.max(...bboxes.map((b) => b.height));
     this.w = Math.max(...bboxes.map((b) => b.width));
+    const attrs = this._getFilteredAttrs();
     for (let a = 0; a < this.attrText.length; a++) {
       context.fillStyle = this.renderer.metadataOverlayBGColor;
       context.fillRect(this.x, y, this.w, this.attrHeight);
@@ -391,6 +391,11 @@ FrameAttributesOverlay.prototype.draw = function (
         this.x + this.textPadder,
         y + this.attrFontHeight + this.textPadder
       );
+      const attr = attrs[i];
+      if (this.renderer.options.selectedObjects.has(attr.id)) {
+        context.strokeStyle = this._getColor(attr.name, attr.value);
+        context.strokeRect(this.x, y, this.w, this.attrHe);
+      }
       y += this.textPadder + this.attrHeight;
     }
   }
