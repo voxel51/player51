@@ -348,7 +348,11 @@ Renderer.prototype.prepareOverlay = function (rawjson) {
         const frameKey = frameKeys[frameKeyI];
         const f = rawjson.frames[frameKey];
         if (f && f.mask) {
-          this._prepareOverlay_auxMask(context, { mask: f.mask }, frameKey);
+          this._prepareOverlay_auxMask(
+            context,
+            { mask: f.mask, name: f.name, _id: f._id },
+            frameKey
+          );
         }
         if (f && f.masks) {
           for (const maskData of f.masks) {
@@ -357,6 +361,7 @@ Renderer.prototype.prepareOverlay = function (rawjson) {
               {
                 name: maskData.name,
                 mask: maskData.mask,
+                _id: maskData._id,
               },
               frameKey
             );
@@ -394,7 +399,11 @@ Renderer.prototype.prepareOverlay = function (rawjson) {
   // Attributes and masks for images
   if (typeof rawjson.mask !== "undefined") {
     const context = this.setupCanvasContext();
-    this._prepareOverlay_auxMask(context, { mask: rawjson.mask });
+    this._prepareOverlay_auxMask(context, {
+      mask: rawjson.mask,
+      name: rawjson.name,
+      _id: rawjson._id,
+    });
   }
   if (typeof rawjson.masks !== "undefined") {
     const context = this.setupCanvasContext();
@@ -402,6 +411,7 @@ Renderer.prototype.prepareOverlay = function (rawjson) {
       this._prepareOverlay_auxMask(context, {
         name: maskData.name,
         mask: maskData.mask,
+        _id: maskData._id,
       });
     }
   }
