@@ -352,7 +352,7 @@ FrameAttributesOverlay.prototype.draw = function (
   if (typeof context === "undefined") {
     return;
   }
-  if (this.x === null) {
+  if (this.w === null) {
     this.setup(context, canvasWidth, canvasHeight);
   }
 
@@ -372,16 +372,20 @@ FrameAttributesOverlay.prototype.draw = function (
         this.textPadder
       )
     );
-    const width = Math.max(...bboxes.map((b) => b.width));
+    this.attrHeight = Math.max(...bboxes.map((b) => b.height));
+    this.w = Math.max(...bboxes.map((b) => b.width));
     for (let a = 0; a < this.attrText.length; a++) {
       context.fillStyle = this.renderer.metadataOverlayBGColor;
-      context.fillRect(this.x, y, width, bbox[a].height);
+      context.fillRect(this.x, y, this.w, bbox[a].height);
       // Rendering y is at the baseline of the text.  Handle this by padding
       // one row (attrFontHeight and textPadder)
       context.fillStyle = colorGenerator.white;
-      y += this.attrFontHeight + this.textPadder;
-      context.fillText(this.attrText[a], this.x + this.textPadder, y);
-      y += this.textPadder * 2;
+      context.fillText(
+        this.attrText[a],
+        this.x + this.textPadder,
+        y + this.attrFontHeight + this.textPadder
+      );
+      y += this.textPadder + this.attrHeight;
     }
   }
 };
@@ -393,10 +397,21 @@ FrameAttributesOverlay.prototype.getMouseDistance = function (x, y) {
   return Infinity;
 };
 
+FrameAttributesOverlay.prototype.getYIntervals = function () {
+  return this._getFilteredAttrs().map((a, i) => ({
+    y: this.y + (i * this.attrHeight + this.textPadder),
+    height: this.attrHeight,
+  }));
+};
+
 FrameAttributesOverlay.prototype.containsPoint = function (x, y) {
   const xAxis = x > this.x && x < this.w + this.x;
-  const yAxis = y > this.y && y < this.h + this.y;
-  return xAxis && yAxis;
+  return (
+    xAxis &&
+    this.getYIntervals().some(
+      ({ y: top, height }) => y > top && y < top + height
+    )
+  );
 };
 
 FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
