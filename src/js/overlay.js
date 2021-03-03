@@ -218,8 +218,8 @@ Overlay.prototype.getPointInfo = function (x, y) {
   throw new Error("Method getPointInfo() must be implemented.");
 };
 
-Overlay.prototype.isSelectable = function () {
-  return this.id !== undefined;
+Overlay.prototype.isSelectable = function (x, y) {
+  return this.containsPoint(x, y) && this.getSelectData(x, y);
 };
 
 Overlay.prototype.isSelected = function () {
@@ -229,7 +229,7 @@ Overlay.prototype.isSelected = function () {
   );
 };
 
-Overlay.prototype.getSelectData = function () {
+Overlay.prototype.getSelectData = function (x, y) {
   return {
     id: this.id,
     name: this.name,
@@ -253,6 +253,7 @@ function FrameAttributesOverlay(d, renderer) {
 
   this.name = null;
   this.attrs = d.attrs;
+  console.log(this.attrs);
   this.attrText = null; // will store a list of strings (one for each object in d.attrs)
 
   this.attrFontHeight = null;
@@ -303,6 +304,11 @@ FrameAttributesOverlay.prototype.setup = function (
 
 FrameAttributesOverlay.prototype._isShown = function () {
   return this._getFilteredAttrs().length > 0;
+};
+
+FrameAttributesOverlay.prototype.getSelectData = function (x, y) {
+  const { id, name } = this.getPointInfo(x, y)[0];
+  return { id, name };
 };
 
 FrameAttributesOverlay.prototype._getFilteredAttrs = function () {
@@ -399,7 +405,7 @@ FrameAttributesOverlay.prototype.getMouseDistance = function (x, y) {
 
 FrameAttributesOverlay.prototype.getYIntervals = function () {
   return this._getFilteredAttrs().map((a, i) => ({
-    y: this.y + (i * this.attrHeight + this.textPadder),
+    y: this.y + i * (this.attrHeight + this.textPadder * 2),
     height: this.attrHeight,
   }));
 };
@@ -423,7 +429,7 @@ FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
 
   return [
     {
-      id: a.id,
+      id: a._id,
       color: this._getColor(a.name, a.value),
       field: a.name,
       confidence: a.confidence,

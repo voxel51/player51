@@ -800,7 +800,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
     // for now, allow clicking on objects without IDs
     // @todo only allow this for images?
   }
-  if (eventType === "click" && topObj && topObj.isSelectable()) {
+  if (eventType === "click" && topObj && topObj.isSelectable(x, y)) {
     this.dispatchEvent("select", {
       data: topObj.getSelectData(x, y),
     });
