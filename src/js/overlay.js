@@ -56,8 +56,10 @@ function ColorGenerator() {
 
   const maskOffset = Math.floor(Math.random() * 256);
   this.rawMaskColors = new Uint32Array(256);
+  this.rawMaskColorsSelected = new Uint32Array(256);
   for (let i = 0; i < this.rawMaskColors.length; i++) {
     this.rawMaskColors[i] = this.rawColor((i + maskOffset) % 256);
+    this.rawMaskColorsSelected[i] = this.rawMaskColors[i];
   }
   // reduce alpha of masks
   const rawMaskColorComponents = new Uint8Array(this.rawMaskColors.buffer);
@@ -429,6 +431,7 @@ function FrameMaskOverlay(d, renderer) {
   this.w = null;
   this.h = null;
   this.renderer = renderer;
+  this._selectedCache = null;
 }
 FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
 FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
@@ -478,26 +481,30 @@ FrameMaskOverlay.prototype.draw = function (
   const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext("2d");
   const maskImage = maskContext.createImageData(maskWidth, maskHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
-  if (this.mask.rendered) {
+  if (this.mask.rendered && this._selectedCache === this.isSelected()) {
     imageColors.set(this.mask.data);
   } else {
+    const maskColors = this.isSelected()
+      ? colorGenerator.rawMaskColorsSelected
+      : colorGenerator.rawMaskColors;
     this.mask.targets = new Uint32Array(this.mask.data);
     const index = this.renderer.frameMaskIndex;
     if (index) {
       for (let i = 0; i < this.mask.data.length; i++) {
         if (index[this.mask.data[i]]) {
-          imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
+          imageColors[i] = maskColors[this.mask.data[i]];
         }
       }
     } else {
       for (let i = 0; i < this.mask.data.length; i++) {
         if (this.mask.data[i]) {
-          imageColors[i] = colorGenerator.rawMaskColors[this.mask.data[i]];
+          imageColors[i] = maskColors[this.mask.data[i]];
         }
       }
     }
     this.mask.data = imageColors;
     this.mask.rendered = true;
+    this._selectedCache = this.isSelected();
   }
   maskContext.putImageData(maskImage, 0, 0);
   context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
