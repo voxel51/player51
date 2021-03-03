@@ -415,8 +415,14 @@ FrameAttributesOverlay.prototype.containsPoint = function (x, y) {
 };
 
 FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
-  return this._getFilteredAttrs().map((a) => {
-    return {
+  const yIntervals = this.getYIntervals();
+  const a = this._getFilteredAttrs().filter((a, i) => {
+    const { y: top, height } = yIntervals[i];
+    return y > top && y < top + height;
+  })[0];
+
+  return [
+    {
       id: a.id,
       color: this._getColor(a.name, a.value),
       field: a.name,
@@ -425,8 +431,8 @@ FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
       type: "classification",
       target: a.target,
       attrs: a.attrs,
-    };
-  });
+    },
+  ];
 };
 
 /**
