@@ -376,7 +376,7 @@ FrameAttributesOverlay.prototype.draw = function (
     this.w = Math.max(...bboxes.map((b) => b.width));
     for (let a = 0; a < this.attrText.length; a++) {
       context.fillStyle = this.renderer.metadataOverlayBGColor;
-      context.fillRect(this.x, y, this.w, bbox[a].height);
+      context.fillRect(this.x, y, this.w, this.attrHeight);
       // Rendering y is at the baseline of the text.  Handle this by padding
       // one row (attrFontHeight and textPadder)
       context.fillStyle = colorGenerator.white;
