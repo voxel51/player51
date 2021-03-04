@@ -791,15 +791,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
   }
 
   const topObj = fm && fm[0] && fm[0].containsPoint(x, y) > 0 ? fm[0] : null;
-  if (
-    eventType === "click" &&
-    topObj &&
-    topObj.constructor === ObjectOverlay &&
-    topObj.index === undefined
-  ) {
-    // for now, allow clicking on objects without IDs
-    // @todo only allow this for images?
-  }
   if (eventType === "click" && topObj && topObj.isSelectable(x, y)) {
     this.dispatchEvent("select", {
       data: topObj.getSelectData(x, y),

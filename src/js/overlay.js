@@ -390,11 +390,8 @@ FrameAttributesOverlay.prototype.draw = function (
       );
       const attr = attrs[a];
       if (this.renderer.options.selectedObjects.includes(attr._id)) {
-        context.strokeStyle = DASH_COLOR;
-        context.setLineDash([DASH_LENGTH]);
+        context.strokeStyle = this._getColor(attr.name, attr.value);
         context.strokeRect(this.x, y, this.w, this.attrHeight);
-        context.strokeStyle = this.renderer.metadataOverlayBGColor;
-        context.setLineDash([]);
       }
       y += this.textPadder + this.attrHeight;
     }
@@ -520,7 +517,7 @@ FrameMaskOverlay.prototype.draw = function (
   const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext("2d");
   const maskImage = maskContext.createImageData(maskWidth, maskHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
-  if (this.mask.rendered && this._selectedCache === this.isSelected()) {
+  if (this.mask.rendered) {
     imageColors.set(this.mask.data);
   } else {
     const maskColors = this.isSelected()
@@ -543,7 +540,6 @@ FrameMaskOverlay.prototype.draw = function (
     }
     this.mask.data = imageColors;
     this.mask.rendered = true;
-    this._selectedCache = this.isSelected();
   }
   maskContext.putImageData(maskImage, 0, 0);
   context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
