@@ -390,8 +390,14 @@ FrameAttributesOverlay.prototype.draw = function (
       );
       const attr = attrs[a];
       if (this.renderer.options.selectedObjects.includes(attr._id)) {
+        context.lineWidth = this.textPadder / 2;
+        context.strokeRect(this.x, y, this.w, this.attrHeight);
         context.strokeStyle = this._getColor(attr.name, attr.value);
         context.strokeRect(this.x, y, this.w, this.attrHeight);
+        context.strokeStyle = DASH_COLOR;
+        context.setLineDash([DASH_LENGTH]);
+        context.strokeRect(this.x, y, this.w, this.attrHeight);
+        context.setLineDash([]);
       }
       y += this.textPadder + this.attrHeight;
     }
