@@ -223,10 +223,7 @@ Overlay.prototype.isSelectable = function (x, y) {
 };
 
 Overlay.prototype.isSelected = function () {
-  return (
-    this.isSelectable() &&
-    this.renderer.options.selectedObjects.includes(this.id)
-  );
+  return this.renderer.options.selectedObjects.includes(this.id);
 };
 
 Overlay.prototype.getSelectData = function (x, y) {
@@ -391,10 +388,13 @@ FrameAttributesOverlay.prototype.draw = function (
         this.x + this.textPadder,
         y + this.attrFontHeight + this.textPadder
       );
-      const attr = attrs[i];
-      if (this.renderer.options.selectedObjects.has(attr.id)) {
-        context.strokeStyle = this._getColor(attr.name, attr.value);
-        context.strokeRect(this.x, y, this.w, this.attrHe);
+      const attr = attrs[a];
+      if (this.renderer.options.selectedObjects.includes(attr._id)) {
+        context.strokeStyle = DASH_COLOR;
+        context.setLineDash([DASH_LENGTH]);
+        context.strokeRect(this.x, y, this.w, this.attrHeight);
+        context.strokeStyle = this.renderer.metadataOverlayBGColor;
+        context.setLineDash([]);
       }
       y += this.textPadder + this.attrHeight;
     }
@@ -410,7 +410,7 @@ FrameAttributesOverlay.prototype.getMouseDistance = function (x, y) {
 
 FrameAttributesOverlay.prototype.getYIntervals = function () {
   return this._getFilteredAttrs().map((a, i) => ({
-    y: this.y + i * (this.attrHeight + this.textPadder * 2),
+    y: this.y + i * (this.attrHeight + this.textPadder),
     height: this.attrHeight,
   }));
 };
