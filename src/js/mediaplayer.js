@@ -202,7 +202,6 @@ MediaPlayer.prototype.updateOverlayOptions = function (overlayOptions) {
   this.renderer.eleOptCtlShowAttr.checked = overlayOptions.showAttrs;
   this.renderer.eleOptCtlShowConfidence.checked = overlayOptions.showConfidence;
   this.renderer.eleOptCtlShowTooltip.checked = overlayOptions.showTooltip;
-  this._orderedOverlayCache = null;
   this.renderer.processFrame();
 };
 

@@ -728,7 +728,7 @@ Renderer.prototype.setFocus = function (overlayObj, position = undefined) {
 };
 
 Renderer.prototype._computeEventCoordinates = function (e) {
-  if (!["keydown"].includes(e.type.toLowerCase())) {
+  if (e.type.toLowerCase() === "mousemove") {
     this._mouseX = e.clientX;
     this._mouseY = e.clientY;
     this._rect = e.target.getBoundingClientRect();
@@ -757,6 +757,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
 
   let rotation = false;
   let fm = this._getOrderedOverlays({ x, y });
+  const mousemove = eventType === "mousemove";
   if (pausedOrImage && notThumbnail) {
     let down = null;
     let up = null;
@@ -784,7 +785,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
         this._rotateIndex += 1;
       }
       this._orderedOverlayCache = fm;
-    } else {
+    } else if (mousemove) {
       this._orderedOverlayCache = null;
       this._rotateIndex = 0;
     }
@@ -798,7 +799,6 @@ Renderer.prototype._handleMouseEvent = function (e) {
   }
   let processFrame = topObj && this.setFocus(topObj, { x, y });
 
-  const mousemove = eventType === "mousemove";
   if (pausedOrImage && notThumbnail && (mousemove || rotation)) {
     let result = topObj ? topObj.getPointInfo(x, y) : [];
     if (!Array.isArray(result)) {

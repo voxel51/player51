@@ -496,6 +496,7 @@ FrameMaskOverlay.prototype.setup = function (
   this.y = 0;
   this.w = canvasWidth;
   this.h = canvasHeight;
+  this.mask.targets = new Uint32Array(this.mask.data);
 };
 
 /**
@@ -529,7 +530,6 @@ FrameMaskOverlay.prototype.draw = function (
     const maskColors = this.isSelected()
       ? colorGenerator.rawMaskColorsSelected
       : colorGenerator.rawMaskColors;
-    this.mask.targets = new Uint32Array(this.mask.data);
     const index = this.renderer.frameMaskIndex;
     if (index) {
       for (let i = 0; i < this.mask.data.length; i++) {
@@ -592,7 +592,7 @@ FrameMaskOverlay.prototype.containsPoint = function (x, y) {
   if (!this._isShown(this.name)) {
     return Overlay.CONTAINS_NONE;
   }
-  if (this.mask.rendered && this.getTarget(x, y)) {
+  if (this.getTarget(x, y)) {
     return Overlay.CONTAINS_CONTENT;
   }
   return Overlay.CONTAINS_NONE;
