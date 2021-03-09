@@ -53,7 +53,7 @@ function ColorGenerator(seed) {
   this._colorS = "70%";
   this._colorL = "40%";
   this._colorA = "0.875";
-  this._seed = seed || Math.random();
+  this._seed = Math.random();
 
   const maskOffset = Math.floor(this._seed * 256);
   this.rawMaskColors = new Uint32Array(256);
@@ -117,9 +117,9 @@ ColorGenerator.prototype._generateColorSet = function (n = 36) {
   const delta = 360 / n;
   this._colorSet = new Array(n);
   for (let i = 0; i < n; i++) {
-    this._colorSet[i] = `hsla(${((i + this._seed) * delta) % 360}, ${
-      this._colorS
-    }, ${this._colorL}, ${this._colorA})`;
+    this._colorSet[i] = `hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${
+      this._colorA
+    })`;
     context.fillStyle = this._colorSet[i];
     context.clearRect(0, 0, 1, 1);
     context.fillRect(0, 0, 1, 1);
@@ -466,7 +466,6 @@ function FrameMaskOverlay(d, renderer) {
 
   Overlay.call(this, renderer);
 
-  this.mask = deserialize(d.mask);
   this.name = d.name;
   this.id = d._id;
   this.x = null;
@@ -474,6 +473,7 @@ function FrameMaskOverlay(d, renderer) {
   this.w = null;
   this.h = null;
   this.renderer = renderer;
+  this.data = d;
   this._selectedCache = null;
 }
 FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
@@ -497,7 +497,9 @@ FrameMaskOverlay.prototype.setup = function (
   this.y = 0;
   this.w = canvasWidth;
   this.h = canvasHeight;
-  this.mask.targets = new Uint32Array(this.mask.data);
+  this.mask = deserialize(this.data.mask);
+  this.imageColors = new Uint32Array(this.mask.data);
+  this.targets = new Uint32Array(this.mask.data);
 };
 
 /**
@@ -529,7 +531,7 @@ FrameMaskOverlay.prototype.draw = function (
     this.mask.rendered &&
     this._generator === this.renderer.options.colorGenerator
   ) {
-    imageColors.set(this.mask.data);
+    imageColors.set(this.imageColors);
   } else {
     this._generator = this.renderer.options.colorGenerator;
     const maskColors = this.isSelected()
@@ -549,7 +551,7 @@ FrameMaskOverlay.prototype.draw = function (
         }
       }
     }
-    this.mask.data = imageColors;
+    this.imageColors = imageColors;
     this.mask.rendered = true;
   }
   maskContext.putImageData(maskImage, 0, 0);
@@ -583,7 +585,7 @@ FrameMaskOverlay.prototype.getIndex = function (x, y) {
 
 FrameMaskOverlay.prototype.getTarget = function (x, y) {
   const index = this.getIndex(x, y);
-  return this.mask.targets[index];
+  return this.targets[index];
 };
 
 FrameMaskOverlay.prototype.getMouseDistance = function (x, y) {
