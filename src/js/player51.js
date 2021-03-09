@@ -75,6 +75,8 @@ import { GalleryViewer } from "./galleryviewer.js";
 import { ImageSequence } from "./imagesequence.js";
 import { colorGenerator } from "./overlay.js";
 
+export { ColorGenerator } from "./overlay.js";
+
 export default Player51;
 
 /**
@@ -127,6 +129,7 @@ function Player51(options, ...args) {
   options.enableOverlayOptions = options.enableOverlayOptions || {};
   options.defaultOverlayOptions = options.defaultOverlayOptions || {};
   options.selectedObjects = options.selectedObjects || [];
+  options.colorGenerator = options.colorGenerator || colorGenerator;
 
   const { media, overlay } = options;
   const mimetype = options.media.type.toLowerCase();
@@ -144,13 +147,3 @@ function Player51(options, ...args) {
   }
   throw new Error(`Unrecognized mime type: ${mimetype}`);
 }
-
-/**
- * Get a color for a key
- *
- * @param {object} key
- * @return {string} hsla color string
- */
-export const getColor = function (key) {
-  return colorGenerator.color(key);
-};

@@ -40,7 +40,7 @@ const _rawColorCache = {};
  * A Class to encapsulate the creation of suitable colors for drawing the
  * overlays and maintaining their identity over the entire video.
  */
-function ColorGenerator() {
+function ColorGenerator(seed) {
   // member will store all colors created
   this.colors = {};
   this._rawColors = {};
@@ -53,8 +53,9 @@ function ColorGenerator() {
   this._colorS = "70%";
   this._colorL = "40%";
   this._colorA = "0.875";
+  this._seed = seed || Math.random();
 
-  const maskOffset = Math.floor(Math.random() * 256);
+  const maskOffset = Math.floor(this._seed * 256);
   this.rawMaskColors = new Uint32Array(256);
   this.rawMaskColorsSelected = new Uint32Array(256);
   for (let i = 0; i < this.rawMaskColors.length; i++) {
@@ -80,7 +81,7 @@ ColorGenerator.prototype.color = function (index) {
     if (typeof this._colorSet === "undefined") {
       this._generateColorSet();
     }
-    const rawIndex = Math.floor(Math.random() * this._colorSet.length);
+    const rawIndex = Math.floor(this._seed * this._colorSet.length);
     this.colors[index] = this._colorSet[rawIndex];
     this._rawColors[index] = this._rawColors[rawIndex];
   }
@@ -116,9 +117,9 @@ ColorGenerator.prototype._generateColorSet = function (n = 36) {
   const delta = 360 / n;
   this._colorSet = new Array(n);
   for (let i = 0; i < n; i++) {
-    this._colorSet[i] = `hsla(${i * delta}, ${this._colorS}, ${this._colorL}, ${
-      this._colorA
-    })`;
+    this._colorSet[i] = `hsla(${((i + this._seed) * delta) % 360}, ${
+      this._colorS
+    }, ${this._colorL}, ${this._colorA})`;
     context.fillStyle = this._colorSet[i];
     context.clearRect(0, 0, 1, 1);
     context.fillRect(0, 0, 1, 1);
@@ -184,7 +185,7 @@ Overlay.prototype._getColor = function (name, label, index) {
   if (hasColor) {
     return options.colorMap[key];
   } else {
-    return colorGenerator.color(label);
+    return this.renderer.options.colorGenerator.color(label);
   }
   // return colorGenerator.color(index);
 };
@@ -524,12 +525,16 @@ FrameMaskOverlay.prototype.draw = function (
   const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext("2d");
   const maskImage = maskContext.createImageData(maskWidth, maskHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
-  if (this.mask.rendered) {
+  if (
+    this.mask.rendered &&
+    this._generator === this.renderer.options.colorGenerator
+  ) {
     imageColors.set(this.mask.data);
   } else {
+    this._generator = this.renderer.options.colorGenerator;
     const maskColors = this.isSelected()
-      ? colorGenerator.rawMaskColorsSelected
-      : colorGenerator.rawMaskColors;
+      ? this._generator.rawMaskColorsSelected
+      : this._generator.rawMaskColors;
     const index = this.renderer.frameMaskIndex;
     if (index) {
       for (let i = 0; i < this.mask.data.length; i++) {
@@ -599,7 +604,7 @@ FrameMaskOverlay.prototype.containsPoint = function (x, y) {
 };
 
 FrameMaskOverlay.prototype.getRGBAColor = function (target) {
-  const rawColor = colorGenerator.rawMaskColors[target];
+  const rawColor = this.renderer.options.colorGenerator.rawMaskColors[target];
   const [r, g, b, a] = new Uint8Array(new Uint32Array([rawColor]).buffer);
   return `rgba(${r},${g},${b},${a / 255})`;
 };

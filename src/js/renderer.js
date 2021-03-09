@@ -60,7 +60,6 @@ function Renderer(media, overlay, options) {
   this.paddingTop = 0;
   this.paddingBottom = 0;
   this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
-  this.colorGenerator = new ColorGenerator();
   // Rendering options
   this._boolBorderBox = false;
   this.overlayOptions = Object.assign(
