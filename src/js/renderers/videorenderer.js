@@ -272,14 +272,9 @@ VideoRenderer.prototype.initPlayerControls = function () {
       return;
     }
 
-    const eventArgs = { cancelable: true, data: { player: self.player } };
-    if (!self.dispatchEvent("mouseenter", eventArgs)) {
-      return;
-    } else if (self.player._boolThumbnailMode) {
-      self._boolPlaying = true;
-      if (self._boolSingleFrame) {
-        self.processFrame();
-      }
+    if (self.player._boolThumbnailMode) {
+      const eventArgs = { cancelable: true, data: { player: self.player } };
+      self.dispatchEvent("mouseenter", eventArgs);
     } else {
       self._boolShowControls = true;
       self.setTimeout("hideControls", hideControls, 2.5 * 1000);
