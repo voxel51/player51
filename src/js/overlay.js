@@ -304,8 +304,8 @@ FrameAttributesOverlay.prototype._isShown = function () {
 };
 
 FrameAttributesOverlay.prototype.getSelectData = function (x, y) {
-  const { id, name } = this.getPointInfo(x, y)[0];
-  return { id, name };
+  const { id, field } = this.getPointInfo(x, y)[0];
+  return { id, name: field };
 };
 
 FrameAttributesOverlay.prototype._getFilteredAttrs = function () {
