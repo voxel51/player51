@@ -202,7 +202,7 @@ VideoRenderer.prototype.initPlayerControls = function () {
     } else {
       self.eleVideo.remove();
     }
-    self.dispatchEvent('error');
+    self.dispatchEvent("error");
   });
 
   // Event listener for the play/pause button
@@ -272,10 +272,9 @@ VideoRenderer.prototype.initPlayerControls = function () {
       return;
     }
 
-    if (self.player._boolThumbnailMode) {
-      const eventArgs = { cancelable: true, data: { player: self.player } };
-      self.dispatchEvent("mouseenter", eventArgs);
-    } else {
+    const eventArgs = { cancelable: true, data: { player: self.player } };
+    self.dispatchEvent("mouseenter", eventArgs);
+    if (!self.player._boolThumbnailMode) {
       self._boolShowControls = true;
       self.setTimeout("hideControls", hideControls, 2.5 * 1000);
     }
