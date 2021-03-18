@@ -231,6 +231,7 @@ Overlay.prototype.getSelectData = function (x, y) {
   return {
     id: this.id,
     name: this.name,
+    frameNumber: this.renderer._frameNumber,
   };
 };
 
@@ -305,7 +306,7 @@ FrameAttributesOverlay.prototype._isShown = function () {
 
 FrameAttributesOverlay.prototype.getSelectData = function (x, y) {
   const { id, field } = this.getPointInfo(x, y)[0];
-  return { id, name: field };
+  return { id, name: field, frameNumber: this.renderer._frameNumber };
 };
 
 FrameAttributesOverlay.prototype._getFilteredAttrs = function () {
@@ -446,6 +447,7 @@ FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
       type: "classification",
       target: a.target,
       attrs: a.attrs,
+      frameNumber: this.renderer._frameNumber,
     },
   ];
 };
@@ -622,6 +624,7 @@ FrameMaskOverlay.prototype.getPointInfo = function (x, y) {
     field: this.name,
     target,
     type: "mask",
+    frameNumber: this.renderer._frameNumber,
   };
 };
 
@@ -738,6 +741,7 @@ KeypointsOverlay.prototype.getPointInfo = function (x, y) {
     point: this._getDistanceAndPoint(x, y)[1],
     numPoints: this.points.length,
     attrs: this.attrs,
+    frameNumber: this.renderer._frameNumber,
     type: "keypoints",
   };
 };
@@ -861,6 +865,7 @@ PolylineOverlay.prototype.getPointInfo = function (x, y) {
     filled: this.filled,
     target: this.target,
     attrs: this.attrs,
+    frameNumber: this.renderer._frameNumber,
     type: "polyline",
   };
 };
@@ -1286,6 +1291,7 @@ ObjectOverlay.prototype.getPointInfo = function (x, y) {
     confidence: this.confidence,
     target: this.target,
     attrs: this._attrs,
+    frameNumber: this.renderer._frameNumber,
     top,
     left,
     height,
