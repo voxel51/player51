@@ -53,7 +53,7 @@ function ColorGenerator(seed) {
   this._colorS = "70%";
   this._colorL = "40%";
   this._colorA = "0.875";
-  this._seed = Math.random();
+  this._seed = (seed % 32) / 32;
 
   const maskOffset = Math.floor(this._seed * 256);
   this.rawMaskColors = new Uint32Array(256);
