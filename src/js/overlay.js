@@ -474,6 +474,7 @@ function FrameMaskOverlay(d, renderer) {
   this.y = null;
   this.w = null;
   this.h = null;
+  this.tags = d.tags;
   this.renderer = renderer;
   this.data = d;
   this._selectedCache = null;
@@ -645,6 +646,7 @@ function KeypointsOverlay(d, renderer) {
   this.points = d.points;
   this.target = d.target;
   this.attrs = d.attrs;
+  this.tags = d.tags;
 }
 KeypointsOverlay.prototype = Object.create(Overlay.prototype);
 KeypointsOverlay.prototype.constructor = KeypointsOverlay;
@@ -779,6 +781,7 @@ function PolylineOverlay(d, renderer) {
   this.filled = d.filled;
   this.target = d.target;
   this.attrs = d.attrs;
+  this.tags = d.tags;
 }
 PolylineOverlay.prototype = Object.create(Overlay.prototype);
 PolylineOverlay.prototype.constructor = PolylineOverlay;
@@ -949,6 +952,7 @@ function ObjectOverlay(d, renderer) {
   this._cache_options = Object.assign({}, this.options);
   this.id = d._id;
   this.name = d.name;
+  this.tags = d.tags;
   this.confidence = d.confidence;
   this.label = d.label;
   this._setupLabel();
