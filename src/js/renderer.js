@@ -1099,6 +1099,9 @@ Renderer.prototype.initSharedControls = function () {
 };
 
 Renderer.prototype.initPlayerControlHTML = function (parent, sequence = true) {
+  if (this._boolThumbnailMode) {
+    return;
+  }
   this.eleDivVideoControls = document.createElement("div");
   this.eleDivVideoControls.className = "p51-video-controls";
   if (sequence) {
