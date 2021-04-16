@@ -10,14 +10,7 @@
  * Alan Stahl, alan@voxel51.com
  */
 import EventTarget from "@ungap/event-target";
-import {
-  ColorGenerator,
-  FrameAttributesOverlay,
-  FrameMaskOverlay,
-  ObjectOverlay,
-  KeypointsOverlay,
-  PolylineOverlay,
-} from "./overlay.js";
+import { ClassificationsOverlay, FROM_FO } from "./overlay.js";
 import { ICONS, rescale } from "./util.js";
 import { ZipLibrary } from "./zipreader/zip.js";
 
@@ -34,7 +27,7 @@ export { Renderer };
  * @param {string} overlay is the URL to overlay JSON
  * @param {object} options: additional player options
  */
-function Renderer(media, overlay, options) {
+function Renderer({ media, sample, frameReader, options }) {
   if (this.constructor === Renderer) {
     throw new TypeError("Cannot instantiate abstract class.");
   }
@@ -44,7 +37,8 @@ function Renderer(media, overlay, options) {
   this.eventTarget = new EventTarget();
   this.media = media;
   this.options = options;
-  this.frameOverlay = {};
+  this._sample = sample;
+  this._frameReader = frameReader; // @todo
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = "../src/js/zipreader/";
@@ -102,7 +96,6 @@ function Renderer(media, overlay, options) {
   this._hasOverlay = Boolean(overlay);
   this._overlayCanBePrepared = true;
   this._isOverlayPrepared = false;
-  this._isPreparingOverlay = false;
   this._mouseX = null;
   this._mouseY = null;
   this._overlayData = null;
@@ -118,7 +111,6 @@ function Renderer(media, overlay, options) {
   this._boolShowControls = false;
   this._orderedOverlayCache = null;
   this._rotateIndex = 0;
-  this.handleOverlay(overlay);
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
 }
 
@@ -261,47 +253,6 @@ Renderer.prototype.dispatchEvent = function (
 };
 
 /**
- * This function processes the overlayData
- *
- * @member handleOverlay
- * @param {string} overlay of overlay JSON
- */
-Renderer.prototype.handleOverlay = function (overlay) {
-  if (!overlay) {
-    this._overlayURL = null;
-    this._overlayCanBePrepared = false;
-    this._isOverlayPrepared = true;
-  } else if (typeof overlay === "string") {
-    this._overlayURL = overlay;
-    this._overlayCanBePrepared = false;
-    this.loadOverlay(overlay);
-  } else if (typeof overlay === "object") {
-    this._overlayData = overlay;
-    this._overlayURL = null;
-  }
-};
-
-/**
- * This function loads in the JSON file asynchronously.
- *
- * @member loadOverlay
- * @param {string} overlayPath
- */
-Renderer.prototype.loadOverlay = function (overlayPath) {
-  const self = this;
-  this._isOverlayPrepared = false;
-  const xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function () {
-    if (this.readyState === 4 && this.status === 200) {
-      self._overlayData = JSON.parse(this.responseText);
-      self.updateFromLoadingState();
-    }
-  };
-  xmlhttp.open("GET", overlayPath, true);
-  xmlhttp.send();
-};
-
-/**
  * This function updates the overlay data and prepares it for rendering.
  * Supports 2 formats, object and frame based.
  *
@@ -312,7 +263,7 @@ Renderer.prototype.updateOverlay = function (overlayData) {
   this.frameOverlay = {};
   this._overlayData = JSON.parse(JSON.stringify(overlayData));
   this._isOverlayPrepared = false;
-  this.prepareOverlay(this._overlayData);
+  this.prepareOverlay();
   if (this._boolSingleFrame) {
     this.processFrame();
   }
@@ -321,121 +272,44 @@ Renderer.prototype.updateOverlay = function (overlayData) {
 /**
  * This function processes the overlay code and creates frame objects to be
  * drawn onto the screen.
- * Supports 2 formats, object and frame based.
  *
  * @member prepareOverlay
  * @param {json} rawjson
  */
-Renderer.prototype.prepareOverlay = function (rawjson) {
-  if (this._isOverlayPrepared || this._isPreparingOverlay || !rawjson) {
+Renderer.prototype.prepareOverlay = function () {
+  if (this._isOverlayPrepared || !this.sample) {
     return;
   }
   this._isPreparingOverlay = true;
 
-  // Format 1
-  if (typeof rawjson.objects !== "undefined") {
-    const context = this.setupCanvasContext();
-    this._prepareOverlay_auxFormat1Objects(context, rawjson.objects);
-  }
+  const context = this.setupCanvasContext();
 
-  // Format 2
-  if (typeof rawjson.frames !== "undefined") {
-    const context = this.setupCanvasContext();
-    const frameKeys = Object.keys(rawjson.frames);
-    for (const frameKeyI in frameKeys) {
-      if (frameKeyI) {
-        const frameKey = frameKeys[frameKeyI];
-        const f = rawjson.frames[frameKey];
-        if (f && f.mask) {
-          this._prepareOverlay_auxMask(
-            context,
-            { mask: f.mask, name: f.name, _id: f._id },
-            frameKey
-          );
-        }
-        if (f && f.masks) {
-          for (const maskData of f.masks) {
-            this._prepareOverlay_auxMask(
-              context,
-              {
-                name: maskData.name,
-                mask: maskData.mask,
-                _id: maskData._id,
-              },
-              frameKey
-            );
-          }
-        }
-        if (f && f.objects && f.objects.objects) {
-          this._prepareOverlay_auxFormat1Objects(context, f.objects.objects);
-        }
-        if (f && f.keypoints && f.keypoints.keypoints) {
-          this._prepareOverlay_auxKeypoints(
-            context,
-            f.keypoints.keypoints,
-            frameKey
-          );
-        }
-        if (f && f.polylines && f.polylines.polylines) {
-          this._prepareOverlay_auxPolylines(
-            context,
-            f.polylines.polylines,
-            frameKey
-          );
-        }
-        // add all other overlays above so that this one renders on top
-        if (f && f.attrs) {
-          this._prepareOverlay_auxAttributes(context, f.attrs, frameKey);
-        }
-      }
+  const classifications = [];
+  for (const field in this.sample) {
+    const label = this.sample[field];
+    if (typeof label !== "object") {
+      continue;
+    }
+    if (label._cls in FROM_FO) {
+      const overlay = FROM_FO[label._cls](field, label, this);
+      overlay.setup(context, this.canvasWidth, this.canvasHeight);
+      this._overlays.push(overlay);
+    } else if (label._cls === "Classification") {
+      classifications.push([field, [null, [label]]]);
+    } else if (label._cls === "Classifications") {
+      classifications.push([field, [null, label.classifications]]);
     }
   }
 
-  if (typeof rawjson.mask_index !== "undefined") {
-    this.frameMaskIndex = rawjson.mask_index.index;
-  }
-
-  // Attributes and masks for images
-  if (typeof rawjson.mask !== "undefined") {
-    const context = this.setupCanvasContext();
-    this._prepareOverlay_auxMask(context, {
-      mask: rawjson.mask,
-      name: rawjson.name,
-      _id: rawjson._id,
-    });
-  }
-  if (typeof rawjson.masks !== "undefined") {
-    const context = this.setupCanvasContext();
-    for (const maskData of rawjson.masks) {
-      this._prepareOverlay_auxMask(context, {
-        name: maskData.name,
-        mask: maskData.mask,
-        _id: maskData._id,
-      });
-    }
-  }
-  if (typeof rawjson.keypoints !== "undefined") {
-    this._prepareOverlay_auxKeypoints(
-      this.setupCanvasContext(),
-      rawjson.keypoints.keypoints
-    );
-  }
-  if (typeof rawjson.polylines !== "undefined") {
-    this._prepareOverlay_auxPolylines(
-      this.setupCanvasContext(),
-      rawjson.polylines.polylines
-    );
-  }
-  // add all other overlays above so that this one renders on top
-  if (typeof rawjson.attrs !== "undefined") {
-    const context = this.setupCanvasContext();
-    this._prepareOverlay_auxAttributes(context, rawjson.attrs);
+  if (classifications.length > 0) {
+    const overlay = new ClassificationsOverlay(labels, this);
+    overlay.setup(context, this.canvasWidth, this.canvasHeight);
+    this._overlays.push(overlay);
   }
 
   this._reBindMouseHandler();
 
   this._isOverlayPrepared = true;
-  this._isPreparingOverlay = false;
   this.updateFromLoadingState();
   this.updateFromDynamicState();
 };
@@ -593,7 +467,7 @@ Renderer.prototype._getOrderedOverlays = function (coords) {
   if (this._orderedOverlayCache) {
     return this._orderedOverlayCache;
   }
-  const overlays = this.frameOverlay[this._frameNumber];
+  const overlays = this._overlays;
 
   if (!overlays) {
     return [];
@@ -602,23 +476,23 @@ Renderer.prototype._getOrderedOverlays = function (coords) {
   const activeLabels = this.options.activeLabels;
 
   const bins = Object.fromEntries(activeLabels.map((l) => [l, []]));
-  let attrs = null;
+  let classifications = null;
 
   for (const overlay of overlays) {
-    if (overlay instanceof FrameAttributesOverlay) {
-      attrs = overlay;
+    if (overlay instanceof ClassificationsOverlay) {
+      classifications = overlay;
       continue;
     }
 
-    if (!(overlay.name in bins)) continue;
+    if (!(overlay.field in bins)) continue;
 
-    bins[overlay.name].push(overlay);
+    bins[overlay.field].push(overlay);
   }
 
   let ordered = activeLabels.reduce((acc, cur) => [...acc, ...bins[cur]], []);
 
   if (attrs) {
-    ordered = [attrs, ...ordered];
+    ordered = [classifications, ...ordered];
   }
 
   return this._setTopOverlays(coords, ordered);
@@ -643,7 +517,7 @@ Renderer.prototype.processFrame = function () {
   const context = this.setupCanvasContext();
   this.customDraw(context);
   if (this._isOverlayPrepared) {
-    if (this._frameNumber in this.frameOverlay) {
+    if (this._frameNumber in this._overlays) {
       // Hover Focus setting
 
       let overlays = this._getOrderedOverlays(this._focusPos);

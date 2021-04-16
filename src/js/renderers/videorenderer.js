@@ -446,7 +446,7 @@ VideoRenderer.prototype.updateFromLoadingState = function () {
   }
 
   if (this._overlayCanBePrepared) {
-    this.prepareOverlay(this._overlayData);
+    this.prepareOverlay();
   }
 
   if (this._isOverlayPrepared) {

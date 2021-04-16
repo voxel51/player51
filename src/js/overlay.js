@@ -5,6 +5,7 @@
  *
  * Copyright 2017-2021, Voxel51, Inc.
  * Jason Corso, jason@voxel51.com
+ * Benjamin Kane, ben@voxel51.com
  * Brandon Paris, brandon@voxel51.com
  * Kevin Qi, kevin@voxel51.com
  */
@@ -18,16 +19,7 @@ import {
 } from "./util.js";
 import { deserialize } from "./numpy.js";
 
-export {
-  colorGenerator,
-  ColorGenerator,
-  Overlay,
-  FrameAttributesOverlay,
-  FrameMaskOverlay,
-  ObjectOverlay,
-  KeypointsOverlay,
-  PolylineOverlay,
-};
+export { colorGenerator, ColorGenerator, ClassificationsOverlay, FROM_FO };
 
 const MASK_ALPHA = 0.6;
 const LINE_WIDTH = 6;
@@ -133,21 +125,21 @@ ColorGenerator.prototype._generateColorSet = function (n = 36) {
 const colorGenerator = new ColorGenerator();
 
 /**
- * Checks whether an attribute should be shown.
- * @param {object} filter map of name -> filter callbacks
- * @param {object} attr attribute object
- * @param {boolean} useValue (passed to filter callback)
+ * Checks whether an overlay be shown.
+ *
+ * @param {object} filter map of field -> filter callbacks
+ * @param {string} field the field name
+ * @param {object} label the label data
  * @return {boolean}
  */
-function _isAttrShown(filter, attr, useValue = false) {
-  return filter && attr.name && filter[attr.name] && filter[attr.name].call
-    ? filter[attr.name](attr, useValue)
+function _isOverlayShown(filter, field, label) {
+  return filter && filter[field] && filter[field].call
+    ? filter[field](label)
     : true;
 }
 
 /**
- * A Class defining the generic interface for how to render overlays on the
- * video.
+ * A generic interface for how to render label overlays
  *
  * Each sub-class must overload the setup and the draw functions.
  *
@@ -166,28 +158,29 @@ Overlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
   console.log("ERROR: setup called on abstract type");
 };
 
-Overlay.prototype._isShown = function (name) {
+Overlay.prototype._isShown = function () {
   if (
     this.renderer.options.activeLabels &&
-    !this.renderer.options.activeLabels.includes(name)
+    !this.renderer.options.activeLabels.includes(this.field)
   ) {
     return false;
   }
-  if (!_isAttrShown(this.renderer.options.filter, this)) {
+  if (!_isOverlayShown(this.renderer.options.filter, field, this.label)) {
     return false;
   }
   return true;
 };
-Overlay.prototype._getColor = function (name, label, index) {
+Overlay.prototype._getColor = function (field, { index, label }) {
   const options = this.renderer.options;
-  const key = options.colorByLabel ? label : name;
+  const key = options.colorByLabel ? label : field;
   const hasColor = options.colorMap && options.colorMap[key];
   if (hasColor) {
     return options.colorMap[key];
   } else {
     return this.renderer.options.colorGenerator.color(label);
   }
-  // return colorGenerator.color(index);
+  // @todo: resurrect me
+  return this.renderer.options.colorGenerator.color(index);
 };
 
 Overlay.prototype.hasFocus = function () {
@@ -201,7 +194,7 @@ Overlay.CONTAINS_BORDER = 2;
 
 /**
  * Checks whether the given point (in canvas coordinates) is contained by the
- * object, and if so, what part of the object contains it.
+ * overlay, and if so, what part of the overlay contains it.
  *
  * @param {number} x canvas x coordinate
  * @param {number} y canvas y coordinate
@@ -229,33 +222,28 @@ Overlay.prototype.isSelected = function () {
 
 Overlay.prototype.getSelectData = function (x, y) {
   return {
-    id: this.id,
-    name: this.name,
-    frameNumber: this.renderer._frameNumber,
+    id: this.label._id,
+    field: this.field,
+    frameNumber: this.label.frame_number,
   };
 };
 
 /**
- * An overlay that renders frame-level attributes
+ * An overlay that renders serialized fo Classifications
  *
- * @param {array} d is an array with the following structure
- *    [
- *      "name": "name of the attribute",
- *      "value": "value for the attribute",
- *      "confidence": confidence of the attribute
- *    ]
- * @param {Renderer} renderer Associated renderer
+ * @param {array} labels [string, Array<[number|null, object]>] (field, (frameNumber, labels)) tuples
+ * @param {Renderer} renderer the associated renderer
  *
  */
-function FrameAttributesOverlay(d, renderer) {
+function ClassificationsOverlay(labels, renderer) {
   Overlay.call(this, renderer);
 
   this.name = null;
-  this.attrs = d.attrs;
-  this.attrText = null; // will store a list of strings (one for each object in d.attrs)
+  this.labels = labels;
+  this.textLines = [];
 
-  this.attrFontHeight = null;
-  this.maxAttrTextWidth = -1;
+  this.fontHeight = null;
+  this.maxTextWidth = -1;
   this.font = null;
 
   // Location and Size to draw these
@@ -265,11 +253,11 @@ function FrameAttributesOverlay(d, renderer) {
   this.h = null;
   this.textPadder = null;
 }
-FrameAttributesOverlay.prototype = Object.create(Overlay.prototype);
-FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
+ClassificationsOverlay.prototype = Object.create(Overlay.prototype);
+ClassificationsOverlay.prototype.constructor = ClassificationsOverlay;
 
 /**
- * Second half of constructor that should be called after the object exists.
+ * Second half of constructor that should be called after the ClassificationsOverlay exists.
  *
  * @method setup
  * @constructor
@@ -277,13 +265,13 @@ FrameAttributesOverlay.prototype.constructor = FrameAttributesOverlay;
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-FrameAttributesOverlay.prototype.setup = function (
+ClassificationsOverlay.prototype.setup = function (
   context,
   canvasWidth,
   canvasHeight
 ) {
-  if (typeof this.attrs !== undefined) {
-    this._updateAttrs();
+  if (typeof this.labels !== undefined) {
+    this._updateTextLines();
   }
   this.textPadder = (3 / this.renderer.height) * canvasHeight;
   if (this.x === null || this.y === null) {
@@ -291,64 +279,66 @@ FrameAttributesOverlay.prototype.setup = function (
     this.y = this.textPadder;
   }
 
-  this.attrFontHeight = Math.min(20, 0.09 * canvasHeight);
-  this.attrFontHeight = this.renderer.checkFontHeight(this.attrFontHeight);
-  this.font = `${this.attrFontHeight}px Arial, sans-serif`;
+  this.fontHeight = Math.min(20, 0.09 * canvasHeight);
+  this.fontHeight = this.renderer.checkFontHeight(this.fontHeight);
+  this.font = `${this.fontHeight}px Arial, sans-serif`;
   if (typeof context === "undefined") {
     return;
   }
   context.font = this.font;
 };
 
-FrameAttributesOverlay.prototype._isShown = function () {
-  return this._getFilteredAttrs().length > 0;
+ClassificationsOverlay.prototype._isShown = function () {
+  return this._getFilteredClassifications().length > 0;
 };
 
-FrameAttributesOverlay.prototype.getSelectData = function (x, y) {
-  const { id, field } = this.getPointInfo(x, y)[0];
-  return { id, name: field, frameNumber: this.renderer._frameNumber };
+ClassificationsOverlay.prototype.getSelectData = function (x, y) {
+  const { id, field, frameNumber } = this.getPointInfo(x, y)[0];
+  return { id, field, frameNumber };
 };
 
-FrameAttributesOverlay.prototype._getFilteredAttrs = function () {
-  return this.attrs.filter(
-    (attr) =>
-      this.renderer.options.activeLabels.includes(attr.name) &&
-      _isAttrShown(this.renderer.options.filter, attr, true)
-  );
+ClassificationsOverlay.prototype._getFilteredClassifications = function () {
+  const filter = ([_, label]) =>
+    _isOverlayShown(this.renderer.options.filter, field, label);
+
+  return this.labels.map(([field, labels]) => [field, labels.filter(filter)]);
 };
 
-/**
- * Private method to parse the attributes objects provided at creation and set
- * them up as renderable strings for the overlay.
- *
- * @method _updateAttrs
- */
-FrameAttributesOverlay.prototype._updateAttrs = function () {
-  this.attrText = this._getFilteredAttrs().map((attr) => {
-    const strLimit = 24;
-    let { name, value } = attr;
-    name = name.length > strLimit ? name.slice(0, strLimit) + "..." : name;
-    value =
-      typeof value === "string" && value.length > strLimit
-        ? value.slice(0, strLimit) + "..."
-        : value;
-    let s = `${name}: ${value}`;
-    if (this.options.showConfidence && !isNaN(attr.confidence)) {
-      s += ` (${Number(attr.confidence).toFixed(2)})`;
-    }
-    return s;
+ClassificationsOverlay.prototype._updateClassifications = function () {
+  this.textLines = [];
+  const strLimit = 24;
+  this._getFilteredClassifications().forEach(([field, labels]) => {
+    const name =
+      field.length > strLimit ? field.slice(0, strLimit) + "..." : field;
+
+    this.text = [
+      ...this.text,
+      ...labels[field].map(([_, { confidence, label }]) => {
+        label =
+          typeof label === "string" && label.length > strLimit
+            ? label.slice(0, strLimit) + "..."
+            : label;
+
+        let s = `${name}: ${label}`;
+        if (this.options.showConfidence && !isNaN(confidence)) {
+          s += ` (${Number(confidence).toFixed(2)})`;
+        }
+
+        return s;
+      }),
+    ];
   });
 };
 
 /**
- * Basic rendering function for drawing the overlay instance.
+ * Basic rendering function for drawing the classification overlay instance.
  *
  * @method draw
  * @param {context} context
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-FrameAttributesOverlay.prototype.draw = function (
+ClassificationsOverlay.prototype.draw = function (
   context,
   canvasWidth,
   canvasHeight
@@ -360,67 +350,79 @@ FrameAttributesOverlay.prototype.draw = function (
     this.setup(context, canvasWidth, canvasHeight);
   }
 
-  if (!this.renderer.player._boolThumbnailMode) {
-    this._updateAttrs();
-    if (!this.attrText.length) {
-      return;
-    }
-    context.font = this.font;
+  if (this.renderer.player._boolThumbnailMode) {
+    return;
+  }
 
-    let y = this.y;
-    const bboxes = this.attrText.map((a) =>
-      computeBBoxForTextOverlay(
-        context,
-        [a],
-        this.attrFontHeight,
-        this.textPadder
-      )
+  this._updateTextLines();
+  if (!this.textLines.length) {
+    return;
+  }
+  context.font = this.font;
+
+  let y = this.y;
+  const bboxes = this.textLines.map((label) =>
+    computeBBoxForTextOverlay(
+      context,
+      [label],
+      this.fontHeight,
+      this.textPadder
+    )
+  );
+  this.labelHeight = bboxes[0].height;
+  this.w = Math.max(...bboxes.map((b) => b.width));
+
+  const labels = this._getFilteredAndFlatLabels();
+
+  for (let l = 0; l < this.text.length; l++) {
+    context.fillStyle = this.renderer.metadataOverlayBGColor;
+    context.fillRect(this.x, y, this.w, this.labelHeight);
+
+    // Rendering y is at the baseline of the text
+    context.fillStyle = colorGenerator.white;
+    context.fillText(
+      this.text[l],
+      this.x + this.textPadder,
+      y + this.fontHeight + this.textPadder
     );
-    this.attrHeight = Math.max(...bboxes.map((b) => b.height));
-    this.w = Math.max(...bboxes.map((b) => b.width));
-    const attrs = this._getFilteredAttrs();
-    for (let a = 0; a < this.attrText.length; a++) {
-      context.fillStyle = this.renderer.metadataOverlayBGColor;
-      context.fillRect(this.x, y, this.w, this.attrHeight);
-      // Rendering y is at the baseline of the text.  Handle this by padding
-      // one row (attrFontHeight and textPadder)
-      context.fillStyle = colorGenerator.white;
-      context.fillText(
-        this.attrText[a],
-        this.x + this.textPadder,
-        y + this.attrFontHeight + this.textPadder
-      );
-      const attr = attrs[a];
-      if (this.renderer.options.selectedObjects.includes(attr._id)) {
-        context.lineWidth = this.textPadder / 2;
-        context.strokeRect(this.x, y, this.w, this.attrHeight);
-        context.strokeStyle = this._getColor(attr.name, attr.value);
-        context.strokeRect(this.x, y, this.w, this.attrHeight);
-        context.strokeStyle = DASH_COLOR;
-        context.setLineDash([DASH_LENGTH]);
-        context.strokeRect(this.x, y, this.w, this.attrHeight);
-        context.setLineDash([]);
-      }
-      y += this.textPadder + this.attrHeight;
+    const { field, label } = labels[l];
+    if (this.renderer.options.selectedObjects.includes(label._id)) {
+      context.lineWidth = this.textPadder / 2;
+      context.strokeRect(this.x, y, this.w, this.labelHeight);
+      context.strokeStyle = this._getColor(field, label);
+      context.strokeRect(this.x, y, this.w, this.attrHeight);
+      context.strokeStyle = DASH_COLOR;
+      context.setLineDash([DASH_LENGTH]);
+      context.strokeRect(this.x, y, this.w, this.attrHeight);
+      context.setLineDash([]);
     }
+    y += this.textPadder + this.labelHeight;
   }
 };
 
-FrameAttributesOverlay.prototype.getMouseDistance = function (x, y) {
+ClassificationsOverlay.prototype._getFilteredAndFlatClassifications = function () {
+  return this._getFilteredClassifications()
+    .map(([field, labels]) =>
+      labels.map(([frameNumber, label]) => ({ frameNumber, field, label }))
+    )
+    .flat();
+};
+
+ClassificationsOverlay.prototype.getMouseDistance = function (x, y) {
   if (this.containsPoint(x, y)) {
     return 0;
   }
   return Infinity;
 };
 
-FrameAttributesOverlay.prototype.getYIntervals = function () {
-  return this._getFilteredAttrs().map((a, i) => ({
-    y: this.y + i * (this.attrHeight + this.textPadder),
+ClassificationsOverlay.prototype.getYIntervals = function () {
+  return this._getFilteredAndFlatClassifications().map((_, i) => ({
+    y: this.y + i * (this.labelHeight + this.textPadder),
     height: this.attrHeight,
   }));
 };
 
-FrameAttributesOverlay.prototype.containsPoint = function (x, y) {
+ClassificationsOverlay.prototype.containsPoint = function (x, y) {
   const xAxis = x > this.x && x < this.w + this.x;
   return (
     xAxis &&
@@ -430,60 +432,59 @@ FrameAttributesOverlay.prototype.containsPoint = function (x, y) {
   );
 };
 
-FrameAttributesOverlay.prototype.getPointInfo = function (x, y) {
+ClassificationsOverlay.prototype.getPointInfo = function (x, y) {
   const yIntervals = this.getYIntervals();
-  const a = this._getFilteredAttrs().filter((a, i) => {
+  const {
+    frameNumber,
+    field,
+    label,
+  } = this._getFilteredAndFlatClassifications().filter((_, i) => {
     const { y: top, height } = yIntervals[i];
     return y > top && y < top + height;
   })[0];
 
   return [
     {
-      id: a._id,
-      color: this._getColor(a.name, a.value),
-      field: a.name,
-      confidence: a.confidence,
-      label: a.value,
-      type: "classification",
-      target: a.target,
-      attrs: a.attrs,
-      frameNumber: this.renderer._frameNumber,
+      color: this._getColor(field, label),
+      field,
+      frameNumber,
+      label,
+      type: "Classification",
     },
   ];
 };
 
 /**
- * An overlay that renders frame-level masks
+ * An overlay that renders a fo Segmentation
  *
- * @param {object} d an object with keys:
- *   `mask`: base64-encoded mask
- *   `name`: a name identifying the mask
- * @param {Renderer} renderer Associated renderer
- *
+ * @param {string} field the field name
+ * @param {object} label a serialized fo Segmentation label
+ * @param {Renderer} renderer the associated renderer
+ * @param {number} frameNumber an optional frame number, only applicable to video
  */
-function FrameMaskOverlay(d, renderer) {
-  if (!FrameMaskOverlay._tempMaskCanvas) {
-    FrameMaskOverlay._tempMaskCanvas = document.createElement("canvas");
+function SegmentationOverlay(field, label, renderer, frameNumber = null) {
+  if (!SegmentationOverlay._tempMaskCanvas) {
+    SegmentationOverlay._tempMaskCanvas = document.createElement("canvas");
   }
 
   Overlay.call(this, renderer);
 
-  this.name = d.name;
-  this.id = d._id;
+  this.field = field;
+  this.label = label;
+  this.frameNumber = frameNumber;
+
   this.x = null;
   this.y = null;
   this.w = null;
   this.h = null;
-  this.tags = d.tags;
   this.renderer = renderer;
-  this.data = d;
   this._selectedCache = null;
 }
-FrameMaskOverlay.prototype = Object.create(Overlay.prototype);
-FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
+SegmentationOverlay.prototype = Object.create(Overlay.prototype);
+SegmentationOverlay.prototype.constructor = SegmentationOverlay;
 
 /**
- * Second half of constructor that should be called after the object exists.
+ * Second half of constructor that should be called after the segmentation overlay exists.
  *
  * @method setup
  * @constructor
@@ -491,7 +492,7 @@ FrameMaskOverlay.prototype.constructor = FrameMaskOverlay;
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-FrameMaskOverlay.prototype.setup = function (
+SegmentationOverlay.prototype.setup = function (
   context,
   canvasWidth,
   canvasHeight
@@ -500,34 +501,34 @@ FrameMaskOverlay.prototype.setup = function (
   this.y = 0;
   this.w = canvasWidth;
   this.h = canvasHeight;
-  this.mask = deserialize(this.data.mask);
+  this.mask = deserialize(this.label.mask);
   this.imageColors = new Uint32Array(this.mask.data);
   this.targets = new Uint32Array(this.mask.data);
 };
 
 /**
- * Basic rendering function for drawing the overlay instance.
+ * Basic rendering function for drawing the segmentation overlay instance.
  *
  * @method draw
  * @param {context} context
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-FrameMaskOverlay.prototype.draw = function (
+SegmentationOverlay.prototype.draw = function (
   context,
   canvasWidth,
   canvasHeight
 ) {
-  if (this.name && !this._isShown(this.name)) {
+  if (this.field && !this._isShown()) {
     return;
   }
 
   const [maskHeight, maskWidth] = this.mask.shape;
-  ensureCanvasSize(FrameMaskOverlay._tempMaskCanvas, {
+  ensureCanvasSize(SegmentationOverlay._tempMaskCanvas, {
     width: maskWidth,
     height: maskHeight,
   });
-  const maskContext = FrameMaskOverlay._tempMaskCanvas.getContext("2d");
+  const maskContext = SegmentationOverlay._tempMaskCanvas.getContext("2d");
   const maskImage = maskContext.createImageData(maskWidth, maskHeight);
   const imageColors = new Uint32Array(maskImage.data.buffer);
   if (
@@ -574,32 +575,32 @@ FrameMaskOverlay.prototype.draw = function (
   this.w = canvasWidth;
 };
 
-FrameMaskOverlay.prototype.getMaskCoordinates = function (x, y) {
+SegmentationOverlay.prototype.getMaskCoordinates = function (x, y) {
   const [h, w] = this.mask.shape;
   const sx = Math.floor(x * (w / this.w));
   const sy = Math.floor(y * (h / this.h));
   return [sx, sy];
 };
 
-FrameMaskOverlay.prototype.getIndex = function (x, y) {
+SegmentationOverlay.prototype.getIndex = function (x, y) {
   const [sx, sy] = this.getMaskCoordinates(x, y);
   return this.mask.shape[1] * sy + sx;
 };
 
-FrameMaskOverlay.prototype.getTarget = function (x, y) {
+SegmentationOverlay.prototype.getTarget = function (x, y) {
   const index = this.getIndex(x, y);
   return this.targets[index];
 };
 
-FrameMaskOverlay.prototype.getMouseDistance = function (x, y) {
+SegmentationOverlay.prototype.getMouseDistance = function (x, y) {
   if (this.containsPoint(x, y)) {
     return 0;
   }
   return Infinity;
 };
 
-FrameMaskOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown(this.name)) {
+SegmentationOverlay.prototype.containsPoint = function (x, y) {
+  if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
   if (this.getTarget(x, y)) {
@@ -608,51 +609,44 @@ FrameMaskOverlay.prototype.containsPoint = function (x, y) {
   return Overlay.CONTAINS_NONE;
 };
 
-FrameMaskOverlay.prototype.getRGBAColor = function (target) {
+SegmentationOverlay.prototype.getRGBAColor = function (target) {
   const rawColor = this.renderer.options.colorGenerator.rawMaskColors[target];
   const [r, g, b, a] = new Uint8Array(new Uint32Array([rawColor]).buffer);
   return `rgba(${r},${g},${b},${a / 255})`;
 };
 
-FrameMaskOverlay.prototype.getPointInfo = function (x, y) {
-  const coords = this.getMaskCoordinates(x, y);
+SegmentationOverlay.prototype.getPointInfo = function (x, y) {
   const target = this.getTarget(x, y);
   return {
-    id: this.id,
     color: this.getRGBAColor(target),
-    shape: this.mask.shape,
-    coordinates: coords,
-    field: this.name,
+    field: this.field,
+    frameNumber: this.frameNumber,
+    label: this.label,
     target,
-    type: "mask",
-    frameNumber: this.renderer._frameNumber,
+    type: "Segmentation",
   };
 };
 
 /**
- * An overlay that renders keypoints
+ * An overlay that renders a fo Keypoint
  *
- * @param {array} d an ETA Keypoints object
- * @param {Renderer} renderer Associated renderer
- *
+ * @param {string} field the field name
+ * @param {array} label a serialized fo Keypoint
+ * @param {Renderer} renderer the associated renderer
+ * @param {number} frameNumber an optional frame number, only applicable to video
  */
-function KeypointsOverlay(d, renderer) {
+function KeypointOverlay(field, label, renderer, frameNumber = null) {
   Overlay.call(this, renderer);
 
-  this.id = d._id;
-  this.name = d.name;
-  this.label = d.label;
-  this.index = d.index;
-  this.points = d.points;
-  this.target = d.target;
-  this.attrs = d.attrs;
-  this.tags = d.tags;
+  this.field = field;
+  this.label = label;
+  this.frameNumber = frameNumber;
 }
-KeypointsOverlay.prototype = Object.create(Overlay.prototype);
-KeypointsOverlay.prototype.constructor = KeypointsOverlay;
+KeypointOverlay.prototype = Object.create(Overlay.prototype);
+KeypointOverlay.prototype.constructor = KeypointOverlay;
 
 /**
- * Second half of constructor that should be called after the object exists.
+ * Second half of constructor that should be called after the keypoint overlay exists.
  *
  * @method setup
  * @constructor
@@ -660,7 +654,7 @@ KeypointsOverlay.prototype.constructor = KeypointsOverlay;
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-KeypointsOverlay.prototype.setup = function (
+KeypointOverlay.prototype.setup = function (
   context,
   canvasWidth,
   canvasHeight
@@ -684,14 +678,14 @@ KeypointsOverlay.prototype.draw = function (
   canvasWidth,
   canvasHeight
 ) {
-  if (!this._isShown(this.name)) {
+  if (!this._isShown()) {
     return;
   }
-  const color = this._getColor(this.name, this.label, this.index);
+  const color = this._getColor(this.field, this.label);
   context.lineWidth = 0;
   const isSelected = this.isSelected();
 
-  for (const point of this.points) {
+  for (const point of this.label.points) {
     context.fillStyle = color;
     context.beginPath();
     context.arc(
@@ -718,7 +712,7 @@ KeypointsOverlay.prototype.draw = function (
   }
 };
 
-KeypointsOverlay.prototype._getDistanceAndPoint = function (x, y) {
+KeypointOverlay.prototype._getDistanceAndPoint = function (x, y) {
   const distances = [];
   for (const point of this.points) {
     const d = distance(x, y, point[0] * this.w, point[1] * this.h);
@@ -734,26 +728,21 @@ KeypointsOverlay.prototype._getDistanceAndPoint = function (x, y) {
 
 KeypointsOverlay.prototype.getPointInfo = function (x, y) {
   return {
-    id: this.id,
-    color: this._getColor(this.name, this.label, this.index),
+    color: this._getColor(this.name, this.label),
+    field: this.field,
+    frameNumber: this.frameNumber,
     label: this.label,
-    field: this.name,
-    index: this.index,
-    target: this.target,
     point: this._getDistanceAndPoint(x, y)[1],
-    numPoints: this.points.length,
-    attrs: this.attrs,
-    frameNumber: this.renderer._frameNumber,
-    type: "keypoints",
+    type: "Keypoint",
   };
 };
 
-KeypointsOverlay.prototype.getMouseDistance = function (x, y) {
+KeypointOverlay.prototype.getMouseDistance = function (x, y) {
   return this._getDistanceAndPoint(x, y)[0];
 };
 
-KeypointsOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown(this.name)) {
+KeypointOverlay.prototype.containsPoint = function (x, y) {
+  if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
   if (this._getDistanceAndPoint(x, y)[0] <= 2 * POINT_RADIUS) {
@@ -763,31 +752,25 @@ KeypointsOverlay.prototype.containsPoint = function (x, y) {
 };
 
 /**
- * An overlay that renders polylines
+ * An overlay that renders a fo Polyline
  *
- * @param {array} d an ETA Polyline object
- * @param {Renderer} renderer Associated renderer
- *
+ * @param {string} field the field name
+ * @param {array} label a serialized fo Polyline
+ * @param {Renderer} renderer the associated renderer
+ * @param {number} frameNumber an optional frame number, only applicable to video
  */
-function PolylineOverlay(d, renderer) {
+function PolylineOverlay(field, label, renderer, frameNumber = null) {
   Overlay.call(this, renderer);
 
-  this.id = d._id;
-  this.name = d.name;
-  this.label = d.label;
-  this.index = d.index;
-  this.points = d.points;
-  this.closed = d.closed;
-  this.filled = d.filled;
-  this.target = d.target;
-  this.attrs = d.attrs;
-  this.tags = d.tags;
+  this.field = field;
+  this.label = label;
+  this.frameNumber = frameNumber;
 }
 PolylineOverlay.prototype = Object.create(Overlay.prototype);
 PolylineOverlay.prototype.constructor = PolylineOverlay;
 
 /**
- * Second half of constructor that should be called after the object exists.
+ * Second half of constructor that should be called after the polyline overlay exists.
  *
  * @method setup
  * @constructor
@@ -808,7 +791,7 @@ PolylineOverlay.prototype.setup = function (
   this._context = context;
 
   this.path = new Path2D();
-  for (const shape of this.points) {
+  for (const shape of this.label.points) {
     const shapePath = new Path2D();
     for (const [pidx, point] of Object.entries(shape)) {
       if (pidx > 0) {
@@ -817,7 +800,7 @@ PolylineOverlay.prototype.setup = function (
         shapePath.moveTo(canvasWidth * point[0], canvasHeight * point[1]);
       }
     }
-    if (this.closed) {
+    if (this.label.closed) {
       shapePath.closePath();
     }
     this.path.addPath(shapePath);
@@ -833,10 +816,10 @@ PolylineOverlay.prototype.setup = function (
  * @param {int} canvasHeight
  */
 PolylineOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
-  if (!this._isShown(this.name)) {
+  if (!this._isShown()) {
     return;
   }
-  const color = this._getColor(this.name, this.label, this.index);
+  const color = this._getColor(this.name, this.label);
   context.fillStyle = color;
   context.strokeStyle = color;
   context.lineWidth = LINE_WIDTH;
@@ -857,25 +840,16 @@ PolylineOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
 
 PolylineOverlay.prototype.getPointInfo = function (x, y) {
   return {
-    id: this.id,
-    color: this._getColor(this.name, this.label, this.index),
+    field: this.field,
+    frameNumber: this.frameNumber,
     label: this.label,
-    field: this.name,
-    index: this.index,
-    points: this.points.map((p) => p.length).reduce((a, b) => a + b, 0),
-    paths: this.points.length,
-    closed: this.closed,
-    filled: this.filled,
-    target: this.target,
-    attrs: this.attrs,
-    frameNumber: this.renderer._frameNumber,
-    type: "polyline",
+    type: "Polyline",
   };
 };
 
 PolylineOverlay.prototype.getMouseDistance = function (x, y) {
   const distances = [];
-  for (const shape of this.points) {
+  for (const shape of this.label.points) {
     for (let i = 0; i < shape.length - 1; i++) {
       distances.push(
         distanceFromLineSegment(
@@ -889,7 +863,7 @@ PolylineOverlay.prototype.getMouseDistance = function (x, y) {
       );
     }
     // acheck final line segment if closed
-    if (this.closed) {
+    if (this.label.closed) {
       distances.push(
         distanceFromLineSegment(
           x,
@@ -906,7 +880,7 @@ PolylineOverlay.prototype.getMouseDistance = function (x, y) {
 };
 
 PolylineOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown(this.name)) {
+  if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
   const tolerance = LINE_WIDTH * 1.5;
@@ -915,7 +889,7 @@ PolylineOverlay.prototype.containsPoint = function (x, y) {
     return Overlay.CONTAINS_BORDER;
   }
 
-  if (this.closed || this.filled) {
+  if (this.label.closed || this.label.filled) {
     return this._context.isPointInPath(this.path, x, y)
       ? Overlay.CONTAINS_CONTENT
       : Overlay.CONTAINS_NONE;
@@ -924,59 +898,32 @@ PolylineOverlay.prototype.containsPoint = function (x, y) {
 };
 
 /**
- * A Class for rendering an Overlay on the Video
+ * An overlay that renders a fo Detection
  *
- * @param {dictionary} d is a dictionary with the following structure
- *       "label": "the class/label/name of thing to show",
- *       "index": "a unique index for the object",
- *       "frame_number": 100, // the integer frame number for this object
- *       "Optional, may only be present for certain players."
- *       "bounding_box": {
- *         "top_left": {
- *           "x": 0.1, // floating number in relative 0:1 coordinates
- *           "y": 0.1, // floating number in relative 0:1 coordinates
- *         },
- *         "bottom_right": {
- *           "x": 0.2, // floating number in relative 0:1 coordinates
- *           "y": 0.2, // floating number in relative 0:1 coordinates
- *         }
- *       }
- * @param {Renderer} renderer Associated renderer
+ * @param {string} field the field name
+ * @param {array} label a serialized fo Detection
+ * @param {Renderer} renderer the associated renderer
+ * @param {number} frameNumber an optional frame number, only applicable to video
  */
-function ObjectOverlay(d, renderer) {
-  if (!ObjectOverlay._tempMaskCanvas) {
-    ObjectOverlay._tempMaskCanvas = document.createElement("canvas");
+function DetectionOverlay(field, label, renderer, frameNumber = null) {
+  if (!DetectionOverlay._tempMaskCanvas) {
+    DetectionOverlay._tempMaskCanvas = document.createElement("canvas");
   }
   Overlay.call(this, renderer);
 
   this._cache_options = Object.assign({}, this.options);
-  this.id = d._id;
-  this.name = d.name;
-  this.tags = d.tags;
-  this.confidence = d.confidence;
-  this.label = d.label;
+  this.label = label;
+  this.field = field;
+  this.frameNumber = frameNumber;
+
   this._setupLabel();
-  this.index = d.index;
-  this.target = d.target;
   this.indexStr = "";
-  if (this.index != null) {
-    this.indexStr = `${this.index}`;
+  if (this.label.index != null) {
+    this.indexStr = `${this.label.index}`;
   }
 
-  this.frame_number = d.frame_number;
-  this.bounding_box = d.bounding_box;
-
-  if (typeof d.attrs !== "undefined") {
-    this._attrs = d.attrs.attrs;
-  }
-  this.attrText = null;
-  this.attrTextWidth = -1;
-  this.attrFontHeight = null;
-  this.attrWidth = 0;
-  this.attrHeight = 0;
-
-  if (typeof d.mask === "string") {
-    this.mask = deserialize(d.mask);
+  if (typeof label.mask === "string") {
+    this.mask = deserialize(label.mask);
   }
 
   this.x = null;
@@ -992,12 +939,18 @@ function ObjectOverlay(d, renderer) {
   this.labelTextWidth = null;
   this.indexTextWidth = null;
   this.labelIndexPadding = 51; // extra space forced between label and index in header
+
+  this.attrText = null;
+  this.attrTextWidth = -1;
+  this.attrFontHeight = null;
+  this.attrWidth = 0;
+  this.attrHeight = 0;
 }
-ObjectOverlay.prototype = Object.create(Overlay.prototype);
-ObjectOverlay.prototype.constructor = ObjectOverlay;
+DetectionOverlay.prototype = Object.create(Overlay.prototype);
+DetectionOverlay.prototype.constructor = DetectionOverlay;
 
 /**
- * Second half of constructor that should be called after the object exists.
+ * Second half of constructor that should be called after the detection overlay exists.
  *
  * @method setup
  * @constructor
@@ -1005,16 +958,17 @@ ObjectOverlay.prototype.constructor = ObjectOverlay;
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-ObjectOverlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
+DetectionOverlay.prototype.setup = function (
+  context,
+  canvasWidth,
+  canvasHeight
+) {
   this._parseAttrs();
-  this.x = this.bounding_box.top_left.x * canvasWidth;
-  this.y = this.bounding_box.top_left.y * canvasHeight;
-  this.w =
-    (this.bounding_box.bottom_right.x - this.bounding_box.top_left.x) *
-    canvasWidth;
-  this.h =
-    (this.bounding_box.bottom_right.y - this.bounding_box.top_left.y) *
-    canvasHeight;
+  const [tlx, tly, w, h] = this.label.bounding_box;
+  this.x = tlx * canvasWidth;
+  this.y = tly * canvasHeight;
+  this.w = w * canvasWidth;
+  this.h = h * canvasHeight;
   this.headerFontHeight = Math.min(20, 0.09 * canvasHeight);
   this.headerFontHeight = this.renderer.checkFontHeight(this.headerFontHeight);
   this.attrFontHeight = Math.min(18, 0.088 * canvasHeight);
@@ -1034,11 +988,12 @@ ObjectOverlay.prototype.setup = function (context, canvasWidth, canvasHeight) {
  * Checks whether the object has attributes
  * @return {boolean}
  */
-ObjectOverlay.prototype.hasAttrs = function () {
+DetectionOverlay.prototype.hasAttrs = function () {
+  // @todo: update
   return this._attrs !== undefined;
 };
 
-ObjectOverlay.prototype._setupFontWidths = function (context) {
+DetectionOverlay.prototype._setupFontWidths = function (context) {
   context.font = `${this.headerFontHeight}px Arial, sans-serif`;
   this.labelTextWidth = context.measureText(this.labelUpper).width;
   this.indexTextWidth = context.measureText(this.indexStr).width;
@@ -1061,30 +1016,15 @@ ObjectOverlay.prototype._setupFontWidths = function (context) {
       2 * this.textPadder +
       this.labelIndexPadding;
   }
-  this._setupAttrBox(context);
 };
 
-ObjectOverlay.prototype._setupAttrFont = function (context) {
-  this.attrFont = `${this.attrFontHeight}px Arial, sans-serif`;
-  context.font = this.attrFont;
-};
-
-ObjectOverlay.prototype._setupAttrBox = function (context) {
-  this._setupAttrFont(context);
-  const wh = computeBBoxForTextOverlay(
-    context,
-    this.attrText,
-    this.attrFontHeight,
-    this.textPadder
-  );
-  this.attrWidth = wh.width;
-  this.attrHeight = wh.height;
-};
-
-ObjectOverlay.prototype._setupLabel = function () {
-  this.labelUpper = (this.label ? `${this.label} ` : "").toUpperCase();
-  if (this.options.showConfidence && !isNaN(this.confidence)) {
-    this.labelUpper += `(${Number(this.confidence).toFixed(2)})`;
+DetectionOverlay.prototype._setupLabel = function () {
+  this.labelUpper = (this.label.label
+    ? `${this.label.label} `
+    : ""
+  ).toUpperCase();
+  if (this.options.showConfidence && !isNaN(this.label.confidence)) {
+    this.labelUpper += `(${Number(this.label.confidence).toFixed(2)})`;
   }
 };
 
@@ -1095,7 +1035,7 @@ ObjectOverlay.prototype._setupLabel = function () {
  * @method _parseAttrs
  * @param {attrs} attrs
  */
-ObjectOverlay.prototype._parseAttrs = function (attrs) {
+DetectionOverlay.prototype._parseAttrs = function (attrs) {
   if (this.attrText === null) {
     this.attrText = "";
   }
@@ -1134,19 +1074,23 @@ ObjectOverlay.prototype._parseAttrs = function (attrs) {
 };
 
 /**
- * Basic rendering function for drawing the overlay instance.
+ * Basic rendering function for drawing the detection overlay instance.
  *
  * @method draw
  * @param {context} context
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-ObjectOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
+DetectionOverlay.prototype.draw = function (
+  context,
+  canvasWidth,
+  canvasHeight
+) {
   if (typeof context === "undefined") {
     return;
   }
 
-  if (!this._isShown(this.name)) {
+  if (!this._isShown()) {
     return;
   }
 
@@ -1162,7 +1106,7 @@ ObjectOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
     this._setupLabel();
     this._setupFontWidths(context, canvasWidth, canvasHeight);
   }
-  const color = this._getColor(this.name, this.label, this.index);
+  const color = this._getColor(this.field, this.label);
   context.strokeStyle = color;
   context.fillStyle = color;
   context.lineWidth = LINE_WIDTH;
@@ -1187,12 +1131,12 @@ ObjectOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
     const rawMaskColor = _rawColorCache[color];
 
     const [maskHeight, maskWidth] = this.mask.shape;
-    ensureCanvasSize(ObjectOverlay._tempMaskCanvas, {
+    ensureCanvasSize(DetectionOverlay._tempMaskCanvas, {
       width: maskWidth,
       height: maskHeight,
     });
 
-    const maskContext = ObjectOverlay._tempMaskCanvas.getContext("2d");
+    const maskContext = DetectionOverlay._tempMaskCanvas.getContext("2d");
     const maskImage = maskContext.createImageData(maskWidth, maskHeight);
     const maskImageRaw = new Uint32Array(maskImage.data.buffer);
 
@@ -1204,7 +1148,7 @@ ObjectOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
     maskContext.putImageData(maskImage, 0, 0);
     context.imageSmoothingEnabled = this.renderer.overlayOptions.smoothMasks;
     context.drawImage(
-      ObjectOverlay._tempMaskCanvas,
+      DetectionOverlay._tempMaskCanvas,
       0,
       0,
       maskWidth,
@@ -1281,30 +1225,17 @@ ObjectOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
   }
 };
 
-ObjectOverlay.prototype.getPointInfo = function (x, y) {
-  const left = this.bounding_box.top_left.x;
-  const width = this.bounding_box.bottom_right.x - left;
-  const top = this.bounding_box.top_left.y;
-  const height = this.bounding_box.bottom_right.y - top;
+DetectionOverlay.prototype.getPointInfo = function (x, y) {
   return {
-    id: this.id,
-    color: this._getColor(this.name, this.label, this.index),
+    color: this._getColor(this.field, this.label),
+    field: this.field,
+    frameNumber: this.frameNumber,
     label: this.label,
-    field: this.name,
-    index: this.index,
-    confidence: this.confidence,
-    target: this.target,
-    attrs: this._attrs,
-    frameNumber: this.renderer._frameNumber,
-    top,
-    left,
-    height,
-    width,
-    type: "detection",
+    type: "Detection",
   };
 };
 
-ObjectOverlay.prototype._inHeader = function (x, y) {
+DetectionOverlay.prototype._inHeader = function (x, y) {
   return inRect(
     x,
     y,
@@ -1315,7 +1246,7 @@ ObjectOverlay.prototype._inHeader = function (x, y) {
   );
 };
 
-ObjectOverlay.prototype.getMouseDistance = function (x, y) {
+DetectionOverlay.prototype.getMouseDistance = function (x, y) {
   if (this._inHeader(x, y)) {
     return 0;
   }
@@ -1342,8 +1273,8 @@ ObjectOverlay.prototype.getMouseDistance = function (x, y) {
   return Math.min(...distances);
 };
 
-ObjectOverlay.prototype.containsPoint = function (x, y) {
-  if (!this._isShown(this.name)) {
+DetectionOverlay.prototype.containsPoint = function (x, y) {
+  if (!this._isShown()) {
     return Overlay.CONTAINS_NONE;
   }
   // the header takes up an extra LINE_WIDTH / 2 on each side due to its border
@@ -1379,3 +1310,30 @@ function ensureCanvasSize(canvas, { width, height }) {
     canvas.height = height;
   }
 }
+
+const fromLabel = (overlayType) => (
+  field,
+  label,
+  renderer,
+  frameNumber = null
+) => [overlayType(field, label, renderer, frameNumber)];
+
+const fromLabelList = (overlayType, list_key) => (
+  field,
+  labels,
+  renderer,
+  frameNumber = null
+) =>
+  labels[list_key].map((label) =>
+    overlayType(field, label, renderer, frameNumber)
+  );
+
+const FROM_FO = {
+  Detection: fromLabel(DetectionOverlay),
+  Detections: fromLabelList(DetectionOverlay, "detections"),
+  Keypoint: fromLabel(KeypointOverlay),
+  Keypoints: fromLabelList(KeypointOverlay, "keypoints"),
+  Polyline: fromLabel(PolylineOverlay),
+  PoylinesOverlay: fromLabelList(PolylineOverlay, "polylines"),
+  Segmentation: fromLabel(SegmentationOverlay),
+};

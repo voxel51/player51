@@ -86,8 +86,8 @@ ImageRenderer.prototype.initPlayerControls = function () {
       tmpImage.setAttribute("src", self.player._notFoundPosterURL);
       self.parent.appendChild(tmpImage);
     }
-    self.eleImage.remove(); 
-    self.dispatchEvent('error');
+    self.eleImage.remove();
+    self.dispatchEvent("error");
   });
 
   const hideControls = function () {
@@ -199,7 +199,7 @@ ImageRenderer.prototype.updateFromLoadingState = function () {
   }
 
   if (this._overlayCanBePrepared) {
-    this.prepareOverlay(this._overlayData);
+    this.prepareOverlay();
   }
 
   if (this._isOverlayPrepared) {
