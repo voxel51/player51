@@ -37,7 +37,7 @@ function Renderer(media, sample, options) {
   this.eventTarget = new EventTarget();
   this.media = media;
   this.options = options;
-  this._sample = sample;
+  this.sample = sample;
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = "../src/js/zipreader/";
@@ -96,8 +96,6 @@ function Renderer(media, sample, options) {
   this._isOverlayPrepared = false;
   this._mouseX = null;
   this._mouseY = null;
-  this._overlayData = null;
-  this._overlayURL = null;
   this._overlayHasDetectionAttrs = false;
   this._boolBadZip = false;
   this._boolZipReady = false;
@@ -107,6 +105,7 @@ function Renderer(media, sample, options) {
   this._boolHoveringControls = false;
   this._boolDisableShowControls = false;
   this._boolShowControls = false;
+  this._overlays = [];
   this._orderedOverlayCache = null;
   this._rotateIndex = 0;
   this._handleMouseEvent = this._handleMouseEvent.bind(this);
@@ -249,17 +248,13 @@ Renderer.prototype.dispatchEvent = function (
   e.data = data;
   return this.eventTarget.dispatchEvent(e);
 };
-
-/**
- * This function updates the overlay data and prepares it for rendering.
- * Supports 2 formats, object and frame based.
+/*
  *
- * @member updateOverlay
- * @param {object} overlayData
+ * @member updateSample
+ * @param {object} sample
  */
-Renderer.prototype.updateOverlay = function (overlayData) {
-  this.frameOverlay = {};
-  this._overlayData = JSON.parse(JSON.stringify(overlayData));
+Renderer.prototype.updateSample = function (sample) {
+  this.sample = sample;
   this._isOverlayPrepared = false;
   this.prepareOverlay();
   if (this._boolSingleFrame) {
@@ -285,13 +280,15 @@ Renderer.prototype.prepareOverlay = function () {
   const classifications = [];
   for (const field in this.sample) {
     const label = this.sample[field];
-    if (typeof label !== "object") {
+    if (!label) {
       continue;
     }
     if (label._cls in FROM_FO) {
-      const overlay = FROM_FO[label._cls](field, label, this);
-      overlay.setup(context, this.canvasWidth, this.canvasHeight);
-      this._overlays.push(overlay);
+      const overlays = FROM_FO[label._cls](field, label, this);
+      overlays.forEach((o) =>
+        o.setup(context, this.canvasWidth, this.canvasHeight)
+      );
+      this._overlays = [...this._overlays, ...overlays];
     } else if (label._cls === "Classification") {
       classifications.push([field, [null, [label]]]);
     } else if (label._cls === "Classifications") {
@@ -351,7 +348,7 @@ Renderer.prototype._getOrderedOverlays = function (coords) {
 
   let ordered = activeLabels.reduce((acc, cur) => [...acc, ...bins[cur]], []);
 
-  if (attrs) {
+  if (classifications) {
     ordered = [classifications, ...ordered];
   }
 
@@ -468,8 +465,10 @@ Renderer.prototype._computeEventCoordinates = function (e) {
   }
   let [x, y] = [this._mouseX, this._mouseY];
 
-  x = x - this._rect.left;
-  y = y - this._rect.top;
+  if (this._rect) {
+    x = x - this._rect.left;
+    y = y - this._rect.top;
+  }
 
   return [
     Math.round(rescale(x, 0, this._rect.width, 0, this.eleCanvas.width)),

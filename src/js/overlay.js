@@ -165,7 +165,7 @@ Overlay.prototype._isShown = function () {
   ) {
     return false;
   }
-  if (!_isOverlayShown(this.renderer.options.filter, field, this.label)) {
+  if (!_isOverlayShown(this.renderer.options.filter, this.field, this.label)) {
     return false;
   }
   return true;
@@ -217,7 +217,7 @@ Overlay.prototype.isSelectable = function (x, y) {
 };
 
 Overlay.prototype.isSelected = function () {
-  return this.renderer.options.selectedObjects.includes(this.id);
+  return this.renderer.options.selectedLabels.includes(this.label._id);
 };
 
 Overlay.prototype.getSelectData = function (x, y) {
@@ -386,7 +386,7 @@ ClassificationsOverlay.prototype.draw = function (
       y + this.fontHeight + this.textPadder
     );
     const { field, label } = labels[l];
-    if (this.renderer.options.selectedObjects.includes(label._id)) {
+    if (this.renderer.options.selectedLabels.includes(label._id)) {
       context.lineWidth = this.textPadder / 2;
       context.strokeRect(this.x, y, this.w, this.labelHeight);
       context.strokeStyle = this._getColor(field, label);
@@ -1014,6 +1014,23 @@ DetectionOverlay.prototype._setupFontWidths = function (context) {
   }
 };
 
+DetectionOverlay.prototype._setupAttrFont = function (context) {
+  this.attrFont = `${this.attrFontHeight}px Arial, sans-serif`;
+  context.font = this.attrFont;
+};
+
+DetectionOverlay.prototype._setupAttrBox = function (context) {
+  this._setupAttrFont(context);
+  const wh = computeBBoxForTextOverlay(
+    context,
+    this.attrText,
+    this.attrFontHeight,
+    this.textPadder
+  );
+  this.attrWidth = wh.width;
+  this.attrHeight = wh.height;
+};
+
 DetectionOverlay.prototype._setupLabel = function () {
   this.labelUpper = (this.label.label
     ? `${this.label.label} `
@@ -1312,7 +1329,7 @@ const fromLabel = (overlayType) => (
   label,
   renderer,
   frameNumber = null
-) => [overlayType(field, label, renderer, frameNumber)];
+) => [new overlayType(field, label, renderer, frameNumber)];
 
 const fromLabelList = (overlayType, list_key) => (
   field,
@@ -1320,8 +1337,8 @@ const fromLabelList = (overlayType, list_key) => (
   renderer,
   frameNumber = null
 ) =>
-  labels[list_key].map((label) =>
-    overlayType(field, label, renderer, frameNumber)
+  labels[list_key].map(
+    (label) => new overlayType(field, label, renderer, frameNumber)
   );
 
 const FROM_FO = {

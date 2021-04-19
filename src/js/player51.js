@@ -103,7 +103,7 @@ function Player51(options) {
   options.filter = options.filter || {};
   options.enableOverlayOptions = options.enableOverlayOptions || {};
   options.defaultOverlayOptions = options.defaultOverlayOptions || {};
-  options.selectedObjects = options.selectedObjects || [];
+  options.selectedLabels = options.selectedLabels || [];
   options.colorGenerator = options.colorGenerator || colorGenerator;
 
   const { media, sample } = options;
