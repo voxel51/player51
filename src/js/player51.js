@@ -95,32 +95,7 @@ export default Player51;
  *   isSequence: for rendering ZIP files - if true, the contents will be
  *     rendered as a video; otherwise, as a gallery.
  */
-function Player51(options, ...args) {
-  // maintain compatibility with code that passes these arguments positionally
-  if (options.src && options.type) {
-    options.media = {
-      src: options.src,
-      type: options.type,
-    };
-    delete options.src;
-    delete options.type;
-  }
-  for (let [index, name] of Object.entries(["overlay", "fps", "isSequence"])) {
-    index = Number(index);
-    if (args[index] !== undefined) {
-      if (options[name] === undefined) {
-        options[name] = args[index];
-      } else {
-        throw new Error(
-          `Duplicate option and positional argument ${index + 1}: ${name}`
-        );
-      }
-    }
-  }
-  if (!options.overlay) {
-    // convert undefined and other false-y values to null for internal use
-    options.overlay = null;
-  }
+function Player51(options) {
   // set defaults for other options
   options.colorMap = options.colorMap || {};
   options.colorByLabel = options.coloredByLabel || false;
@@ -131,19 +106,14 @@ function Player51(options, ...args) {
   options.selectedObjects = options.selectedObjects || [];
   options.colorGenerator = options.colorGenerator || colorGenerator;
 
-  const { media, overlay } = options;
+  const { media, sample } = options;
   const mimetype = options.media.type.toLowerCase();
 
   // Load correct player
   if (mimetype.startsWith("video/")) {
-    return new VideoPlayer(media, overlay, options);
+    return new VideoPlayer(media, sample, options);
   } else if (mimetype.startsWith("image/")) {
-    return new ImageViewer(media, overlay, options);
-  } else if (mimetype === "application/zip") {
-    if (options.isSequence) {
-      return new ImageSequence(media, overlay, options);
-    }
-    return new GalleryViewer(media, overlay, options);
+    return new ImageViewer(media, sample, options);
   }
   throw new Error(`Unrecognized mime type: ${mimetype}`);
 }

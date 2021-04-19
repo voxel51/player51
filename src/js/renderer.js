@@ -27,7 +27,7 @@ export { Renderer };
  * @param {string} overlay is the URL to overlay JSON
  * @param {object} options: additional player options
  */
-function Renderer({ media, sample, frameReader, options }) {
+function Renderer(media, sample, options) {
   if (this.constructor === Renderer) {
     throw new TypeError("Cannot instantiate abstract class.");
   }
@@ -38,7 +38,6 @@ function Renderer({ media, sample, frameReader, options }) {
   this.media = media;
   this.options = options;
   this._sample = sample;
-  this._frameReader = frameReader; // @todo
   this.frameZeroOffset = 1;
   this.reader = new ZipLibrary();
   this.reader.workerScriptsPath = "../src/js/zipreader/";
@@ -93,14 +92,13 @@ function Renderer({ media, sample, frameReader, options }) {
   this._frameNumber = undefined;
   this._isReadyProcessFrames = false;
   this._isDataLoaded = false;
-  this._hasOverlay = Boolean(overlay);
   this._overlayCanBePrepared = true;
   this._isOverlayPrepared = false;
   this._mouseX = null;
   this._mouseY = null;
   this._overlayData = null;
   this._overlayURL = null;
-  this._overlayHasObjectAttrs = false;
+  this._overlayHasDetectionAttrs = false;
   this._boolBadZip = false;
   this._boolZipReady = false;
   this._timeouts = {};
@@ -306,7 +304,7 @@ Renderer.prototype.prepareOverlay = function () {
     overlay.setup(context, this.canvasWidth, this.canvasHeight);
     this._overlays.push(overlay);
   }
-
+  this._updateOverlayOptionVisibility();
   this._reBindMouseHandler();
 
   this._isOverlayPrepared = true;
@@ -322,144 +320,6 @@ Renderer.prototype._reBindMouseHandler = function () {
   this.eleCanvas.addEventListener(eventType, this._handleMouseEvent);
   if (eventType !== "click") {
     this.eleCanvas.addEventListener("click", this._handleMouseEvent);
-  }
-};
-
-/**
- * Helper function to parse attributes of an overlay and add it to the overlay
- * representation.
- *
- * @param {context} context
- * @param {array} attributes is an Array of attributes
- * @param {key} frameKey the frame number of the attributes (defaults to current
- *   frame)
- */
-Renderer.prototype._prepareOverlay_auxAttributes = function (
-  context,
-  attributes,
-  frameKey = null
-) {
-  const o = new FrameAttributesOverlay(attributes, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight);
-  if (frameKey) {
-    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
-  } else {
-    // @todo remove this when video attrs are supported
-    // In the meantime, this allows video labels with video attrs to load
-    if (typeof this._frameNumber !== "undefined") {
-      this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
-    }
-  }
-};
-
-/**
- * Helper function to parse attributes of an overlay and add it to the overlay
- * representation.
- *
- * @param {context} context
- * @param {object} maskData an object with keys:
- *   `mask`: base64-encoded mask
- *   `name`: a name identifying the mask
- * @param {key} frameKey the frame number of the mask (defaults to current
- *   frame)
- */
-Renderer.prototype._prepareOverlay_auxMask = function (
-  context,
-  maskData,
-  frameKey = null
-) {
-  const o = new FrameMaskOverlay(maskData, this);
-  o.setup(context, this.canvasWidth, this.canvasHeight);
-  if (frameKey) {
-    this._prepareOverlay_auxCheckAdd(o, parseInt(frameKey));
-  } else {
-    this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
-  }
-};
-
-Renderer.prototype._prepareOverlay_auxKeypoints = function (
-  context,
-  keypoints,
-  frameKey = null
-) {
-  frameKey = parseInt(frameKey) || this._frameNumber;
-  for (const k of keypoints) {
-    const o = new KeypointsOverlay(k, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this._prepareOverlay_auxCheckAdd(o, frameKey);
-  }
-};
-
-Renderer.prototype._prepareOverlay_auxPolylines = function (
-  context,
-  polylines,
-  frameKey = null
-) {
-  frameKey = parseInt(frameKey) || this._frameNumber;
-  for (const p of polylines) {
-    const o = new PolylineOverlay(p, this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    this._prepareOverlay_auxCheckAdd(o, frameKey);
-  }
-};
-
-/**
- * Helper function to parse one of the objects in the Format 1 of the overlay
- * and add it the overlay representation.
- *
- * @param {context} context
- * @param {array} objects is an Array of Objects with each entry an
- * object in Format 1 above.
- * @param {bool} frameFlag forces frameNumber to be frameNumber property
- */
-Renderer.prototype._prepareOverlay_auxFormat1Objects = function (
-  context,
-  objects,
-  frameFlag = false
-) {
-  if (typeof objects === "undefined") {
-    return;
-  }
-  if (typeof objects.length === "undefined") {
-    objects = objects.objects;
-  }
-  this._overlayHasObjectAttrs = false;
-  for (let len = objects.length, i = 0; i < len; i++) {
-    const o = new ObjectOverlay(objects[i], this);
-    o.setup(context, this.canvasWidth, this.canvasHeight);
-    if (o.hasAttrs()) {
-      this._overlayHasObjectAttrs = true;
-    }
-    if (frameFlag) {
-      this._prepareOverlay_auxCheckAdd(o, this._frameNumber);
-    } else {
-      this._prepareOverlay_auxCheckAdd(o);
-    }
-  }
-  // we may have updated _overlayHasObjectAttrs
-  this._updateOverlayOptionVisibility();
-};
-
-/**
- * Add the overlay to the set.
- *
- * @arguments
- * @param {overlay} o the Overlay instance
- * @param {int} fn optional is the frame numnber
- * (if not provided, then the overlay o needs a frameNumber propery.
- */
-Renderer.prototype._prepareOverlay_auxCheckAdd = function (o, fn = -1) {
-  if (fn == -1) {
-    fn = o.frame_number;
-  }
-  if (typeof fn === "undefined") {
-    fn = this._frameNumber;
-  }
-  if (fn in this.frameOverlay) {
-    this.frameOverlay[fn].push(o);
-  } else {
-    // this the first time we are seeing the frame
-    this.frameOverlay[fn] = [o];
   }
 };
 
@@ -568,7 +428,7 @@ Renderer.prototype._setTopOverlays = function ({ x, y }, overlays) {
     .filter((o) => o.containsPoint(x, y) > 0)
     .sort((a, b) => a.getMouseDistance(x, y) - b.getMouseDistance(x, y));
   const outside = overlays.filter(
-    (o) => o instanceof FrameAttributesOverlay || o.containsPoint(x, y) === 0
+    (o) => o instanceof ClassificationsOverlay || o.containsPoint(x, y) === 0
   );
 
   return [...contained, ...outside];
@@ -1471,12 +1331,12 @@ Renderer.prototype._updateOptionsDisplayState = function () {
 Renderer.prototype._updateOverlayOptionVisibility = function () {
   this.eleOptCtlShowAttrWrapper.classList.toggle(
     "hidden",
-    !this._overlayHasObjectAttrs
+    !this._overlayHasDetectionAttrs
   );
   this.attrOptsElements.forEach((e) =>
     e.classList.toggle(
       "hidden",
-      !this._overlayHasObjectAttrs || !this.overlayOptions.showAttrs
+      !this._overlayHasDetectionAttrs || !this.overlayOptions.showAttrs
     )
   );
   for (const [key, wrapper] of Object.entries(this._overlayOptionWrappers)) {
@@ -1487,7 +1347,7 @@ Renderer.prototype._updateOverlayOptionVisibility = function () {
 };
 
 Renderer.prototype.hasFrameNumbers = function () {
-  return this._hasOverlay;
+  return false;
 };
 
 Renderer.prototype.updatePlayButton = function (playing) {

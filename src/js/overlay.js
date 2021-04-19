@@ -673,11 +673,7 @@ KeypointOverlay.prototype.setup = function (
  * @param {int} canvasWidth
  * @param {int} canvasHeight
  */
-KeypointsOverlay.prototype.draw = function (
-  context,
-  canvasWidth,
-  canvasHeight
-) {
+KeypointOverlay.prototype.draw = function (context, canvasWidth, canvasHeight) {
   if (!this._isShown()) {
     return;
   }
@@ -726,7 +722,7 @@ KeypointOverlay.prototype._getDistanceAndPoint = function (x, y) {
   return distances.sort((a, b) => a[0] - b[0])[0];
 };
 
-KeypointsOverlay.prototype.getPointInfo = function (x, y) {
+KeypointOverlay.prototype.getPointInfo = function (x, y) {
   return {
     color: this._getColor(this.name, this.label),
     field: this.field,

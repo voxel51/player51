@@ -23,12 +23,11 @@ export { ImageRenderer };
  * @param {object} media is an object that has "src" and "type" attributes.
  * type must be in the format image/<format>
  * ex. type: "image/jpg"
- * @param {string} overlay is data that should be overlayed on the image.
- * Overlay is a path to a file of eta.core.image.ImageLabels format.
+ * @param {string} sample
  * @param {object} options: additional player options
  */
-function ImageRenderer(media, overlay, options) {
-  Renderer.call(this, media, overlay, options);
+function ImageRenderer(media, sample, options) {
+  Renderer.call(this, media, sample, options);
   this._frameNumber = 1;
 }
 ImageRenderer.prototype = Object.create(Renderer.prototype);
@@ -233,7 +232,3 @@ isPreparingOverlay: ${this._isPreparingOverlay}
  * @param {context} context
  */
 ImageRenderer.prototype.customDraw = function (context) {};
-
-ImageRenderer.prototype.hasFrameNumbers = function () {
-  return false;
-};

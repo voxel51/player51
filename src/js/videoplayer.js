@@ -13,14 +13,9 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
-import {
-  MediaPlayer,
-} from './mediaplayer.js';
+import { MediaPlayer } from "./mediaplayer.js";
 
-export {
-  VideoPlayer,
-};
-
+export { VideoPlayer };
 
 /**
  * VideoPlayer Class Definition
@@ -31,13 +26,11 @@ export {
  * @param {object} media is an object that has "src" and "type" attributes.
  * type must be in the format video/<format>
  * ex. type: "video/mp4"
- * @param {string} overlay is data that should be overlayed on the video.
- * Overlay can be empty (`null`), a string point to a single URL or
- * an object that is preloaded data.
+ * @param {string} sample is data that should be overlayed on the video.
  * @param {object} options: additional player options
  */
-function VideoPlayer(media, overlay, options) {
-  MediaPlayer.call(this, 'video', media, overlay, options);
+function VideoPlayer(media, sample, options) {
+  MediaPlayer.call(this, "video", media, sample, options);
   // Player View Attributes
   this.boolDrawFrameNumber = false;
   this.boolDrawTimestamp = false;
@@ -45,18 +38,16 @@ function VideoPlayer(media, overlay, options) {
 VideoPlayer.prototype = Object.create(MediaPlayer.prototype);
 VideoPlayer.prototype.constructor = VideoPlayer;
 
-
 /**
  * Set a poster frame URL to display while the video itself is loading
  *
  * @member setLoadingPoster
  * @param {string} url Image to be shown while loading.
  */
-VideoPlayer.prototype.setLoadingPoster = function(url) {
+VideoPlayer.prototype.setLoadingPoster = function (url) {
   this._boolHasPoster = true;
   this._loadingPosterURL = url;
 };
-
 
 /**
  * Force the video to loop.
@@ -64,32 +55,29 @@ VideoPlayer.prototype.setLoadingPoster = function(url) {
  * @member loop
  * @param {bool} boolLoop
  */
-VideoPlayer.prototype.loop = function(boolLoop = true) {
+VideoPlayer.prototype.loop = function (boolLoop = true) {
   this.renderer._boolLoop = boolLoop;
 };
-
 
 /**
  * Play the video, if it is not already playing.
  *
  * @member play
  */
-VideoPlayer.prototype.play = function() {
+VideoPlayer.prototype.play = function () {
   this.renderer._boolPlaying = true;
   this.renderer.updateFromDynamicState();
 };
-
 
 /**
  * Pause the video, if it is not already paused.
  *
  * @member pause
  */
-VideoPlayer.prototype.pause = function() {
+VideoPlayer.prototype.pause = function () {
   this.renderer._boolPlaying = false;
   this.renderer.updateFromDynamicState();
 };
-
 
 /**
  * Returns true if the mouse is hovering over the player, and false, if not.
@@ -98,10 +86,9 @@ VideoPlayer.prototype.pause = function() {
  *
  * @return {bool} if the mouse is hovering over the player
  */
-VideoPlayer.prototype.isHovering = function() {
+VideoPlayer.prototype.isHovering = function () {
   return this._boolHovering;
 };
-
 
 /**
  * Force the video to autoplay when rendered.
@@ -109,7 +96,7 @@ VideoPlayer.prototype.isHovering = function() {
  * @member autoplay
  * @param {bool} boolAutoplay
  */
-VideoPlayer.prototype.autoplay = function(boolAutoplay = true) {
+VideoPlayer.prototype.autoplay = function (boolAutoplay = true) {
   if (this.renderer._boolSingleFrame && boolAutoplay) {
     boolAutoplay = false;
     this.renderer._boolPlaying = true;
@@ -117,7 +104,6 @@ VideoPlayer.prototype.autoplay = function(boolAutoplay = true) {
   this.renderer._boolAutoplay = boolAutoplay;
   this.renderer.updateFromDynamicState();
 };
-
 
 /**
  * If the player has a media fragment, reset to the initial state:
@@ -129,7 +115,7 @@ VideoPlayer.prototype.autoplay = function(boolAutoplay = true) {
  * @member resetToFragment
  * @return {bool} true if reset happens
  */
-VideoPlayer.prototype.resetToFragment = function() {
+VideoPlayer.prototype.resetToFragment = function () {
   if (!this.renderer._hasMediaFragment || !this.renderer._isRendered) {
     return false;
   }
@@ -139,7 +125,6 @@ VideoPlayer.prototype.resetToFragment = function() {
   this.renderer.updateFromDynamicState();
   return true;
 };
-
 
 /**
  * This changes the behaviour of the video player in the following ways.
@@ -154,7 +139,7 @@ VideoPlayer.prototype.resetToFragment = function() {
  * @param {function} action (optional) a callback function to associate with
  * any click on the video.
  */
-VideoPlayer.prototype.thumbnailMode = function(action) {
+VideoPlayer.prototype.thumbnailMode = function (action) {
   this._boolThumbnailMode = true;
   this._thumbnailClickAction = action;
   this.loop(true);

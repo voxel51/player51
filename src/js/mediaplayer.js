@@ -26,22 +26,18 @@ export { MediaPlayer };
  * @abstract
  * @param {string} type is the media content type
  * @param {object} media
- * @param {string} overlay is a URL to the overlay JSON
+ * @param {string} sample is the overlay data
  * @param {object} options: additional player options
  *
  */
-function MediaPlayer(type, media, overlay, options) {
+function MediaPlayer(type, media, sample, options) {
   if (this.constructor === MediaPlayer) {
     throw new TypeError("Cannot instantiate abstract class.");
   }
   if (type === "video") {
-    this.renderer = new VideoRenderer(media, overlay, options);
+    this.renderer = new VideoRenderer(media, sample, options);
   } else if (type === "image") {
-    this.renderer = new ImageRenderer(media, overlay, options);
-  } else if (type == "gallery") {
-    this.renderer = new GalleryRenderer(media, overlay, options);
-  } else if (type == "imagesequence") {
-    this.renderer = new ImageSequenceRenderer(media, overlay, options);
+    this.renderer = new ImageRenderer(media, sample, options);
   } else {
     throw new Error("invalid media type: " + type);
   }

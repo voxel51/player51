@@ -29,12 +29,11 @@ export {
  * @param {object} media is an object that has "src" and "type" attributes.
  * type must be in the format image/<format>
  * ex. type: "image/jpg"
- * @param {string} overlay is data that should be overlayed on the image.
- * Overlay is a path to a file of eta.core.image.ImageLabels format.
+ * @param {string} sample is data that should be overlayed on the image.
  * @param {object} options: additional player options
  */
-function ImageViewer(media, overlay, options) {
-  MediaPlayer.call(this, 'image', media, overlay, options);
+function ImageViewer(media, sample, options) {
+  MediaPlayer.call(this, 'image', media, sample, options);
 }
 ImageViewer.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer.prototype.constructor = ImageViewer;

@@ -24,13 +24,11 @@ export { VideoRenderer };
  * @param {object} media is an object that has "src" and "type" attributes.
  * type must be in the format video/<format>
  * ex. type: "video/mp4"
- * @param {string} overlay is data that should be overlayed on the video.
- * Overlay can be empty (`null`), a string point to a single URL or
- * an object that is preloaded data.
+ * @param {string} sample
  * @param {object} options: additional player options
  */
-function VideoRenderer(media, overlay, options) {
-  Renderer.call(this, media, overlay, options);
+function VideoRenderer(media, sample, options) {
+  Renderer.call(this, media, sample, options);
 
   // Player State Attributes
   this._boolAutoplay = false;
@@ -796,4 +794,8 @@ VideoRenderer.prototype._seconds_to_hhmmss_aux = function (number) {
     str = `${number}`;
   }
   return str;
+};
+
+VideoRenderer.prototype.hasFrameNumbers = function () {
+  return true;
 };
