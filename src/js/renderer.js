@@ -1,18 +1,6 @@
-/**
- * @module renderer.js
- * @summary Defines an abstract base class that enforces what child renderers
- * need to implement.
- *
- * @desc Renderer is an abstract class that defines the features child
- * renderers should be able to support.
- *
- * Copyright 2017-2021, Voxel51, Inc.
- * Alan Stahl, alan@voxel51.com
- */
 import EventTarget from "@ungap/event-target";
 import { ClassificationsOverlay, FROM_FO } from "./overlay.js";
 import { ICONS, rescale } from "./util.js";
-import { ZipLibrary } from "./zipreader/zip.js";
 
 export { Renderer };
 
@@ -35,12 +23,9 @@ function Renderer(media, sample, options) {
   this.player = undefined;
   this.parent = undefined;
   this.eventTarget = new EventTarget();
-  this.media = media;
   this.options = options;
   this.sample = sample;
   this.frameZeroOffset = 1;
-  this.reader = new ZipLibrary();
-  this.reader.workerScriptsPath = "../src/js/zipreader/";
   this._rect = null;
   // Player state attributes
   this._isRendered = false;
@@ -97,8 +82,6 @@ function Renderer(media, sample, options) {
   this._mouseX = null;
   this._mouseY = null;
   this._overlayHasDetectionAttrs = false;
-  this._boolBadZip = false;
-  this._boolZipReady = false;
   this._timeouts = {};
   this._canFocus = true;
   this._focusPos = { x: -1, y: -1 };
@@ -182,27 +165,6 @@ Renderer.prototype.updateFromLoadingState = function () {
 };
 
 /**
- * Define abstract function updateStateFromTimeChange to be implemented in
- * subclasses
- *
- * @member updateStateFromTimeChange
- * @abstract
- */
-Renderer.prototype.updateStateFromTimeChange = function () {
-  throw new Error("Method updateStateFromTimeChange() must be implemented.");
-};
-
-/**
- * Define abstract function state to be implemented in subclasses
- *
- * @member state
- * @abstract
- */
-Renderer.prototype.state = function () {
-  throw new Error("Method state() must be implemented.");
-};
-
-/**
  * Define abstract function customDraw to be implemented in subclasses
  *
  * @member customDraw
@@ -212,26 +174,6 @@ Renderer.prototype.customDraw = function () {
   throw new Error("Method customDraw() must be implemented.");
 };
 
-/**
- * Define abstract function handleBlob to be implemented in subclasses
- * that load zip files
- *
- * @member handleBlob
- * @abstract
- */
-Renderer.prototype.handleBlob = function () {
-  throw new Error("Method handleBlob() must be implemented.");
-};
-
-/**
- * Return the original size of the underlying content (image, video).
- *
- * @return {object|null} with keys `width` and `height`, or null if the content
- *   size cannot be determined or is not applicable (e.g. for galleries)
- */
-Renderer.prototype.getContentDimensions = function () {
-  return null;
-};
 
 /**
  * Emit a custom event.
@@ -247,19 +189,6 @@ Renderer.prototype.dispatchEvent = function (
   const e = new Event(eventType, args);
   e.data = data;
   return this.eventTarget.dispatchEvent(e);
-};
-/*
- *
- * @member updateSample
- * @param {object} sample
- */
-Renderer.prototype.updateSample = function (sample) {
-  this.sample = sample;
-  this._isOverlayPrepared = false;
-  this.prepareOverlay();
-  if (this._boolSingleFrame) {
-    this.processFrame();
-  }
 };
 
 /**
@@ -603,7 +532,7 @@ Renderer.prototype.checkFontHeight = function (h) {
  * @return {string} extension
  */
 Renderer.prototype.getExtension = function () {
-  const tmp = this.media.type.split("/");
+  const tmp = this.player.mimeType.split("/");
   return tmp.slice(-1)[0];
 };
 
@@ -629,83 +558,6 @@ Renderer.prototype.getFileExtension = function (path) {
 Renderer.prototype.checkImageExtension = function (extension) {
   const validImageTypes = ["png", "jpg", "gif", "jpeg", "bmp"];
   return validImageTypes.includes(extension.toLowerCase());
-};
-
-/**
- * Checks for MACOSX from mac created zips.
- *
- * @member checkMACOSX
- * @param {path} filename
- * @return {bool}
- */
-Renderer.prototype.checkMACOSX = function (filename) {
-  const elements = filename.split("/");
-  return elements.includes("__MACOSX");
-};
-
-/**
- * Opens up media and stores filenames in imageFiles by
- * index (psuedo frameNumber)
- *
- * @member openContents
- * @required media.src needs to be a zip file
- */
-Renderer.prototype.openContents = function () {
-  const zipPath = this.media.src;
-  const self = this;
-  this._boolZipReady = false;
-  const xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function () {
-    if (this.readyState === 4 && this.status === 200) {
-      const zipBlob = this.response;
-      self.readBlob(zipBlob);
-    } else if (this.status === 404) {
-      self._boolBadZip = true;
-      self.updateFromLoadingState();
-    }
-  };
-  xmlhttp.responseType = "blob";
-  xmlhttp.open("GET", zipPath, true);
-  xmlhttp.send();
-};
-
-/**
- * Reads the zip blob into files
- *
- * @member readBlob
- * @param {blob} blob
- */
-Renderer.prototype.readBlob = function (blob) {
-  const self = this;
-  this.reader.createReader(
-    new this.reader.BlobReader(blob),
-    function (reader) {
-      reader.getEntries(
-        function (entries) {
-          entries.forEach(function (item) {
-            const filename = item.filename;
-            const extension = self.getFileExtension(filename);
-            if (
-              self.checkImageExtension(extension) &&
-              !self.checkMACOSX(filename)
-            ) {
-              item.getData(new self.reader.BlobWriter(), function (content) {
-                self.handleBlob(content, filename);
-              });
-            }
-          });
-        },
-        function (error) {
-          /* eslint-disable-next-line no-console */
-          console.log(error);
-        }
-      );
-    },
-    function (error) {
-      /* eslint-disable-next-line no-console */
-      console.log(error);
-    }
-  );
 };
 
 /**
@@ -823,9 +675,6 @@ Renderer.prototype.setupCanvasContext = function () {
  */
 Renderer.prototype.initSharedControls = function () {
   this.checkPlayer();
-  if (typeof this.player._thumbnailClickAction !== "undefined") {
-    this.parent.addEventListener("click", this.player._thumbnailClickAction);
-  }
   if (this.eleOptionsButton) {
     this.initPlayerOptionsControls();
   }
@@ -1366,143 +1215,6 @@ Renderer.prototype.updateTimeStamp = function (timeStr) {
     return;
   }
   this.eleTimeStamp.innerHTML = timeStr;
-};
-
-/**
- * This function updates the size and padding based on the configuration
- *
- * @member updateSizeAndPadding
- * @required the viewer must be rendered.
- */
-Renderer.prototype.updateSizeAndPadding = function () {
-  this.checkPlayer();
-  this.checkParentandMedia();
-  this.handleWidthAndHeight();
-  this.resizeCanvas();
-  this._isSizePrepared = true;
-};
-
-/**
- * This function updates the size and padding based on parent
- *
- * @member updateSizeAndPaddingByParent
- * @required the viewer must be rendered.
- */
-Renderer.prototype.updateSizeAndPaddingByParent = function () {
-  this.checkPlayer();
-  this.checkParentandMedia();
-  this.determineMediaDimensions();
-  this.canvasWidth = this.mediaWidth;
-  this.canvasHeight = this.mediaHeight;
-  this._isSizePrepared = true;
-};
-
-/**
- * This method is a helper function that computes necessary padding and
- * width/height and sets the media element.
- *
- * @member handleWidthAndHeight
- * @required the viewer must be rendered.
- */
-Renderer.prototype.handleWidthAndHeight = function () {
-  if (!this._isRendered) {
-    /* eslint-disable-next-line no-console */
-    console.log(
-      "WARN: Player51 trying to update size, but it is not rendered."
-    );
-    return;
-  }
-
-  this.determineMediaDimensions();
-
-  this.paddingLeft = window
-    .getComputedStyle(this.parent, null)
-    .getPropertyValue("padding-left");
-  this.paddingRight = window
-    .getComputedStyle(this.parent, null)
-    .getPropertyValue("padding-right");
-  this.paddingTop = window
-    .getComputedStyle(this.parent, null)
-    .getPropertyValue("padding-top");
-  this.paddingBottom = window
-    .getComputedStyle(this.parent, null)
-    .getPropertyValue("padding-bottom");
-  this.paddingLeftN = parseInt(
-    this.paddingLeft.substr(0, this.paddingLeft.length - 2)
-  );
-  this.paddingRightN = parseInt(
-    this.paddingRight.substr(0, this.paddingRight.length - 2)
-  );
-  this.paddingTopN = parseInt(
-    this.paddingTop.substr(0, this.paddingTop.length - 2)
-  );
-  this.paddingBottomN = parseInt(
-    this.paddingBottom.substr(0, this.paddingBottom.length - 2)
-  );
-
-  // Preservation is based on maintaining the height of the parent.
-  // Try to maintain height of container first.  If fails, then set width.
-  // Fails means that the width of the video is too wide for the container.
-  this.height =
-    this.parent.offsetHeight - this.paddingTopN - this.paddingBottomN;
-  this.width = (this.height * this.mediaWidth) / this.mediaHeight;
-
-  if (
-    this.width >
-    this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN
-  ) {
-    this.width =
-      this.parent.offsetWidth - this.paddingLeftN - this.paddingRightN;
-    this.height = (this.width * this.mediaHeight) / this.mediaWidth;
-  }
-
-  // if the caller wants to maximize to native pixel resolution
-  if (this.player._boolForcedMax) {
-    this.width = this.mediaWidth;
-    this.height = this.mediaHeight;
-
-    if (this.width >= 1440) {
-      this.width = 1280;
-      this.height = 720;
-    }
-  }
-
-  // height priority in sizing is a forced size.
-  if (this.player._boolForcedSize) {
-    this.width = this.player._forcedWidth;
-    this.height = this.player._forcedHeight;
-  }
-};
-
-/**
- * This method is a helper function that aligns canvas dimensions
- * with image dimensions.
- *
- * @member resizeCanvas
- * @required the viewer must be rendered
- */
-Renderer.prototype.resizeCanvas = function () {
-  // NOTE:: Legacy
-  // Current functionality is to set a fixed size canvas so that we can
-  // guarantee of consistent L&F for the overlays.
-  // But, the right way to do this is probably define an abstraction to the
-  // canvas size and then make the canvas the closest match to the actual
-  // display size so that we do not kill so much member in creating the video
-  // player.
-  // this.eleCanvas.setAttribute("width", this.width);
-  // this.eleCanvas.setAttribute("height", this.height);
-  // this.canvasWidth = this.width;
-  // this.canvasHeight = this.height;
-
-  const canvasWidth = 1280;
-  const canvasHeight = (canvasWidth * this.mediaHeight) / this.mediaWidth;
-  this.eleCanvas.setAttribute("width", canvasWidth);
-  this.eleCanvas.setAttribute("height", canvasHeight);
-  this.canvasWidth = canvasWidth;
-  this.canvasHeight = canvasHeight;
-  this.canvasMultiplier = canvasWidth / this.width;
-
-  this.resizeControls();
 };
 
 /**

@@ -9,76 +9,321 @@
  * Copyright 2017-2021, Voxel51, Inc.
  * Alan Stahl, alan@voxel51.com
  */
-
-import { Renderer } from "../renderer.js";
 import { parseMediaFragmentsUri } from "../mediafragments.js";
 
-export { VideoRenderer };
+export { asVideoRenderer };
 
-/**
- * VideoRenderer Class Definition
- *
- * INHERITS: Renderer
- * F-MIXINS: None
- @constructor
- * @param {object} media is an object that has "src" and "type" attributes.
- * type must be in the format video/<format>
- * ex. type: "video/mp4"
- * @param {string} sample
- * @param {object} options: additional player options
- */
-function VideoRenderer(media, sample, options) {
-  Renderer.call(this, media, sample, options);
+function VideoRenderer(options) {
+  const state = {
+    boolAutoplay: false,
+    boolLoop: false,
+    boolPlaying: false,
+    boolManualSeek: false,
+    boolSingleFrame: false,
+    overlayCanBePrepared: false, // need to wait for video metadata
+    isVideoMetadataLoaded: false,
+    hasMediaFragment: false,
+    mfBeginT: null, // Time
+    mfEndT: null,
+    mfBeginF: null, // Frame
+    mfEndF: null,
+    lockToMF: false,
+    frameDuration: 1 / options.fps,
+    frameRate: options.fps,
+  };
 
-  // Player State Attributes
-  this._boolAutoplay = false;
-  this._boolLoop = false;
-  this._boolPlaying = false;
-  this._boolManualSeek = false;
-  this._boolSingleFrame = false;
-  // Content Attributes
-  this.frameRate = options.fps;
-  this.frameDuration = 1 / this.frameRate;
+  const handleKeyboardEvent =  (
+    e
+  ) => {
+    Renderer.prototype._handleKeyboardEvent.call(this, e);
+    if (e.keyCode === 32) {
+      // space
+      this._boolPlaying = !this._boolPlaying;
+      this.updateFromDynamicState();
+      return true;
+    }
+    // navigating frame-by-frame with arrow keys
+    if (
+      this.eleVideo.paused &&
+      this.hasFrameNumbers() &&
+      (e.keyCode === 37 || e.keyCode === 39)
+    ) {
+      if (e.keyCode === 37) {
+        // left arrow
+        this.eleVideo.currentTime = Math.max(
+          0,
+          this.computeFrameTime() - this.frameDuration
+        );
+      } else {
+        // right arrow
+        this.eleVideo.currentTime = Math.min(
+          this.eleVideo.duration,
+          this.computeFrameTime() + this.frameDuration
+        );
+      }
+      this.updateStateFromTimeChange();
+      return true;
+    }
+  };
 
-  this._overlayCanBePrepared = false; // need to wait for video metadata
-  this._isVideoMetadataLoaded = false;
-  this._hasMediaFragment = false;
-  this._mfBeginT = null; // Time
-  this._mfEndT = null;
-  this._mfBeginF = null; // Frame
-  this._mfEndF = null;
-  this._lockToMF = false;
-  this.setMediaFragment();
+  const renderer = Object.assign(this, {
+    initPlayer() {
+      this.checkParentandMedia();
+      this.checkBorderBox();
+      this.eleDivVideo = document.createElement("div");
+      this.eleDivVideo.className = "p51-contained-video";
+      this.eleVideo = document.createElement("video");
+      this.eleVideo.className = "p51-contained-video";
+      this.eleVideo.setAttribute("preload", "metadata");
+      this.eleVideo.setAttribute("src", this.media.src);
+      this.eleVideo.muted = true; // this works whereas .setAttribute does not
+
+      this.eleDivVideo.appendChild(this.eleVideo);
+      this.parent.appendChild(this.eleDivVideo);
+
+      // Video controls
+      this.initPlayerControlHTML(this.eleDivVideo);
+      this.mediaElement = this.eleVideo;
+      this.mediaDiv = this.eleDivVideo;
+      this.initCanvas();
+    },
+
+    initPlayerControls() {
+      this.checkPlayer();
+
+      if (this.player._boolHasPoster) {
+        this.eleVideo.setAttribute("poster", this.player._loadingPosterURL);
+        if (this.player._boolForcedSize) {
+          const sizeStyleString =
+            "width:" +
+            this.player._forcedWidth +
+            "px; height:" +
+            this.player._forcedHeight +
+            "px;";
+          this.eleVideo.setAttribute("style", sizeStyleString);
+          this.eleDivVideo.setAttribute("style", sizeStyleString);
+          this.parent.setAttribute("style", sizeStyleString);
+        }
+      }
+
+      // after the DOM elements are created then we initialize other variables that
+      // will be needed during playback
+      const self = this;
+
+      this.eleVideo.addEventListener("loadedmetadata", function () {
+        self._isVideoMetadataLoaded = true;
+        self.setupCanvasContext();
+        self.updateFromLoadingState();
+      });
+
+      this.eleVideo.addEventListener("loadeddata", function () {
+        self._isDataLoaded = true;
+
+        // Handles the case that we have a poster frame to indicate the video is
+        // loading and now we can show the video.  But when we are not autoplay.
+        // We need to set the state to playing if we are set to autoplay
+        //  (the player itself will handle the autoplaying)
+        if (self._boolAutoplay) {
+          self._boolPlaying = true;
+        } else if (self._hasMediaFragment) {
+          self.eleVideo.currentTime = self._mfBeginT;
+          self._frameNumber = self._mfBeginF;
+        } else {
+          self.eleVideo.currentTime = 0;
+          self._frameNumber = 1;
+        }
+
+        self.updateFromLoadingState();
+
+        if (self._boolSingleFrame) {
+          self.eleVideo.currentTime = self._mfBeginT;
+          self._frameNumber = self._mfBeginF;
+        }
+
+        // so that we see overlay and time stamp now that we are ready
+        if (!self._boolAutoplay) {
+          self.processFrame();
+        }
+
+        self.dispatchEvent("load");
+      });
+
+      this.eleVideo.addEventListener("ended", function () {
+        if (self._boolLoop) {
+          self.eleVideo.play();
+        } else {
+          self._boolPlaying = false;
+          self.updateFromDynamicState();
+        }
+      });
+
+      this.eleVideo.addEventListener("pause", function () {
+        self.checkForFragmentReset(self.computeFrameNumber());
+        if (
+          self._boolPlaying &&
+          !self._lockToMF &&
+          !self._boolManualSeek &&
+          !self.eleVideo.ended
+        ) {
+          self.eleVideo.play();
+        }
+      });
+
+      // Update the seek bar as the video plays
+      this.eleVideo.addEventListener("timeupdate", function () {
+        // Calculate the slider value
+        const value =
+          (self.seekBarMax / self.eleVideo.duration) *
+          self.eleVideo.currentTime;
+        // Update the slider value
+        self.eleSeekBar.value = value;
+        self.dispatchEvent("timeupdate", {
+          data: {
+            frame_number: self.computeFrameNumber(),
+          },
+        });
+      });
+
+      this.eleVideo.addEventListener(
+        "play",
+        function () {
+          self.timerCallback();
+        },
+        false
+      );
+
+      this.eleVideo.addEventListener("seeked", function () {
+        self.updateStateFromTimeChange();
+      });
+
+      this.eleVideo.addEventListener("error", function () {
+        if (self.player._boolNotFound) {
+          self.eleVideo.setAttribute("poster", self.player._notFoundPosterURL);
+        } else {
+          self.eleVideo.remove();
+        }
+        self.dispatchEvent("error");
+      });
+
+      // Event listener for the play/pause button
+      this.elePlayPauseButton.addEventListener("click", function (e) {
+        e.stopPropagation();
+        self._boolPlaying = !self._boolPlaying;
+        self.updateFromDynamicState();
+      });
+
+      // Event listener for the seek bar
+      this.eleSeekBar.addEventListener("change", function () {
+        // Calculate the new time
+        const time =
+          self.eleVideo.duration *
+          (self.eleSeekBar.valueAsNumber / self.seekBarMax);
+        // Update the video time
+        self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
+        // Unlock the fragment so the user can browse the whole video
+        self._lockToMF = false;
+        self._boolSingleFrame = false;
+        self.updateStateFromTimeChange();
+      });
+
+      // Pause the video when the seek handle is being dragged
+      this.eleSeekBar.addEventListener("mousedown", function () {
+        if (!self.player.options.thumbnail) {
+          self._boolManualSeek = true;
+          // Unlock the fragment so the user can browse the whole video
+          self._lockToMF = false;
+          // We need to manually control the video-play state
+          // And turn it back on as needed.
+          self.eleVideo.pause();
+        }
+      });
+
+      // Play the video when the seek handle is dropped
+      this.eleSeekBar.addEventListener("mouseup", function (e) {
+        self._boolManualSeek = false;
+        if (self._boolPlaying && self.eleVideo.paused) {
+          // Calculate the new time
+          const seekRect = self.eleSeekBar.getBoundingClientRect();
+          const time =
+            self.eleVideo.duration *
+            ((e.clientX - seekRect.left) / seekRect.width);
+          // Update the video time
+          self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
+          self.eleSeekBar.value =
+            (time / self.eleVideo.duration) * self.seekBarMax;
+          self.eleVideo.play();
+        }
+      });
+
+      const hideControls = function () {
+        if (self._boolShowVideoOptions) {
+          return;
+        }
+        self._boolShowControls = false;
+        self.updateFromDynamicState();
+      };
+
+      this.parent.addEventListener("mouseenter", function () {
+        // Two different behaviors.
+        // 1.
+        // 1.  Regular Mode: show controls.
+        // 2.  Thumbnail Mode: play video
+        // 3.  Single Frame Mode: annotate
+        self.player._boolHovering = true;
+        if (!self._isDataLoaded) {
+          return;
+        }
+
+        const eventArgs = { cancelable: true, data: { player: self.player } };
+        self.dispatchEvent("mouseenter", eventArgs);
+        if (!self.player.options.thumbnail) {
+          self._boolShowControls = true;
+          self.setTimeout("hideControls", hideControls, 2.5 * 1000);
+        }
+        self.updateFromDynamicState();
+      });
+
+      this.parent.addEventListener("mousemove", function (e) {
+        if (!self.player.options.thumbnail) {
+          if (self.checkMouseOnControls(e)) {
+            self.clearTimeout("hideControls");
+          } else {
+            self._boolShowControls = true;
+            self.setTimeout("hideControls", hideControls, 2.5 * 1000);
+          }
+        }
+        self.updateFromDynamicState();
+      });
+
+      this.parent.addEventListener("mouseleave", function () {
+        self.player._boolHovering = false;
+        self._boolDisableShowControls = false;
+        if (!self._isDataLoaded) {
+          return;
+        }
+
+        const eventArgs = { cancelable: true, data: { player: self.player } };
+        if (!self.dispatchEvent("mouseleave", eventArgs)) {
+          return;
+        } else if (self.player.options.thumbnail) {
+          self._boolPlaying = false;
+          // clear things we do not want to render any more
+          self.clearCanvas();
+        } else {
+          hideControls();
+          self.clearTimeout("hideControls");
+        }
+        self.updateFromDynamicState();
+      });
+    },
+
+
+
+  });
+
+  renderer.setMediaFragment();
+  return renderer;
 }
-VideoRenderer.prototype = Object.create(Renderer.prototype);
-VideoRenderer.prototype.constructor = VideoRenderer;
-
-/**
- * Initializes a video and canvas in parent
- *
- * member initPlayer
- * @required setParentandMedia called beforehand
- */
-VideoRenderer.prototype.initPlayer = function () {
-  this.checkParentandMedia();
-  this.checkBorderBox();
-  this.eleDivVideo = document.createElement("div");
-  this.eleDivVideo.className = "p51-contained-video";
-  this.eleVideo = document.createElement("video");
-  this.eleVideo.className = "p51-contained-video";
-  this.eleVideo.setAttribute("preload", "metadata");
-  this.eleVideo.setAttribute("src", this.media.src);
-  this.eleVideo.muted = true; // this works whereas .setAttribute does not
-
-  this.eleDivVideo.appendChild(this.eleVideo);
-  this.parent.appendChild(this.eleDivVideo);
-
-  // Video controls
-  this.initPlayerControlHTML(this.eleDivVideo);
-  this.mediaElement = this.eleVideo;
-  this.mediaDiv = this.eleDivVideo;
-  this.initCanvas();
-};
 
 /**
  * This loads controls for videoplayer51
@@ -86,264 +331,7 @@ VideoRenderer.prototype.initPlayer = function () {
  * @member initPlayerControls
  * @required player to be set
  */
-VideoRenderer.prototype.initPlayerControls = function () {
-  this.checkPlayer();
-
-  if (this.player._boolHasPoster) {
-    this.eleVideo.setAttribute("poster", this.player._loadingPosterURL);
-    if (this.player._boolForcedSize) {
-      const sizeStyleString =
-        "width:" +
-        this.player._forcedWidth +
-        "px; height:" +
-        this.player._forcedHeight +
-        "px;";
-      this.eleVideo.setAttribute("style", sizeStyleString);
-      this.eleDivVideo.setAttribute("style", sizeStyleString);
-      this.parent.setAttribute("style", sizeStyleString);
-    }
-  }
-
-  // after the DOM elements are created then we initialize other variables that
-  // will be needed during playback
-  const self = this;
-
-  this.eleVideo.addEventListener("loadedmetadata", function () {
-    self._isVideoMetadataLoaded = true;
-    self.updateSizeAndPadding();
-    self.setupCanvasContext();
-    self.updateFromLoadingState();
-  });
-
-  this.eleVideo.addEventListener("loadeddata", function () {
-    self._isDataLoaded = true;
-
-    // Handles the case that we have a poster frame to indicate the video is
-    // loading and now we can show the video.  But when we are not autoplay.
-    // We need to set the state to playing if we are set to autoplay
-    //  (the player itself will handle the autoplaying)
-    if (self._boolAutoplay) {
-      self._boolPlaying = true;
-    } else if (self._hasMediaFragment) {
-      self.eleVideo.currentTime = self._mfBeginT;
-      self._frameNumber = self._mfBeginF;
-    } else {
-      self.eleVideo.currentTime = 0;
-      self._frameNumber = 1;
-    }
-
-    self.updateFromLoadingState();
-
-    if (self._boolSingleFrame) {
-      self.eleVideo.currentTime = self._mfBeginT;
-      self._frameNumber = self._mfBeginF;
-    }
-
-    // so that we see overlay and time stamp now that we are ready
-    if (!self._boolAutoplay) {
-      self.processFrame();
-    }
-
-    self.dispatchEvent("load");
-  });
-
-  this.eleVideo.addEventListener("ended", function () {
-    if (self._boolLoop) {
-      self.eleVideo.play();
-    } else {
-      self._boolPlaying = false;
-      self.updateFromDynamicState();
-    }
-  });
-
-  this.eleVideo.addEventListener("pause", function () {
-    self.checkForFragmentReset(self.computeFrameNumber());
-    if (
-      self._boolPlaying &&
-      !self._lockToMF &&
-      !self._boolManualSeek &&
-      !self.eleVideo.ended
-    ) {
-      self.eleVideo.play();
-    }
-  });
-
-  // Update the seek bar as the video plays
-  this.eleVideo.addEventListener("timeupdate", function () {
-    // Calculate the slider value
-    const value =
-      (self.seekBarMax / self.eleVideo.duration) * self.eleVideo.currentTime;
-    // Update the slider value
-    self.eleSeekBar.value = value;
-    self.dispatchEvent("timeupdate", {
-      data: {
-        frame_number: self.computeFrameNumber(),
-      },
-    });
-  });
-
-  this.eleVideo.addEventListener(
-    "play",
-    function () {
-      self.timerCallback();
-    },
-    false
-  );
-
-  this.eleVideo.addEventListener("seeked", function () {
-    self.updateStateFromTimeChange();
-  });
-
-  this.eleVideo.addEventListener("error", function () {
-    if (self.player._boolNotFound) {
-      self.eleVideo.setAttribute("poster", self.player._notFoundPosterURL);
-    } else {
-      self.eleVideo.remove();
-    }
-    self.dispatchEvent("error");
-  });
-
-  // Event listener for the play/pause button
-  this.elePlayPauseButton.addEventListener("click", function (e) {
-    e.stopPropagation();
-    self._boolPlaying = !self._boolPlaying;
-    self.updateFromDynamicState();
-  });
-
-  // Event listener for the seek bar
-  this.eleSeekBar.addEventListener("change", function () {
-    // Calculate the new time
-    const time =
-      self.eleVideo.duration *
-      (self.eleSeekBar.valueAsNumber / self.seekBarMax);
-    // Update the video time
-    self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
-    // Unlock the fragment so the user can browse the whole video
-    self._lockToMF = false;
-    self._boolSingleFrame = false;
-    self.updateStateFromTimeChange();
-  });
-
-  // Pause the video when the seek handle is being dragged
-  this.eleSeekBar.addEventListener("mousedown", function () {
-    if (!self.player.options.thumbnail) {
-      self._boolManualSeek = true;
-      // Unlock the fragment so the user can browse the whole video
-      self._lockToMF = false;
-      // We need to manually control the video-play state
-      // And turn it back on as needed.
-      self.eleVideo.pause();
-    }
-  });
-
-  // Play the video when the seek handle is dropped
-  this.eleSeekBar.addEventListener("mouseup", function (e) {
-    self._boolManualSeek = false;
-    if (self._boolPlaying && self.eleVideo.paused) {
-      // Calculate the new time
-      const seekRect = self.eleSeekBar.getBoundingClientRect();
-      const time =
-        self.eleVideo.duration * ((e.clientX - seekRect.left) / seekRect.width);
-      // Update the video time
-      self.eleVideo.currentTime = self.clampTimeToFrameStart(time);
-      self.eleSeekBar.value = (time / self.eleVideo.duration) * self.seekBarMax;
-      self.eleVideo.play();
-    }
-  });
-
-  const hideControls = function () {
-    if (self._boolShowVideoOptions) {
-      return;
-    }
-    self._boolShowControls = false;
-    self.updateFromDynamicState();
-  };
-
-  this.parent.addEventListener("mouseenter", function () {
-    // Two different behaviors.
-    // 1.
-    // 1.  Regular Mode: show controls.
-    // 2.  Thumbnail Mode: play video
-    // 3.  Single Frame Mode: annotate
-    self.player._boolHovering = true;
-    if (!self._isDataLoaded) {
-      return;
-    }
-
-    const eventArgs = { cancelable: true, data: { player: self.player } };
-    self.dispatchEvent("mouseenter", eventArgs);
-    if (!self.player.options.thumbnail) {
-      self._boolShowControls = true;
-      self.setTimeout("hideControls", hideControls, 2.5 * 1000);
-    }
-    self.updateFromDynamicState();
-  });
-
-  this.parent.addEventListener("mousemove", function (e) {
-    if (!self.player.options.thumbnail) {
-      if (self.checkMouseOnControls(e)) {
-        self.clearTimeout("hideControls");
-      } else {
-        self._boolShowControls = true;
-        self.setTimeout("hideControls", hideControls, 2.5 * 1000);
-      }
-    }
-    self.updateFromDynamicState();
-  });
-
-  this.parent.addEventListener("mouseleave", function () {
-    self.player._boolHovering = false;
-    self._boolDisableShowControls = false;
-    if (!self._isDataLoaded) {
-      return;
-    }
-
-    const eventArgs = { cancelable: true, data: { player: self.player } };
-    if (!self.dispatchEvent("mouseleave", eventArgs)) {
-      return;
-    } else if (self.player.options.thumbnail) {
-      self._boolPlaying = false;
-      // clear things we do not want to render any more
-      self.clearCanvas();
-    } else {
-      hideControls();
-      self.clearTimeout("hideControls");
-    }
-    self.updateFromDynamicState();
-  });
-};
-
-VideoRenderer.prototype._handleKeyboardEvent = function (e) {
-  Renderer.prototype._handleKeyboardEvent.call(this, e);
-  if (e.keyCode === 32) {
-    // space
-    this._boolPlaying = !this._boolPlaying;
-    this.updateFromDynamicState();
-    return true;
-  }
-  // navigating frame-by-frame with arrow keys
-  if (
-    this.eleVideo.paused &&
-    this.hasFrameNumbers() &&
-    (e.keyCode === 37 || e.keyCode === 39)
-  ) {
-    if (e.keyCode === 37) {
-      // left arrow
-      this.eleVideo.currentTime = Math.max(
-        0,
-        this.computeFrameTime() - this.frameDuration
-      );
-    } else {
-      // right arrow
-      this.eleVideo.currentTime = Math.min(
-        this.eleVideo.duration,
-        this.computeFrameTime() + this.frameDuration
-      );
-    }
-    this.updateStateFromTimeChange();
-    return true;
-  }
-};
+VideoRenderer.prototype.VideoRenderer.prototype._
 
 /**
  * This determines the dimensions of the media
@@ -354,22 +342,6 @@ VideoRenderer.prototype._handleKeyboardEvent = function (e) {
 VideoRenderer.prototype.determineMediaDimensions = function () {
   this.mediaHeight = this.mediaElement.videoHeight;
   this.mediaWidth = this.mediaElement.videoWidth;
-};
-
-/**
- * Return the original size of the underlying image
- *
- * @return {object|null} with keys `width` and `height`, or null if the content
- *   size cannot be determined
- */
-VideoRenderer.prototype.getContentDimensions = function () {
-  if (!this.mediaElement || !this._isVideoMetadataLoaded) {
-    return null;
-  }
-  return {
-    width: this.mediaElement.videoWidth,
-    height: this.mediaElement.videoHeight,
-  };
 };
 
 /**
@@ -462,19 +434,6 @@ VideoRenderer.prototype.updateFromLoadingState = function () {
   }
 };
 
-/**
- * This function is a controller
- * This function updates the player state when the video current time/frame has
- * been changed, which happens when the video is playing or the user manually
- * scrubs.
- *
- * @member updateStateFromTimeChange
- */
-VideoRenderer.prototype.updateStateFromTimeChange = function () {
-  this.updateFromDynamicState();
-  this._updateFrame();
-};
-
 VideoRenderer.prototype._updateFrame = function () {
   let cfn = this.computeFrameNumber();
   // check if we have a media fragment and should be looping
@@ -484,31 +443,6 @@ VideoRenderer.prototype._updateFrame = function () {
     this._frameNumber = cfn;
     this.processFrame();
   }
-};
-
-/**
- * Generate a string that represents the state.
- *
- * @member state
- * @return {dictionary} state
- */
-VideoRenderer.prototype.state = function () {
-  return `
-VideoPlayer State Information:
-frame number: ${this._frameNumber}
-playing: ${this._boolPlaying}
-autoplay:  ${this._boolAutoplay}
-looping:  ${this._boolLoop}
-single frame: ${this._boolSingleFrame}
-isReadyProcessFrames: ${this._isReadyProcessFrames}
-isRendered:   ${this._isRendered}
-isSizePrepared:  ${this._isSizePrepared}
-isDataLoaded:  ${this._isDataLoaded}
-overlayCanBePrepared: ${this._overlayCanBePrepared}
-isOverlayPrepared: ${this._isOverlayPrepared}
-isPreparingOverlay: ${this._isPreparingOverlay}
-hasMediaFragment: ${this._hasMediaFragment}
-`;
 };
 
 /**
