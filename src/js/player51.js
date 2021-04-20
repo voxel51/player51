@@ -18,21 +18,6 @@ const defaults = {
   colorGenerator,
 };
 
-function Player51({ sample, src, ...options }) {
-  const mimeType =
-    (sample.metadata && sample.metadata.mime_type) ||
-    mime.lookup(sample.filepath) ||
-    "image/jpg";
-
-  const player = new MediaPlayer({ sample, src, mimeType, ...options });
-
-  if (mimeType.startsWith("video/")) {
-    return Video.call(player);
-  }
-
-  return player;
-}
-
 let installedEventHandlers = false;
 let instances = [];
 let focusedInstance = null;
@@ -55,16 +40,16 @@ const handleGlobalClick = (e) => {
   focusedInstance = null;
 };
 
+const installEventHandlers = () => {
+  window.addEventListener("click", handleGlobalClick);
+  window.addEventListener("keydown", handleGlobalKeyboard);
+  installedEventHandlers = true;
+};
+
 function Player51({ sample, src, ...rest }) {
   this.sample = sample;
   this.src = src;
   this.options = Object.assign({}, defaults, rest);
-
-  const installEventHandlers = () => {
-    window.addEventListener("click", handleGlobalClick);
-    window.addEventListener("keydown", handleGlobalKeyboard);
-    installedEventHandlers = true;
-  };
 
   !installedEventHandlers && installEventHandlers();
 
@@ -81,8 +66,9 @@ function Player51({ sample, src, ...rest }) {
           ...args
         );
     },
+
     grabKeyboardFocus(grab = true) {
-      MediaPlayer._focusedInstance = grab ? this : null;
+      focusedInstance = grab ? this : null;
     },
 
     destroy() {
@@ -122,6 +108,15 @@ function Player51({ sample, src, ...rest }) {
       this.renderer.processFrame();
     },
   });
+
+  const mimeType =
+    (sample.metadata && sample.metadata.mime_type) ||
+    mime.lookup(sample.filepath) ||
+    "image/jpg";
+
+  if (mimeType.startsWith("video/")) {
+    return Video.call(this);
+  }
 
   instances.push(this);
 }

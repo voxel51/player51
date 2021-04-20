@@ -4,22 +4,12 @@ import { ICONS, rescale } from "./util.js";
 
 export { Renderer };
 
-/**
- * Renderer Class Definition
- *
- * INHERITS:  None
- * F-MIXINS:  None
- * @constructor
- * @abstract
- * @param {object} media
- * @param {string} overlay is the URL to overlay JSON
- * @param {object} options: additional player options
- */
+const clearCanvas = (canvas) => {
+  canvas.getContext("2d").clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+};
+
 function Renderer(media, sample, options) {
-  if (this.constructor === Renderer) {
-    throw new TypeError("Cannot instantiate abstract class.");
-  }
-  // Data structures
+
   this.player = undefined;
   this.parent = undefined;
   this.eventTarget = new EventTarget();
@@ -30,13 +20,7 @@ function Renderer(media, sample, options) {
   // Player state attributes
   this._isRendered = false;
   this._isSizePrepared = false;
-  // View attributes
-  this.width = -1;
-  this.height = -1;
-  this.paddingLeft = 0;
-  this.paddingRight = 0;
-  this.paddingTop = 0;
-  this.paddingBottom = 0;
+
   this.metadataOverlayBGColor = "hsla(210, 20%, 10%, 0.8)";
   // Rendering options
   this._boolBorderBox = false;
@@ -104,76 +88,29 @@ Renderer.prototype.destroy = function () {
   }
 };
 
-/**
- * Define abstract function initPlayer to be implemented in subclasses
- *
- * @member initPlayer
- * @abstract
- */
 Renderer.prototype.initPlayer = function () {
   throw new Error("Method initPlayer() must be implemented.");
 };
 
-/**
- * Define abstract function initPlayerControls to be implemented in subclasses
- *
- * @member initPlayerControls
- * @abstract
- */
 Renderer.prototype.initPlayerControls = function () {
   throw new Error("Method initPlayerControls() must be implemented.");
 };
 
-/**
- * Define abstract function determineMediaDimensions to be implemented in
- * subclasses
- *
- * @member determineMediaDimensions
- * @abstract
- */
 Renderer.prototype.determineMediaDimensions = function () {
   throw new Error("Method determineMediaDimensions() must be implemented.");
 };
 
-/**
- * Define base function resizeControls to be implemented in subclasses
- *
- * @member resizeControls
- */
-Renderer.prototype.resizeControls = function () {};
-
-/**
- * Define abstract function updateFromDynamicState to be implemented in
- * subclasses
- *
- * @member updateFromDynamicState
- * @abstract
- */
 Renderer.prototype.updateFromDynamicState = function () {
   throw new Error("Method updateFromDynamicState() must be implemented.");
 };
 
-/**
- * Define abstract function updateFromLoadingState to be implemented in
- * subclasses
- *
- * @member updateFromLoadingState
- * @abstract
- */
 Renderer.prototype.updateFromLoadingState = function () {
   throw new Error("Method updateFromLoadingState() must be implemented.");
 };
 
-/**
- * Define abstract function customDraw to be implemented in subclasses
- *
- * @member customDraw
- * @abstract
- */
 Renderer.prototype.customDraw = function () {
   throw new Error("Method customDraw() must be implemented.");
 };
-
 
 /**
  * Emit a custom event.
@@ -191,13 +128,6 @@ Renderer.prototype.dispatchEvent = function (
   return this.eventTarget.dispatchEvent(e);
 };
 
-/**
- * This function processes the overlay code and creates frame objects to be
- * drawn onto the screen.
- *
- * @member prepareOverlay
- * @param {json} rawjson
- */
 Renderer.prototype.prepareOverlay = function () {
   if (this._isOverlayPrepared || !this.sample) {
     return;
@@ -284,17 +214,6 @@ Renderer.prototype._getOrderedOverlays = function (coords) {
   return this._setTopOverlays(coords, ordered);
 };
 
-/**
- * Handles the rendering of a specific frame, noting that rendering has two
- * different meanings in Player51.  The Player51.render function is used to
- * actually create the Player51 and inject it into the DOM.  This
- * Player51.processFrame function is responsible for drawing when a new video
- * frame has been drawn by the underlying player.
- *
- * @todo need to use double-buffering instead of rendering direct to the
- * canvas to avoid flickering.
- * @member processFrame
- */
 Renderer.prototype.processFrame = function () {
   if (!this._isReadyProcessFrames) {
     return;
@@ -324,13 +243,7 @@ Renderer.prototype.processFrame = function () {
   }
 };
 
-Renderer.prototype.clearCanvas = function () {
-  this.eleCanvas
-    .getContext("2d")
-    .clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-};
-
-Renderer.prototype._renderRest = function () {
+Renderer.prototype.Renderer.prototype._renderRest = function () {
   if (this.overlayOptions.labelsOnlyOnClick) {
     return !this._focusedObject;
   }
@@ -526,41 +439,6 @@ Renderer.prototype.checkFontHeight = function (h) {
 };
 
 /**
- * Return media extension
- *
- * @member getExtension
- * @return {string} extension
- */
-Renderer.prototype.getExtension = function () {
-  const tmp = this.player.mimeType.split("/");
-  return tmp.slice(-1)[0];
-};
-
-/**
- * Return media extension of a file path
- *
- * @memeber getFileExtension
- * @param {path} path
- * @return {string} extension
- */
-Renderer.prototype.getFileExtension = function (path) {
-  const tmp = path.split(".");
-  return tmp.slice(-1)[0];
-};
-
-/**
- * Check image extension
- *
- * @member checkImageExtension
- * @param {string} extension
- * @return {bool}
- */
-Renderer.prototype.checkImageExtension = function (extension) {
-  const validImageTypes = ["png", "jpg", "gif", "jpeg", "bmp"];
-  return validImageTypes.includes(extension.toLowerCase());
-};
-
-/**
  * This function checks if player is set
  *
  * @member checkPlayer
@@ -641,13 +519,6 @@ Renderer.prototype.initCanvas = function () {
   this.parent.appendChild(this.eleDivCanvas);
 };
 
-/**
- * Set up the canvas context for default styles.
- *
- * @member setupCanvasContext
- * @required the viewer needs to be rendered
- * @return {canvas} context
- */
 Renderer.prototype.setupCanvasContext = function () {
   this.checkPlayer();
   if (!this._isRendered) {
@@ -667,12 +538,6 @@ Renderer.prototype.setupCanvasContext = function () {
   return canvasContext;
 };
 
-/**
- * This function loads shared UI controls
- *
- * @member initSharedControls
- * @required player to be set
- */
 Renderer.prototype.initSharedControls = function () {
   this.checkPlayer();
   if (this.eleOptionsButton) {
@@ -1115,13 +980,6 @@ Renderer.prototype._alterOptionsLabelText = function () {
     `${this._actionOptions[this.overlayOptions.action].labelText} object`;
 };
 
-/**
- * This function returns if the mouseEvent target is inside any of the player
- * controls
- *
- * @param {MouseEvent} e - mouseEvent from eventHandler
- * @return {Boolean} if contained
- */
 Renderer.prototype.checkMouseOnControls = function (e) {
   if (this.eleDivVideoControls && this.eleDivVideoControls.contains(e.target)) {
     return true;
@@ -1131,13 +989,6 @@ Renderer.prototype.checkMouseOnControls = function (e) {
   return false;
 };
 
-/**
- * This function is to be called by child classes in updateFromDynamicState
- * to properly show or hide all configured controls
- *
- * @member updateControlsDisplayState
- * @required the viewer must be rendered.
- */
 Renderer.prototype.updateControlsDisplayState = function () {
   if (!this.eleDivVideoControls) {
     return;
@@ -1194,10 +1045,6 @@ Renderer.prototype._updateOverlayOptionVisibility = function () {
   }
 };
 
-Renderer.prototype.hasFrameNumbers = function () {
-  return false;
-};
-
 Renderer.prototype.updatePlayButton = function (playing) {
   if (this.elePlayPauseButton) {
     if (playing) {
@@ -1217,21 +1064,11 @@ Renderer.prototype.updateTimeStamp = function (timeStr) {
   this.eleTimeStamp.innerHTML = timeStr;
 };
 
-/**
- * Set a named timeout, cancelling any existing timeout of the same name.
- * @param {string} name The name of the timeout
- * @param {function} callback The function to call after the time has passed
- * @param {number} delay The time to wait
- */
 Renderer.prototype.setTimeout = function (name, callback, delay) {
   this.clearTimeout(name);
   this._timeouts[name] = setTimeout(callback, delay);
 };
 
-/**
- * Clear a named timeout if it exists.
- * @param {string} name The name of the timeout
- */
 Renderer.prototype.clearTimeout = function (name) {
   if (name in this._timeouts) {
     clearTimeout(this._timeouts[name]);

@@ -1,19 +1,39 @@
-/**
- * @module videorenderer.js
- * @summary Renders a video into the parentElement, handles the overlay and
- * produces the end output.
- *
- * @desc VideoRenderer is a class that controls the creation and viewing of
- * videoplayer.
- *
- * Copyright 2017-2021, Voxel51, Inc.
- * Alan Stahl, alan@voxel51.com
- */
 import { parseMediaFragmentsUri } from "../mediafragments.js";
 
 export { asVideoRenderer };
 
-function VideoRenderer(options) {
+const secondsToHhmmss = function (number) {
+  let str = "";
+  if (number == 0) {
+    str = "00";
+  } else if (number < 10) {
+    str += "0" + number;
+  } else {
+    str = `${number}`;
+  }
+  return str;
+};
+
+const renderTime = ({ decimals = 1, duration, numSeconds }) => {
+  const renderHours = Math.floor(duration / 3600) > 0;
+  let hours = 0;
+  if (renderHours) {
+    hours = Math.floor(numSeconds / 3600);
+  }
+  numSeconds = numSeconds % 3600;
+  const minutes = Math.floor(numSeconds / 60);
+  const seconds = numSeconds % 60;
+
+  const mmss =
+    secondsToHhmmss(minutes) + ":" + secondsToHhmmss(seconds.toFixed(decimals));
+
+  if (renderHours) {
+    return secondsToHhmmss(hours) + ":" + mmss;
+  }
+  return mmss;
+};
+
+function asVideoRenderer(options) {
   const state = {
     boolAutoplay: false,
     boolLoop: false,
@@ -32,9 +52,7 @@ function VideoRenderer(options) {
     frameRate: options.fps,
   };
 
-  const handleKeyboardEvent =  (
-    e
-  ) => {
+  const handleKeyboardEvent = (e) => {
     Renderer.prototype._handleKeyboardEvent.call(this, e);
     if (e.keyCode === 32) {
       // space
@@ -43,11 +61,7 @@ function VideoRenderer(options) {
       return true;
     }
     // navigating frame-by-frame with arrow keys
-    if (
-      this.eleVideo.paused &&
-      this.hasFrameNumbers() &&
-      (e.keyCode === 37 || e.keyCode === 39)
-    ) {
+    if (this.eleVideo.paused && (e.keyCode === 37 || e.keyCode === 39)) {
       if (e.keyCode === 37) {
         // left arrow
         this.eleVideo.currentTime = Math.max(
@@ -317,53 +331,16 @@ function VideoRenderer(options) {
       });
     },
 
-
-
+    determineMediaDimensions() {
+      this.mediaHeight = this.mediaElement.videoHeight;
+      this.mediaWidth = this.mediaElement.videoWidth;
+    },
   });
 
   renderer.setMediaFragment();
   return renderer;
 }
 
-/**
- * This loads controls for videoplayer51
- *
- * @member initPlayerControls
- * @required player to be set
- */
-VideoRenderer.prototype.VideoRenderer.prototype._
-
-/**
- * This determines the dimensions of the media
- *
- * @member determineMediaDimensions
- * @required initPlayer() to be called
- */
-VideoRenderer.prototype.determineMediaDimensions = function () {
-  this.mediaHeight = this.mediaElement.videoHeight;
-  this.mediaWidth = this.mediaElement.videoWidth;
-};
-
-/**
- * Resizes controls
- *
- * @member resizeControls
- * @required initPlayer() to be called
- */
-VideoRenderer.prototype.resizeControls = function () {
-  Renderer.prototype.resizeControls.call(this);
-};
-
-/**
- * This function is a controller
- * The dynamic state of the player has changed and various settings have to be
- * toggled.
- *
- * _frameNumber is part of the dynamic state but does not call this function to
- * invoke.
- *
- * @member updateFromDynamicState
- */
 VideoRenderer.prototype.updateFromDynamicState = function () {
   if (!this._isRendered || !this._isSizePrepared) {
     return;
@@ -547,17 +524,6 @@ VideoRenderer.prototype.setMediaFragment = function () {
   }
 };
 
-/**
- * If the player has a media fragment and has exceeded the fragment, then reset
- * it back to the beginning if we are looping, else pause the video.
- *
- * The default html5 video player functionality only pauses once and then does
- * not respond to the fragment.
- *
- * @member checkForFragmentReset
- * @param {int} fn current frame number
- * @return {int} frame number after possible reset
- */
 VideoRenderer.prototype.checkForFragmentReset = function (fn) {
   if (!this._hasMediaFragment || !this._boolPlaying || !this._lockToMF) {
     return fn;
@@ -575,14 +541,6 @@ VideoRenderer.prototype.checkForFragmentReset = function (fn) {
   return fn;
 };
 
-/**
- * Computes the frame number corresponding to the given (or current) video time.
- *
- * @member computeFrameNumber
- * @param {number} time Time to compute frame number for (defaults to current
- *   player time)
- * @return {number} Frame number
- */
 VideoRenderer.prototype.computeFrameNumber = function (time) {
   if (typeof time === "undefined") {
     time = this.eleVideo.currentTime;
@@ -595,14 +553,6 @@ VideoRenderer.prototype.computeFrameNumber = function (time) {
   return Math.floor(frameNumber);
 };
 
-/**
- * Computes the video time corresponding to the given frame number.
- *
- * @member computeFrameTime
- * @param {number} frameNumber frame number (1-indexed, as returned by
- *   computeFrameNumber; defaults to current frame number)
- * @return {number} Video time
- */
 VideoRenderer.prototype.computeFrameTime = function (frameNumber) {
   if (typeof frameNumber === "undefined") {
     frameNumber = this.computeFrameNumber();
@@ -612,15 +562,6 @@ VideoRenderer.prototype.computeFrameTime = function (frameNumber) {
   // on a frame boundary sometimes renders the previous frame
   return (frameNumber + 0.01) * this.frameDuration;
 };
-
-/**
- * Computes the video time of the start of the frame displayed at the specified
- * time (or if unspecified, the current video time).
- *
- * @member clampTimeToFrameStart
- * @param {number} time Video time
- * @return {number} Video time
- */
 
 VideoRenderer.prototype.clampTimeToFrameStart = function (time) {
   if (typeof time === "undefined") {
@@ -632,32 +573,14 @@ VideoRenderer.prototype.clampTimeToFrameStart = function (time) {
   return this.computeFrameTime(this.computeFrameNumber(time));
 };
 
-/**
- * Retrieves the current video frame number as a 0-padding string
- *
- * @member currentFrameStamp
- * @return {String}
- */
 VideoRenderer.prototype.currentFrameStamp = function () {
   return this._renderFrameCount(this.computeFrameNumber());
 };
 
-/**
- * Retrieves the total frames of the video as string
- *
- * @member totalFrameStamp
- * @return {String}
- */
 VideoRenderer.prototype.totalFrameStamp = function () {
   return this._renderFrameCount(this.getTotalFrameCount());
 };
 
-/**
- * Gets and caches the total frames in the video.
- *
- * @member getTotalFrameCount
- * @return {int}
- */
 VideoRenderer.prototype.getTotalFrameCount = function () {
   if (this.totalFrameCount === undefined) {
     this.totalFrameCount = this.computeFrameNumber(this.eleVideo.duration);
@@ -676,60 +599,16 @@ VideoRenderer.prototype._renderFrameCount = function (numFrames) {
   return frameStr;
 };
 
-/**
- * Retrieves the video duration in a human-readable format.
- *
- * @member currentTimestamp
- * @return {time}
- */
 VideoRenderer.prototype.durationStamp = function () {
-  return this._renderTime(this.eleVideo.duration);
+  return renderTime({
+    numSeconds: this.eleVideo.duration,
+    duration: this.eleVideo.duration,
+  });
 };
 
-/**
- * Retrieves the current time of the video being played in a human-readable
- * format.
- *
- * @member currentTimestamp
- * @return {time}
- */
 VideoRenderer.prototype.currentTimestamp = function () {
-  return this._renderTime(this.eleVideo.currentTime);
-};
-
-VideoRenderer.prototype._renderTime = function (numSeconds, decimals = 1) {
-  const renderHours = Math.floor(this.eleVideo.duration / 3600) > 0;
-  let hours = 0;
-  if (renderHours) {
-    hours = Math.floor(numSeconds / 3600);
-  }
-  numSeconds = numSeconds % 3600;
-  const minutes = Math.floor(numSeconds / 60);
-  const seconds = numSeconds % 60;
-
-  const mmss =
-    this._seconds_to_hhmmss_aux(minutes) +
-    ":" +
-    this._seconds_to_hhmmss_aux(seconds.toFixed(decimals));
-
-  if (renderHours) {
-    return this._seconds_to_hhmmss_aux(hours) + ":" + mmss;
-  }
-  return mmss;
-};
-
-VideoRenderer.prototype._seconds_to_hhmmss_aux = function (number) {
-  let str = "";
-  if (number == 0) {
-    str = "00";
-  } else if (number < 10) {
-    str += "0" + number;
-  } else {
-    str = `${number}`;
-  }
-  return str;
-};
-
-VideoRenderer.prototype.hasFrameNumbers = function () {
-  return true;
+  return this._renderTime({
+    numSeconds: this.eleVideo.currentTime,
+    duration: this.eleVideo.duration,
+  });
 };

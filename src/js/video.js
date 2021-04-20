@@ -17,11 +17,6 @@ function Video() {
     boolDrawFrameNumber: false,
     boolDrawTimestamp: false,
 
-    setLoadingPoster(url) {
-      this._boolHasPoster = true;
-      this._loadingPosterURL = url;
-    },
-
     loop(boolLoop = true) {
       this.renderer._boolLoop = boolLoop;
     },
