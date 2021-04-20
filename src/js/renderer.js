@@ -410,7 +410,7 @@ Renderer.prototype._renderRest = function () {
 
 Renderer.prototype._setTopOverlays = function ({ x, y }, overlays) {
   if (
-    this.player._boolThumbnailMode ||
+    this.player.options.thumbnail ||
     [-1, null].includes(x) ||
     [-1, null].includes(y)
   ) {
@@ -485,7 +485,7 @@ Renderer.prototype._handleMouseEvent = function (e) {
 
   const pausedOrImage = !this.eleVideo || this.eleVideo.paused;
 
-  const notThumbnail = !this.player._boolThumbnailMode;
+  const notThumbnail = !this.player.options.thumbnail;
 
   let rotation = false;
   let fm = this._getOrderedOverlays({ x, y });
@@ -1299,7 +1299,7 @@ Renderer.prototype.updateControlsDisplayState = function () {
   } else {
     this.eleDivVideoControls.style.opacity = "0.0";
     this.eleDivVideoControls.style.height = 0;
-    if (this.player._boolThumbnailMode) {
+    if (this.player.options.thumbnail) {
       this.eleDivVideoControls.remove();
     }
   }
@@ -1320,7 +1320,7 @@ Renderer.prototype._updateOptionsDisplayState = function () {
   } else {
     this.eleDivVideoOpts.style.opacity = "0.0";
     this.eleDivVideoOpts.classList.add("p51-display-none");
-    if (this.player._boolThumbnailMode) {
+    if (this.player.options.thumbnail) {
       this.eleDivVideoOpts.remove();
     }
   }

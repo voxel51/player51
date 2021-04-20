@@ -125,21 +125,3 @@ VideoPlayer.prototype.resetToFragment = function () {
   this.renderer.updateFromDynamicState();
   return true;
 };
-
-/**
- * This changes the behaviour of the video player in the following ways.
- * 1. The caller can associate an action with clicking on the image.
- * 2. Video controls are never available.
- * 3. The video plays over mouse-over.
- * 4. The video is set to loop.
- * 5. Less information is visualized.
- * Caller probably wants to set the size of the video via forceSize()
- *
- * @member thumbnailMode
- * @param {function} action (optional) a callback function to associate with
- * any click on the video.
- */
-VideoPlayer.prototype.thumbnailMode = function (action) {
-  this._boolThumbnailMode = true;
-  this.loop(true);
-};

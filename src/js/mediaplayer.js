@@ -10,9 +10,6 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
-import { VideoRenderer } from "./renderers/videorenderer.js";
-import { ImageRenderer } from "./renderers/imagerenderer.js";
-
 export { MediaPlayer };
 
 /**
@@ -33,14 +30,15 @@ function MediaPlayer(renderer, src, sample, options) {
     throw new TypeError("Cannot instantiate abstract class.");
   }
   this.renderer = renderer;
+  this.options = options;
+  this.sample = sample;
+  this.src;
 
   // Player prerender attributes
   this._boolForcedMax = false;
   this._boolForcedSize = false;
   this._forcedWidth = -1;
   this._forcedHeight = -1;
-  this._boolThumbnailMode = false;
-  this._thumbnailClickAction = undefined;
   this._boolHasPoster = false;
   this._boolNotFound = false;
   this._loadingPosterURL = "";
@@ -111,18 +109,6 @@ MediaPlayer.prototype.resetToFragment = function () {
 };
 
 /**
- * Define abstract function thumbnailMode to be implemented in subclasses
- *
- * @member thumbnailMode
- * @abstract
- * @param {function} action (optional) a callback function to associate with
- * a click event.
- */
-MediaPlayer.prototype.thumbnailMode = function (action) {
-  throw new Error("Method thumbnailMode() must be implemented.");
-};
-
-/**
  * Render a new viewer for this media within the DOM element provided
  *
  * @member render
@@ -160,48 +146,19 @@ MediaPlayer.prototype.dynamicRender = function () {
 };
 
 /**
- * Update player options - only the options passed in
+ * Update the player
  *
  * @member updateOptions
  * @param {object} options: new player options
  */
-MediaPlayer.prototype.updateOptions = function (options) {
-  Object.assign(this.renderer.options, options);
-  this.renderer.processFrame();
-};
-
-/**
- * Get player overlay options
- *
- * @member getOverlayOptions
- * @return {object} copy of player overlay options
- */
-MediaPlayer.prototype.getOverlayOptions = function () {
-  return Object.assign({}, this.renderer.overlayOptions);
-};
-
-/**
- * Update player overlay options - only the options passed in
- *
- * @member updateOverlayOptions
- * @param {object} overlayOptions: new player overlay options
- */
-MediaPlayer.prototype.updateOverlayOptions = function (overlayOptions) {
-  Object.assign(this.renderer.overlayOptions, overlayOptions);
+MediaPlayer.prototype.update = function ({ sample, src, options }) {
+  Object.assign(this.options, options);
+  sample && (this.sample = sample);
+  src && (this.src = src);
   this.renderer.eleOptCtlShowAttr.checked = overlayOptions.showAttrs;
   this.renderer.eleOptCtlShowConfidence.checked = overlayOptions.showConfidence;
   this.renderer.eleOptCtlShowTooltip.checked = overlayOptions.showTooltip;
   this.renderer.processFrame();
-};
-
-/**
- * Update the player's overlay
- *
- * @member updateOverlay
- * @param {overlayData} overlayData: new overlayData
- */
-MediaPlayer.prototype.updateOverlay = function (overlayData) {
-  this.renderer.updateOverlay(overlayData);
 };
 
 /**

@@ -350,7 +350,7 @@ ClassificationsOverlay.prototype.draw = function (
     this.setup(context, canvasWidth, canvasHeight);
   }
 
-  if (this.renderer.player._boolThumbnailMode) {
+  if (this.renderer.player.options.thumbnail) {
     return;
   }
 
@@ -1173,7 +1173,7 @@ DetectionOverlay.prototype.draw = function (
     );
   }
 
-  if (!this.renderer.player._boolThumbnailMode) {
+  if (!this.renderer.player.options.Tthumbnail) {
     // fill and stroke to account for line thickness variation
     context.strokeRect(
       this.x,

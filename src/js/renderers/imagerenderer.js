@@ -103,7 +103,7 @@ ImageRenderer.prototype.initPlayerControls = function () {
     if (!self._isDataLoaded) {
       return;
     }
-    if (!self.player._boolThumbnailMode) {
+    if (!self.player.options.thumbnail) {
       self._boolShowControls = true;
       self.setTimeout("hideControls", hideControls, 2.5 * 1000);
     }
@@ -111,7 +111,7 @@ ImageRenderer.prototype.initPlayerControls = function () {
   });
 
   this.parent.addEventListener("mousemove", function (e) {
-    if (!self.player._boolThumbnailMode) {
+    if (!self.player.options.thumbnail) {
       if (self.checkMouseOnControls(e)) {
         self.clearTimeout("hideControls");
       } else {
@@ -129,7 +129,7 @@ ImageRenderer.prototype.initPlayerControls = function () {
     if (!self._isDataLoaded) {
       return;
     }
-    if (!self.player._boolThumbnailMode) {
+    if (!self.player.options.thumbnail) {
       hideControls();
       self.clearTimeout("hideControls");
     }

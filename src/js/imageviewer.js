@@ -63,18 +63,3 @@ ImageViewer.prototype.autoplay = function () {};
  * @member resetToFragment
  */
 ImageViewer.prototype.resetToFragment = function () {};
-
-/**
- * This changes the behaviour of the image viewer in the following ways.
- * 1. The caller can associate an action with clicking on the image.
- * 2. Annotations are drawn on mouse-over.
- * Caller probably wants to set the size of the image via forceSize()
- *
- * @member thumbnailMode
- * @param {function} action (optional) a callback function to associate with
- * any click on the image.
- */
-ImageViewer.prototype.thumbnailMode = function (action) {
-  this._boolThumbnailMode = true;
-  this._thumbnailClickAction = action;
-};

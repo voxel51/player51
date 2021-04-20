@@ -226,7 +226,7 @@ VideoRenderer.prototype.initPlayerControls = function () {
 
   // Pause the video when the seek handle is being dragged
   this.eleSeekBar.addEventListener("mousedown", function () {
-    if (!self.player._boolThumbnailMode) {
+    if (!self.player.options.thumbnail) {
       self._boolManualSeek = true;
       // Unlock the fragment so the user can browse the whole video
       self._lockToMF = false;
@@ -272,7 +272,7 @@ VideoRenderer.prototype.initPlayerControls = function () {
 
     const eventArgs = { cancelable: true, data: { player: self.player } };
     self.dispatchEvent("mouseenter", eventArgs);
-    if (!self.player._boolThumbnailMode) {
+    if (!self.player.options.thumbnail) {
       self._boolShowControls = true;
       self.setTimeout("hideControls", hideControls, 2.5 * 1000);
     }
@@ -280,7 +280,7 @@ VideoRenderer.prototype.initPlayerControls = function () {
   });
 
   this.parent.addEventListener("mousemove", function (e) {
-    if (!self.player._boolThumbnailMode) {
+    if (!self.player.options.thumbnail) {
       if (self.checkMouseOnControls(e)) {
         self.clearTimeout("hideControls");
       } else {
@@ -301,7 +301,7 @@ VideoRenderer.prototype.initPlayerControls = function () {
     const eventArgs = { cancelable: true, data: { player: self.player } };
     if (!self.dispatchEvent("mouseleave", eventArgs)) {
       return;
-    } else if (self.player._boolThumbnailMode) {
+    } else if (self.player.options.thumbnail) {
       self._boolPlaying = false;
       // clear things we do not want to render any more
       self.clearCanvas();
