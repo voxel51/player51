@@ -141,6 +141,5 @@ VideoPlayer.prototype.resetToFragment = function () {
  */
 VideoPlayer.prototype.thumbnailMode = function (action) {
   this._boolThumbnailMode = true;
-  this._thumbnailClickAction = action;
   this.loop(true);
 };

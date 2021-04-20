@@ -26,8 +26,8 @@ export { ImageRenderer };
  * @param {string} sample
  * @param {object} options: additional player options
  */
-function ImageRenderer(media, sample, options) {
-  Renderer.call(this, media, sample, options);
+function ImageRenderer(src, sample, options) {
+  Renderer.call(this, src, sample, options);
   this._frameNumber = 1;
 }
 ImageRenderer.prototype = Object.create(Renderer.prototype);

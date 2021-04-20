@@ -11,14 +11,9 @@
  * Kevin Qi, kevin@voxel51.com
  */
 
-import {
-  MediaPlayer,
-} from './mediaplayer.js';
+import { MediaPlayer } from "./mediaplayer.js";
 
-export {
-  ImageViewer,
-};
-
+export { ImageViewer };
 
 /**
  * ImageViewer Class Definition
@@ -26,18 +21,15 @@ export {
  * INHERITS:  MediaPlayer
  * F-MIXINS:  None
  * @constructor
- * @param {object} media is an object that has "src" and "type" attributes.
- * type must be in the format image/<format>
- * ex. type: "image/jpg"
+ * @param {object} src URL to media
  * @param {string} sample is data that should be overlayed on the image.
  * @param {object} options: additional player options
  */
-function ImageViewer(media, sample, options) {
-  MediaPlayer.call(this, 'image', media, sample, options);
+function ImageViewer(src, sample, options) {
+  MediaPlayer.call(this, "image", src, sample, options);
 }
 ImageViewer.prototype = Object.create(MediaPlayer.prototype);
 ImageViewer.prototype.constructor = ImageViewer;
-
 
 /**
  * SetLoadingPoster is not for images.
@@ -46,9 +38,7 @@ ImageViewer.prototype.constructor = ImageViewer;
  * @member setLoadingPoster
  * @param {string} url Image to be shown when loading.
  */
-ImageViewer.prototype.setLoadingPoster = function(url) {
-};
-
+ImageViewer.prototype.setLoadingPoster = function (url) {};
 
 /**
  * Loop is not for images.
@@ -56,9 +46,7 @@ ImageViewer.prototype.setLoadingPoster = function(url) {
  *
  * @member loop
  */
-ImageViewer.prototype.loop = function() {
-};
-
+ImageViewer.prototype.loop = function () {};
 
 /**
  * Autoplay is not for images.
@@ -66,9 +54,7 @@ ImageViewer.prototype.loop = function() {
  *
  * @member autoplay
  */
-ImageViewer.prototype.autoplay = function() {
-};
-
+ImageViewer.prototype.autoplay = function () {};
 
 /**
  * ResetToFragment is not for images
@@ -76,9 +62,7 @@ ImageViewer.prototype.autoplay = function() {
  *
  * @member resetToFragment
  */
-ImageViewer.prototype.resetToFragment = function() {
-};
-
+ImageViewer.prototype.resetToFragment = function () {};
 
 /**
  * This changes the behaviour of the image viewer in the following ways.
@@ -90,7 +74,7 @@ ImageViewer.prototype.resetToFragment = function() {
  * @param {function} action (optional) a callback function to associate with
  * any click on the image.
  */
-ImageViewer.prototype.thumbnailMode = function(action) {
+ImageViewer.prototype.thumbnailMode = function (action) {
   this._boolThumbnailMode = true;
   this._thumbnailClickAction = action;
 };

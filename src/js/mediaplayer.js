@@ -12,8 +12,6 @@
 
 import { VideoRenderer } from "./renderers/videorenderer.js";
 import { ImageRenderer } from "./renderers/imagerenderer.js";
-import { GalleryRenderer } from "./renderers/galleryrenderer.js";
-import { ImageSequenceRenderer } from "./renderers/imagesequencerenderer.js";
 
 export { MediaPlayer };
 
@@ -25,22 +23,17 @@ export { MediaPlayer };
  * @constructor
  * @abstract
  * @param {string} type is the media content type
- * @param {object} media
+ * @param {object} src
  * @param {string} sample is the overlay data
  * @param {object} options: additional player options
  *
  */
-function MediaPlayer(type, media, sample, options) {
+function MediaPlayer(renderer, src, sample, options) {
   if (this.constructor === MediaPlayer) {
     throw new TypeError("Cannot instantiate abstract class.");
   }
-  if (type === "video") {
-    this.renderer = new VideoRenderer(media, sample, options);
-  } else if (type === "image") {
-    this.renderer = new ImageRenderer(media, sample, options);
-  } else {
-    throw new Error("invalid media type: " + type);
-  }
+  this.renderer = renderer;
+
   // Player prerender attributes
   this._boolForcedMax = false;
   this._boolForcedSize = false;

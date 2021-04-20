@@ -67,12 +67,10 @@
  * Brandon Paris, brandon@voxel51.com
  * Alan Stahl, alan@voxel51.com
  */
+import mime from "mime-types";
 
-// Imports
 import { VideoPlayer } from "./videoplayer.js";
 import { ImageViewer } from "./imageviewer.js";
-import { GalleryViewer } from "./galleryviewer.js";
-import { ImageSequence } from "./imagesequence.js";
 import { colorGenerator } from "./overlay.js";
 
 export { ColorGenerator } from "./overlay.js";
@@ -95,8 +93,7 @@ export default Player51;
  *   isSequence: for rendering ZIP files - if true, the contents will be
  *     rendered as a video; otherwise, as a gallery.
  */
-function Player51(options) {
-  // set defaults for other options
+function Player51({ sample, src, ...options }) {
   options.colorMap = options.colorMap || {};
   options.colorByLabel = options.coloredByLabel || false;
   options.activeLabels = options.activeLabels || [];
@@ -106,14 +103,15 @@ function Player51(options) {
   options.selectedLabels = options.selectedLabels || [];
   options.colorGenerator = options.colorGenerator || colorGenerator;
 
-  const { media, sample } = options;
-  const mimetype = options.media.type.toLowerCase();
+  const mimeType =
+    (sample.metadata && sample.metadata.mime_type) ||
+    mime.lookup(sample.filepath) ||
+    "image/jpg";
 
-  // Load correct player
-  if (mimetype.startsWith("video/")) {
-    return new VideoPlayer(media, sample, options);
-  } else if (mimetype.startsWith("image/")) {
-    return new ImageViewer(media, sample, options);
+  if (mimeType.startsWith("video/")) {
+    return new VideoPlayer(src, sample, options);
+  } else if (mimeType.startsWith("image/")) {
+    return new ImageViewer(src, sample, options);
   }
-  throw new Error(`Unrecognized mime type: ${mimetype}`);
+  throw new Error(`Unrecognized mime type: ${mimeType}`);
 }
