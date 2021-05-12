@@ -181,9 +181,9 @@ Overlay.prototype._isShown = function (name) {
 Overlay.prototype._getColor = function (name, label, index) {
   const options = this.renderer.options;
   const key = options.colorByLabel ? label : name;
-  const hasColor = options.colorMap && options.colorMap[key];
+  const hasColor = options.colorMap && options.colorMap(key);
   if (hasColor) {
-    return options.colorMap[key];
+    return options.colorMap(key);
   } else {
     return this.renderer.options.colorGenerator.color(label);
   }
