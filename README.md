@@ -1,6 +1,7 @@
 # DEPRECATED
 
-This project has been deprecated by [Looker](https://github.com/voxel51/fiftyone/tree/develop/app)
+This project has been deprecated by [Looker](https://github.com/voxel51/fiftyone/tree/develop/app),
+the media visualizer of [FiftyOne](https://github.com/voxel51/fiftyone).
 
 # Player51
 
