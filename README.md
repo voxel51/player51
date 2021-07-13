@@ -1,11 +1,7 @@
-# NOTE
+# DEPRECATED
 
-This project is a core component of the
-[FiftyOne](https://github.com/voxel51/fiftyone) App. Its exact future is to be
-determined, but it will continue to be actively developed. If one is
-determined to contribute to this project, please refer to the FiftyOne
-[CONTRIBUTING](https://github.com/voxel51/fiftyone/blob/develop/CONTRIBUTING.md)
-and make a best effort to follow them.
+This project has been deprecated by [Looker](https://github.com/voxel51/fiftyone/tree/develop/app),
+the media visualizer of [FiftyOne](https://github.com/voxel51/fiftyone).
 
 # Player51
 
